@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expense_tracker/models/expense.dart';
+import 'package:expense_tracker/models/settlement.dart';
+import 'package:expense_tracker/services/settlement_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:expense_tracker/services/group_service.dart';
 import 'package:expense_tracker/services/auth_service.dart';
@@ -8,7 +10,7 @@ class ExpenseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String userId = FirebaseAuth.instance.currentUser!.uid;
   final GroupService _groupService = GroupService();
-  List<String> _settledPayments = [];
+  final SettlementService _settlementService = SettlementService();
   final AuthService _authService = AuthService();
 
   Future<void> addExpense(Expense expense) async {
@@ -26,93 +28,166 @@ class ExpenseService {
       double iOwe = 0;
       Map<String, double> individualBalances = {};
 
-      // 1. Expenses created by the user (others owe you)
-      final userExpensesQuery =
-          await _firestore
-              .collection('expenses')
-              .where('userId', isEqualTo: currentUserId)
-              .get();
+      final allExpensesQuery = await _firestore.collection('expenses').get();
 
-      for (var doc in userExpensesQuery.docs) {
-        final expense = Expense.fromFirestore(doc);
-        if (expense.splitDetails != null) {
-          expense.splitDetails!.forEach((userId, amount) {
-            if (userId != currentUserId) {
-              owedToMe += amount;
-              individualBalances[userId] =
-                  (individualBalances[userId] ?? 0) + amount;
-            }
-          });
-        }
-      }
-
-      // 2. Expenses where others paid and you owe
-      final splitExpensesQuery =
-          await _firestore
-              .collection('expenses')
-              .where('splitDetails.$currentUserId', isGreaterThan: 0)
-              .get();
-
-      for (var doc in splitExpensesQuery.docs) {
+      for (var doc in allExpensesQuery.docs) {
         final expense = Expense.fromFirestore(doc);
 
-        // 🔥 Skip if you were the one who paid
-        if (expense.userId == currentUserId) continue;
+        if (expense.splitDetails == null) continue;
 
-        if (expense.splitDetails != null &&
-            expense.splitDetails!.containsKey(currentUserId)) {
-          final amount = expense.splitDetails![currentUserId] ?? 0;
-          iOwe += amount;
-          individualBalances[expense.userId] =
-              (individualBalances[expense.userId] ?? 0) - amount;
+        if (!expense.splitDetails!.containsKey(currentUserId) &&
+            expense.userId != currentUserId) {
+          continue;
+        }
+
+        if (expense.groupId == null && expense.splitDetails!.length == 2) {
+          await _processIndividualSplitExpense(
+            expense,
+            currentUserId,
+            individualBalances,
+          );
+        } else if (expense.groupId != null) {
+          await _processGroupSplitExpense(
+            expense,
+            currentUserId,
+            individualBalances,
+          );
         }
       }
 
-      // 3. Adjust balances with settlements (full or partial)
-      final userGroups = await _groupService.getUserGroups().first;
-
-      for (var group in userGroups) {
-        final settlements = await _groupService.getDetailedSettlements(
-          group.id,
-        );
-
-        for (var settlement in settlements) {
-          final fromId = settlement['fromId'];
-          final toId = settlement['toId'];
-          final amount = settlement['amount'];
-
-          if (fromId == currentUserId) {
-            // You paid someone → reduce your iOwe
-            iOwe -= amount;
-            individualBalances[toId] = (individualBalances[toId] ?? 0) + amount;
-          } else if (toId == currentUserId) {
-            // Someone paid you → reduce your owedToMe
-            owedToMe -= amount;
-            individualBalances[fromId] =
-                (individualBalances[fromId] ?? 0) - amount;
-          }
-        }
-      }
-
-      // 4. Clean and round balances
+      // Clean and calculate final values
       Map<String, double> cleanedBalances = {};
       individualBalances.forEach((userId, balance) {
         if (balance.abs() > 0.01) {
           cleanedBalances[userId] = double.parse(balance.toStringAsFixed(2));
+          if (balance > 0) {
+            owedToMe += balance;
+          } else {
+            iOwe += balance.abs();
+          }
         }
       });
 
-      owedToMe = owedToMe < 0 ? 0 : double.parse(owedToMe.toStringAsFixed(2));
-      iOwe = iOwe < 0 ? 0 : double.parse(iOwe.toStringAsFixed(2));
-
       return {
-        'owedToMe': owedToMe,
-        'iOwe': iOwe,
+        'owedToMe': double.parse(owedToMe.toStringAsFixed(2)),
+        'iOwe': double.parse(iOwe.toStringAsFixed(2)),
         'individualBalances': cleanedBalances,
       };
     } catch (e) {
       print('Error getting owed amounts: $e');
-      return {'owedToMe': 0, 'iOwe': 0, 'individualBalances': {}};
+      return {'owedToMe': 0.0, 'iOwe': 0.0, 'individualBalances': {}};
+    }
+  }
+
+  Future<void> _processIndividualSplitExpense(
+    Expense expense,
+    String currentUserId,
+    Map<String, double> individualBalances,
+  ) async {
+    final settlements = await _settlementService.getSettlementsForExpense(
+      expense.id,
+    );
+
+    String? otherUserId;
+    for (String userId in expense.splitDetails!.keys) {
+      if (userId != currentUserId) {
+        otherUserId = userId;
+        break;
+      }
+    }
+    if (otherUserId == null) return;
+
+    double myShare = expense.splitDetails![currentUserId] ?? 0;
+    double otherShare = expense.splitDetails![otherUserId] ?? 0;
+
+    if (expense.userId == currentUserId) {
+      // I paid, other owes me
+      double paidByOther = settlements
+          .where(
+            (s) => s.fromUserId == otherUserId && s.toUserId == currentUserId,
+          )
+          .fold(0.0, (sum, s) => sum + s.amount);
+      double balance = otherShare - paidByOther;
+      individualBalances[otherUserId] =
+          (individualBalances[otherUserId] ?? 0) + balance;
+    } else {
+      // Other paid, I owe them
+      double paidByMe = settlements
+          .where(
+            (s) => s.fromUserId == currentUserId && s.toUserId == otherUserId,
+          )
+          .fold(0.0, (sum, s) => sum + s.amount);
+      double balance = myShare - paidByMe;
+      individualBalances[otherUserId] =
+          (individualBalances[otherUserId] ?? 0) - balance;
+    }
+  }
+
+  Future<void> _processGroupSplitExpense(
+    Expense expense,
+    String currentUserId,
+    Map<String, double> individualBalances,
+  ) async {
+    final settlements = await _settlementService.getSettlementsForExpense(
+      expense.id,
+    );
+
+    if (expense.userId == currentUserId) {
+      // Others owe me
+      for (var entry in expense.splitDetails!.entries) {
+        String userId = entry.key;
+        if (userId == currentUserId) continue;
+
+        double expectedFromUser = entry.value;
+        double paidByUser = settlements
+            .where((s) => s.fromUserId == userId && s.toUserId == currentUserId)
+            .fold(0.0, (sum, s) => sum + s.amount);
+        double balance = expectedFromUser - paidByUser;
+
+        individualBalances[userId] =
+            (individualBalances[userId] ?? 0) + balance;
+      }
+    } else {
+      // I owe the payer
+      double myShare = expense.splitDetails![currentUserId] ?? 0;
+      double paidByMe = settlements
+          .where(
+            (s) =>
+                s.fromUserId == currentUserId && s.toUserId == expense.userId,
+          )
+          .fold(0.0, (sum, s) => sum + s.amount);
+      double balance = myShare - paidByMe;
+
+      individualBalances[expense.userId] =
+          (individualBalances[expense.userId] ?? 0) - balance;
+    }
+  }
+
+  Future<bool> isIndividualExpenseSettled(String expenseId) async {
+    try {
+      // Get the expense
+      DocumentSnapshot expenseDoc =
+          await _firestore.collection('expenses').doc(expenseId).get();
+
+      if (!expenseDoc.exists) return false;
+
+      Expense expense = Expense.fromFirestore(expenseDoc);
+
+      // Check if it's an individual split
+      if (expense.groupId != null ||
+          expense.splitDetails == null ||
+          expense.splitDetails!.length != 2) {
+        return false;
+      }
+
+      return await _settlementService.isExpenseFullySettled(
+        expenseId,
+        expense.splitDetails!,
+        expense.userId,
+      );
+    } catch (e) {
+      print('Error checking if expense is settled: $e');
+      return false;
     }
   }
 
@@ -126,6 +201,34 @@ class ExpenseService {
           (snapshot) =>
               snapshot.docs.map((doc) => Expense.fromFirestore(doc)).toList(),
         );
+  }
+
+  Stream<List<Expense>> getAllUserExpenses() {
+    return _firestore
+        .collection('expenses')
+        .orderBy('date', descending: true)
+        .snapshots()
+        .asyncMap((snapshot) async {
+          List<Expense> userExpenses = [];
+
+          for (var doc in snapshot.docs) {
+            Expense expense = Expense.fromFirestore(doc);
+
+            // Include if user created the expense
+            if (expense.userId == userId) {
+              userExpenses.add(expense);
+              continue;
+            }
+
+            // Include if user is part of the split
+            if (expense.splitDetails != null &&
+                expense.splitDetails!.containsKey(userId)) {
+              userExpenses.add(expense);
+            }
+          }
+
+          return userExpenses;
+        });
   }
 
   Stream<List<Expense>> getGroupExpenses(String groupId) {
@@ -153,7 +256,19 @@ class ExpenseService {
 
   Future<void> deleteExpense(String expenseId) async {
     try {
+      // Delete the expense
       await _firestore.collection('expenses').doc(expenseId).delete();
+
+      // Delete associated settlements
+      QuerySnapshot settlements =
+          await _firestore
+              .collection('settlements')
+              .where('expenseId', isEqualTo: expenseId)
+              .get();
+
+      for (var doc in settlements.docs) {
+        await doc.reference.delete();
+      }
     } catch (e) {
       throw e;
     }

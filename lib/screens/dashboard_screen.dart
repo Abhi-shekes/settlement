@@ -40,7 +40,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         (sum, amount) => sum + amount,
       );
 
-      _expenseService.getExpenses().listen((expenses) {
+      _expenseService.getAllUserExpenses().listen((expenses) {
         if (mounted) {
           setState(() {
             _recentExpenses = expenses.take(5).toList();
@@ -48,6 +48,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       });
 
+      // Get updated owed amounts with settlement calculations
       final owedData = await _expenseService.getOwedAmounts();
       _owedToMe = owedData['owedToMe'] ?? 0;
       _iOwe = owedData['iOwe'] ?? 0;
@@ -87,7 +88,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             // Total Expenses container with fixed width
                             Container(
-                              width: 200, // Set a fixed width
+                              width: 150, // Set a fixed width
                               child: Card(
                                 elevation: 2,
                                 color: Theme.of(context).primaryColor,
@@ -122,22 +123,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                             // Amount Owed to Me container with fixed width
                             Container(
-                              width: 200, // Set a fixed width
+                              width: 150, // Set a fixed width
                               child: Card(
                                 elevation: 2,
-                                color: Theme.of(context).primaryColor,
+                                color: Colors.teal,
                                 child: Padding(
-                                  padding: EdgeInsets.all(16),
+                                  padding: EdgeInsets.fromLTRB(10, 16, 16, 16),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        'Owed To Me',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.white.withOpacity(0.8),
-                                        ),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.trending_up,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            'Owed To Me',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.white.withOpacity(
+                                                0.8,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                       SizedBox(height: 8),
                                       Text(
@@ -157,22 +170,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                             // Amount I Owe container with fixed width
                             Container(
-                              width: 200, // Set a fixed width
+                              width: 150, // Set a fixed width
                               child: Card(
                                 elevation: 2,
-                                color: Theme.of(context).primaryColor,
+                                color: Colors.teal,
                                 child: Padding(
                                   padding: EdgeInsets.all(16),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        'I Owe',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.white.withOpacity(0.8),
-                                        ),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.trending_down,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            'I Owe',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.white.withOpacity(
+                                                0.8,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                       SizedBox(height: 8),
                                       Text(
