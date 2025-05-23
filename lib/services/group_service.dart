@@ -13,34 +13,60 @@ class GroupService {
     String groupId,
     String fromUserId,
     String toUserId,
-    double amount,
-  ) async {
+    double amount, {
+    bool isPartial = false,
+  }) async {
     try {
-      // Ensure amount is properly rounded to avoid floating point issues
-      amount = double.parse(amount.toStringAsFixed(2));
+      // Create a unique identifier for this settlement
+      String settlementId = DateTime.now().millisecondsSinceEpoch.toString();
 
-      // Format: fromUserId|toUserId|amount
-      final paymentInfo = '$fromUserId|$toUserId|$amount';
+      // Format: fromUserId|toUserId|amount|settlementId|isPartial
+      String paymentInfo =
+          '$fromUserId|$toUserId|$amount|$settlementId|${isPartial ? 'partial' : 'full'}';
 
-      // Add to the settled payments collection
-      await _firestore
-          .collection('groups')
-          .doc(groupId)
-          .collection('settledPayments')
-          .add({
-            'fromUserId': fromUserId,
-            'toUserId': toUserId,
-            'amount': amount,
-            'timestamp': FieldValue.serverTimestamp(),
-            'paymentInfo': paymentInfo,
-          });
-
-      // Update the group's settled payments list
       await _firestore.collection('groups').doc(groupId).update({
         'settledPayments': FieldValue.arrayUnion([paymentInfo]),
       });
     } catch (e) {
       print('Error recording settlement: $e');
+      throw e;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getDetailedSettlements(
+    String groupId,
+  ) async {
+    try {
+      final doc = await _firestore.collection('groups').doc(groupId).get();
+      final data = doc.data();
+
+      if (data != null && data.containsKey('settledPayments')) {
+        List<String> settledPayments = List<String>.from(
+          data['settledPayments'],
+        );
+
+        List<Map<String, dynamic>> detailedSettlements = [];
+
+        for (String paymentInfo in settledPayments) {
+          final parts = paymentInfo.split('|');
+          if (parts.length >= 4) {
+            detailedSettlements.add({
+              'fromId': parts[0],
+              'toId': parts[1],
+              'amount': double.parse(parts[2]),
+              'settlementId': parts[3],
+              'isPartial': parts.length > 4 ? parts[4] == 'partial' : false,
+              'timestamp': parts.length > 5 ? DateTime.parse(parts[5]) : null,
+            });
+          }
+        }
+
+        return detailedSettlements;
+      }
+
+      return [];
+    } catch (e) {
+      print('Error getting settlements: $e');
       throw e;
     }
   }

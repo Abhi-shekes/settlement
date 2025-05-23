@@ -2,12 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expense_tracker/models/expense.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:expense_tracker/services/group_service.dart';
+import 'package:expense_tracker/services/auth_service.dart';
 
 class ExpenseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String userId = FirebaseAuth.instance.currentUser!.uid;
   final GroupService _groupService = GroupService();
   List<String> _settledPayments = [];
+  final AuthService _authService = AuthService();
 
   Future<void> addExpense(Expense expense) async {
     try {
@@ -19,127 +21,98 @@ class ExpenseService {
 
   Future<Map<String, dynamic>> getOwedAmounts() async {
     try {
-      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
-
-      // Get all expenses
-      final QuerySnapshot expenseSnapshot =
-          await _firestore.collection('expenses').where('groupId').get();
-
-      // Initialize balances
-      double amountOwedToMe = 0;
-      double amountIOwe = 0;
+      final currentUserId = _authService.currentUser!.uid;
+      double owedToMe = 0;
+      double iOwe = 0;
       Map<String, double> individualBalances = {};
 
-      // Calculate balances from expenses
-      for (var doc in expenseSnapshot.docs) {
+      // 1. Expenses created by the user (others owe you)
+      final userExpensesQuery =
+          await _firestore
+              .collection('expenses')
+              .where('userId', isEqualTo: currentUserId)
+              .get();
+
+      for (var doc in userExpensesQuery.docs) {
         final expense = Expense.fromFirestore(doc);
-        if (expense.splitDetails == null) continue;
-
-        if (expense.userId == currentUserId) {
-          // I paid for the expense
-          final myShare = expense.splitDetails![currentUserId] ?? 0;
-          final totalOthersShare = expense.amount - myShare;
-          amountOwedToMe += totalOthersShare;
-
-          expense.splitDetails!.forEach((userId, share) {
+        if (expense.splitDetails != null) {
+          expense.splitDetails!.forEach((userId, amount) {
             if (userId != currentUserId) {
-              individualBalances.update(
-                userId,
-                (value) => value + share, // They owe me
-                ifAbsent: () => share,
-              );
+              owedToMe += amount;
+              individualBalances[userId] =
+                  (individualBalances[userId] ?? 0) + amount;
             }
           });
-        } else if (expense.splitDetails!.containsKey(currentUserId)) {
-          // Someone else paid, but I'm included in the split
-          final myShare = expense.splitDetails![currentUserId] ?? 0;
-          amountIOwe += myShare;
-
-          individualBalances.update(
-            expense.userId,
-            (value) => value - myShare, // I owe them
-            ifAbsent: () => -myShare,
-          );
         }
       }
 
-      // Get all groups the user is a member of
-      final groupsSnapshot =
+      // 2. Expenses where others paid and you owe
+      final splitExpensesQuery =
           await _firestore
-              .collection('groups')
-              .where('members', arrayContains: currentUserId)
+              .collection('expenses')
+              .where('splitDetails.$currentUserId', isGreaterThan: 0)
               .get();
 
-      // Process settled payments for each group
-      for (var groupDoc in groupsSnapshot.docs) {
-        final groupId = groupDoc.id;
-        final settledPayments = await _groupService.getSettledPayments(groupId);
+      for (var doc in splitExpensesQuery.docs) {
+        final expense = Expense.fromFirestore(doc);
 
-        // Adjust balances based on settled payments
-        for (String paymentInfo in settledPayments) {
-          final parts = paymentInfo.split('|');
-          if (parts.length == 3) {
-            final fromUserId = parts[0];
-            final toUserId = parts[1];
-            final amount = double.parse(parts[2]);
+        // 🔥 Skip if you were the one who paid
+        if (expense.userId == currentUserId) continue;
 
-            // If I paid someone
-            if (fromUserId == currentUserId) {
-              // I've already paid this amount to someone, so reduce what I owe
-              amountIOwe -= amount;
+        if (expense.splitDetails != null &&
+            expense.splitDetails!.containsKey(currentUserId)) {
+          final amount = expense.splitDetails![currentUserId] ?? 0;
+          iOwe += amount;
+          individualBalances[expense.userId] =
+              (individualBalances[expense.userId] ?? 0) - amount;
+        }
+      }
 
-              // Update individual balance
-              individualBalances.update(
-                toUserId,
-                (value) =>
-                    value +
-                    amount, // Increase what they owe me (or decrease what I owe them)
-                ifAbsent: () => amount,
-              );
-            }
-            // If someone paid me
-            else if (toUserId == currentUserId) {
-              // Someone has paid me, so reduce what they owe me
-              amountOwedToMe -= amount;
+      // 3. Adjust balances with settlements (full or partial)
+      final userGroups = await _groupService.getUserGroups().first;
 
-              // Update individual balance
-              individualBalances.update(
-                fromUserId,
-                (value) =>
-                    value -
-                    amount, // Decrease what they owe me (or increase what I owe them)
-                ifAbsent: () => -amount,
-              );
-            }
+      for (var group in userGroups) {
+        final settlements = await _groupService.getDetailedSettlements(
+          group.id,
+        );
+
+        for (var settlement in settlements) {
+          final fromId = settlement['fromId'];
+          final toId = settlement['toId'];
+          final amount = settlement['amount'];
+
+          if (fromId == currentUserId) {
+            // You paid someone → reduce your iOwe
+            iOwe -= amount;
+            individualBalances[toId] = (individualBalances[toId] ?? 0) + amount;
+          } else if (toId == currentUserId) {
+            // Someone paid you → reduce your owedToMe
+            owedToMe -= amount;
+            individualBalances[fromId] =
+                (individualBalances[fromId] ?? 0) - amount;
           }
         }
       }
 
-      // Ensure all balances are properly rounded to avoid floating point issues
+      // 4. Clean and round balances
+      Map<String, double> cleanedBalances = {};
       individualBalances.forEach((userId, balance) {
-        individualBalances[userId] = double.parse(balance.toStringAsFixed(2));
+        if (balance.abs() > 0.01) {
+          cleanedBalances[userId] = double.parse(balance.toStringAsFixed(2));
+        }
       });
 
-      // Make sure we don't have negative zeros due to rounding
-      amountOwedToMe = double.parse(amountOwedToMe.toStringAsFixed(2));
-      amountIOwe = double.parse(amountIOwe.toStringAsFixed(2));
+      owedToMe = owedToMe < 0 ? 0 : double.parse(owedToMe.toStringAsFixed(2));
+      iOwe = iOwe < 0 ? 0 : double.parse(iOwe.toStringAsFixed(2));
 
-      // Ensure we don't show negative values for the totals
-      amountOwedToMe = amountOwedToMe < 0 ? 0 : amountOwedToMe;
-      amountIOwe = amountIOwe < 0 ? 0 : amountIOwe;
-
-      // Return the correct structure with adjusted balances
       return {
-        'owedToMe': amountOwedToMe,
-        'iOwe': amountIOwe,
-        'individualBalances': individualBalances,
-        'hasSettlements':
-            _settledPayments
-                .isNotEmpty, // Add this flag instead of actual settlement data
+        'owedToMe': owedToMe,
+        'iOwe': iOwe,
+        'individualBalances': cleanedBalances,
       };
     } catch (e) {
-      print('Error calculating owed amounts: $e');
-      throw e;
+      print('Error getting owed amounts: $e');
+      return {'owedToMe': 0, 'iOwe': 0, 'individualBalances': {}};
     }
   }
 

@@ -39,6 +39,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     _loadData();
   }
 
+  // Update the _loadData method to handle partial settlements
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
@@ -62,14 +63,21 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         }
       });
 
-      // Load settled payments
-      final settledPayments = await _groupService.getSettledPayments(
+      // Load detailed settlements including partial ones
+      final detailedSettlements = await _groupService.getDetailedSettlements(
         widget.group.id,
       );
+
       if (mounted) {
         setState(() {
-          _settledPayments = settledPayments;
+          // Convert to the format used by the existing code
+          _settledPayments =
+              detailedSettlements.map((settlement) {
+                return '${settlement['fromId']}|${settlement['toId']}|${settlement['amount']}|${settlement['isPartial'] ? 'partial' : 'full'}';
+              }).toList();
         });
+        // Recalculate balances with current expenses and new settlements
+        _calculateBalances(_groupExpenses);
       }
     } catch (e) {
       print('Error loading group data: $e');
@@ -81,6 +89,168 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     }
   }
 
+  Map<String, Map<String, double>> _calculateRemainingBalances() {
+    // This will track how much each person still owes to each other person
+    Map<String, Map<String, double>> remainingBalances = {};
+
+    // Initialize the map
+    for (String fromId in widget.group.members) {
+      remainingBalances[fromId] = {};
+      for (String toId in widget.group.members) {
+        if (fromId != toId) {
+          remainingBalances[fromId]![toId] = 0;
+        }
+      }
+    }
+
+    // Step 1: Calculate initial balances from expenses
+    for (Expense expense in _groupExpenses) {
+      if (expense.splitDetails != null) {
+        expense.splitDetails!.forEach((userId, amount) {
+          if (userId != expense.userId) {
+            // User owes the expense creator
+            remainingBalances[userId]![expense.userId] =
+                (remainingBalances[userId]![expense.userId] ?? 0) + amount;
+          }
+        });
+      }
+    }
+
+    // Step 2: Apply settlements (including partial ones)
+    for (String paymentInfo in _settledPayments) {
+      final parts = paymentInfo.split('|');
+      if (parts.length >= 3) {
+        final fromId = parts[0]; // Person who paid
+        final toId = parts[1]; // Person who received payment
+        final amount = double.parse(parts[2]);
+
+        // Directly reduce the amount that the payer owes the receiver
+        remainingBalances[fromId]![toId] =
+            (remainingBalances[fromId]![toId] ?? 0) - amount;
+      }
+    }
+
+    // Step 3: Clean up negative balances (if A owes B negative amount, it means B owes A)
+    for (String fromId in widget.group.members) {
+      for (String toId in widget.group.members) {
+        if (fromId != toId) {
+          if (remainingBalances[fromId]![toId]! < 0) {
+            // If A owes B a negative amount, it means B owes A
+            remainingBalances[toId]![fromId] =
+                (remainingBalances[toId]![fromId] ?? 0) +
+                remainingBalances[fromId]![toId]!.abs();
+            remainingBalances[fromId]![toId] = 0;
+          }
+        }
+      }
+    }
+
+    // Step 4: Simplify balances (if A owes B and B owes A, cancel out)
+    for (String fromId in widget.group.members) {
+      for (String toId in widget.group.members) {
+        if (fromId != toId &&
+            remainingBalances[fromId]![toId]! > 0 &&
+            remainingBalances[toId]![fromId]! > 0) {
+          // Find the minimum of the two balances
+          double minAmount = min(
+            remainingBalances[fromId]![toId]!,
+            remainingBalances[toId]![fromId]!,
+          );
+
+          // Reduce both balances by the minimum amount
+          remainingBalances[fromId]![toId] =
+              remainingBalances[fromId]![toId]! - minAmount;
+          remainingBalances[toId]![fromId] =
+              remainingBalances[toId]![fromId]! - minAmount;
+        }
+      }
+    }
+
+    return remainingBalances;
+  }
+
+  Widget _buildRemainingBalancesSection() {
+    final remainingBalances = _calculateRemainingBalances();
+
+    // Filter out zero balances
+    List<Widget> balanceWidgets = [];
+
+    for (String fromId in remainingBalances.keys) {
+      for (String toId in remainingBalances[fromId]!.keys) {
+        double amount = remainingBalances[fromId]![toId]!;
+
+        // Only show non-zero balances
+        if (amount > 0.01) {
+          final fromUser = _memberProfiles[fromId];
+          final toUser = _memberProfiles[toId];
+
+          final fromName =
+              fromId == _currentUserId ? 'You' : (fromUser?.name ?? 'Unknown');
+          final toName =
+              toId == _currentUserId ? 'You' : (toUser?.name ?? 'Unknown');
+
+          balanceWidgets.add(
+            Container(
+              margin: EdgeInsets.only(bottom: 12),
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!, width: 1),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.account_balance_wallet, color: Colors.orange),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      '$fromName still owes $toName ₹${amount.toInt()}',
+                      style: TextStyle(fontSize: 16, color: Colors.grey[800]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+    }
+
+    if (balanceWidgets.isEmpty) {
+      return SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 24),
+        Text(
+          'Remaining Balances',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey[800],
+          ),
+        ),
+        SizedBox(height: 12),
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: balanceWidgets,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Update the _calculateBalances method to handle partial settlements
   void _calculateBalances(List<Expense> expenses) {
     Map<String, double> paid = {};
     Map<String, double> owes = {};
@@ -102,14 +272,16 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
       }
     }
 
-    // Adjust for settled payments
+    // Process settlements (including partial ones)
     for (String paymentInfo in _settledPayments) {
       final parts = paymentInfo.split('|');
-      if (parts.length == 3) {
+      if (parts.length >= 3) {
         final fromId = parts[0];
         final toId = parts[1];
         final amount = double.parse(parts[2]);
+        final isPartial = parts.length > 3 && parts[3] == 'partial';
 
+        // For both full and partial settlements, we adjust the balances
         // When someone pays, it's like they paid an expense for the other person
         paid[fromId] = (paid[fromId] ?? 0) + amount;
         owes[toId] = (owes[toId] ?? 0) + amount;
@@ -125,6 +297,150 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     setState(() {
       _balances = balances;
     });
+  }
+
+  void _showPartialSettlementDialog(String payment) {
+    // Extract the names and amount from the payment string
+    final regex = RegExp(r'(.*) pays (.*) ₹(\d+)');
+    final match = regex.firstMatch(payment);
+
+    if (match != null && match.groupCount >= 3) {
+      final fromName = match.group(1)!;
+      final toName = match.group(2)!;
+      final totalAmount = int.parse(match.group(3)!);
+
+      // Find the user IDs from the names
+      String? fromId;
+      String? toId;
+
+      if (fromName == 'You') {
+        fromId = _currentUserId;
+      } else {
+        _memberProfiles.forEach((id, profile) {
+          if (profile.name == fromName) {
+            fromId = id;
+          }
+        });
+      }
+
+      if (toName == 'You') {
+        toId = _currentUserId;
+      } else {
+        _memberProfiles.forEach((id, profile) {
+          if (profile.name == toName) {
+            toId = id;
+          }
+        });
+      }
+
+      if (fromId != null && toId != null) {
+        TextEditingController amountController = TextEditingController();
+
+        showDialog(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: Text('Partial Settlement'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$fromName owes $toName ₹$totalAmount in total.',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 16),
+                    Text('Enter the amount being paid:'),
+                    SizedBox(height: 8),
+                    TextField(
+                      controller: amountController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        prefixText: '₹',
+                        border: OutlineInputBorder(),
+                        hintText: 'Amount',
+                      ),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(context);
+
+                      // Validate the amount
+                      double? partialAmount = double.tryParse(
+                        amountController.text,
+                      );
+                      if (partialAmount == null || partialAmount <= 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Please enter a valid amount'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+
+                      if (partialAmount > totalAmount) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Amount cannot exceed the total owed (₹$totalAmount)',
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+
+                      // Record the partial settlement
+                      try {
+                        bool isPartial = partialAmount < totalAmount;
+                        await _groupService.recordSettlement(
+                          widget.group.id,
+                          fromId!,
+                          toId!,
+                          partialAmount,
+                          isPartial: isPartial,
+                        );
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              isPartial
+                                  ? 'Partial payment of ₹${partialAmount.toInt()} recorded'
+                                  : 'Payment marked as settled',
+                            ),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+
+                        _loadData();
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error recording settlement: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    child: Text('Confirm'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+        );
+      }
+    }
   }
 
   Future<void> _addMember() async {
@@ -722,6 +1038,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               ),
             ),
           ),
+
           if (_settledPayments.isNotEmpty) ...[
             SizedBox(height: 24),
             Text(
@@ -744,58 +1061,92 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children:
                       _settledPayments.map((paymentInfo) {
-                        final parts = paymentInfo.split('|');
-                        if (parts.length == 3) {
-                          final fromId = parts[0];
-                          final toId = parts[1];
-                          // Don't extract the amount - we want to hide it
-
-                          final fromUser = _memberProfiles[fromId];
-                          final toUser = _memberProfiles[toId];
-
-                          final fromName =
-                              fromId == _currentUserId
-                                  ? 'You'
-                                  : (fromUser?.name ?? 'Unknown');
-                          final toName =
-                              toId == _currentUserId
-                                  ? 'You'
-                                  : (toUser?.name ?? 'Unknown');
-
-                          return Container(
-                            margin: EdgeInsets.only(bottom: 12),
-                            padding: EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.check_circle, color: Colors.green),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    '$fromName paid $toName', // Removed amount display
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey[800],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                        return SizedBox.shrink();
+                        return _buildSettlementHistoryItem(paymentInfo);
                       }).toList(),
                 ),
               ),
             ),
           ],
+          _buildRemainingBalancesSection(),
         ],
       ),
     );
   }
+
+  //         if (_settledPayments.isNotEmpty) ...[
+  //           SizedBox(height: 24),
+  //           Text(
+  //             'Settlement History',
+  //             style: TextStyle(
+  //               fontSize: 20,
+  //               fontWeight: FontWeight.bold,
+  //               color: Colors.grey[800],
+  //             ),
+  //           ),
+  //           SizedBox(height: 12),
+  //           Card(
+  //             elevation: 2,
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(16),
+  //             ),
+  //             child: Padding(
+  //               padding: EdgeInsets.all(20),
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children:
+  //                     _settledPayments.map((paymentInfo) {
+  //                       final parts = paymentInfo.split('|');
+  //                       if (parts.length == 3) {
+  //                         final fromId = parts[0];
+  //                         final toId = parts[1];
+  //                         // Don't extract the amount - we want to hide it
+
+  //                         final fromUser = _memberProfiles[fromId];
+  //                         final toUser = _memberProfiles[toId];
+
+  //                         final fromName =
+  //                             fromId == _currentUserId
+  //                                 ? 'You'
+  //                                 : (fromUser?.name ?? 'Unknown');
+  //                         final toName =
+  //                             toId == _currentUserId
+  //                                 ? 'You'
+  //                                 : (toUser?.name ?? 'Unknown');
+
+  //                         return Container(
+  //                           margin: EdgeInsets.only(bottom: 12),
+  //                           padding: EdgeInsets.all(12),
+  //                           decoration: BoxDecoration(
+  //                             color: Colors.green.withOpacity(0.1),
+  //                             borderRadius: BorderRadius.circular(12),
+  //                           ),
+  //                           child: Row(
+  //                             children: [
+  //                               Icon(Icons.check_circle, color: Colors.green),
+  //                               SizedBox(width: 12),
+  //                               Expanded(
+  //                                 child: Text(
+  //                                   '$fromName paid $toName', // Removed amount display
+  //                                   style: TextStyle(
+  //                                     fontSize: 16,
+  //                                     color: Colors.grey[800],
+  //                                   ),
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         );
+  //                       }
+  //                       return SizedBox.shrink();
+  //                     }).toList(),
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ],
+  //     ),
+  //   );
+  // }
 
   void _showSettleUpDialog() {
     final payments = _calculatePayments();
@@ -857,7 +1208,6 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
 
   void _confirmSettlement(String payment) {
     // Extract the names and amount from the payment string
-    // Format: "Name1 pays Name2 ₹amount"
     final regex = RegExp(r'(.*) pays (.*) ₹(\d+)');
     final match = regex.firstMatch(payment);
 
@@ -895,14 +1245,20 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           context: context,
           builder:
               (context) => AlertDialog(
-                title: Text('Confirm Settlement'),
-                content: Text(
-                  'Are you sure $fromName has paid $toName ₹$amount?',
-                ),
+                title: Text('Settlement Options'),
+                content: Text('$fromName owes $toName ₹$amount'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showPartialSettlementDialog(payment);
+                    },
+                    child: Text('Partial Payment'),
+                    style: TextButton.styleFrom(foregroundColor: Colors.orange),
                   ),
                   ElevatedButton(
                     onPressed: () async {
@@ -913,11 +1269,12 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                           fromId!,
                           toId!,
                           amount.toDouble(),
+                          isPartial: false,
                         );
 
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Payment marked as settled'),
+                            content: Text('Payment marked as fully settled'),
                             backgroundColor: Colors.green,
                           ),
                         );
@@ -932,7 +1289,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                         );
                       }
                     },
-                    child: Text('Confirm'),
+                    child: Text('Full Payment'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
@@ -1007,6 +1364,78 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
 
   double min(double a, double b) {
     return a < b ? a : b;
+  }
+
+  // Update the settlement history display to show partial payments
+  Widget _buildSettlementHistoryItem(String paymentInfo) {
+    final parts = paymentInfo.split('|');
+    if (parts.length >= 3) {
+      final fromId = parts[0];
+      final toId = parts[1];
+      final amount = double.parse(parts[2]);
+      final isPartial = parts.length > 3 && parts[3] == 'partial';
+
+      final fromUser = _memberProfiles[fromId];
+      final toUser = _memberProfiles[toId];
+
+      final fromName =
+          fromId == _currentUserId ? 'You' : (fromUser?.name ?? 'Unknown');
+      final toName =
+          toId == _currentUserId ? 'You' : (toUser?.name ?? 'Unknown');
+
+      return Container(
+        margin: EdgeInsets.only(bottom: 12),
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color:
+              isPartial
+                  ? Colors.orange.withOpacity(0.1)
+                  : Colors.green.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color:
+                isPartial
+                    ? Colors.orange.withOpacity(0.3)
+                    : Colors.green.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isPartial ? Icons.hourglass_bottom : Icons.check_circle,
+              color: isPartial ? Colors.orange : Colors.green,
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$fromName paid $toName ₹${amount.toInt()}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[800],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (isPartial)
+                    Text(
+                      'Partial payment',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.orange[700],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return SizedBox.shrink();
   }
 
   Widget _buildMembersTab() {
