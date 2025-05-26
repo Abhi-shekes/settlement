@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/expense_service.dart';
 import '../../services/group_service.dart';
+import 'dashboard_screen.dart';
 import '../expenses/expenses_screen.dart';
 import '../splits/splits_screen.dart';
 import '../groups/groups_screen.dart';
@@ -20,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   
   final List<Widget> _screens = [
+    const DashboardScreen(),
     const ExpensesScreen(),
     const SplitsScreen(),
     const GroupsScreen(),
@@ -60,7 +62,13 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
         elevation: 8,
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
         items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.receipt_long),
             label: 'Expenses',
