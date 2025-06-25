@@ -3,11 +3,14 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/expense_service.dart';
 import '../../services/group_service.dart';
+import '../../services/budget_service.dart';
 import '../../models/expense_model.dart';
 import '../../models/split_model.dart';
+import '../../widgets/budget_progress_card.dart';
 import '../expenses/add_expense_screen.dart';
 import '../splits/add_split_screen.dart';
 import '../groups/create_group_screen.dart';
+import '../budgets/budget_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -28,6 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context.read<ExpenseService>().loadUserExpenses(),
       context.read<GroupService>().loadUserGroups(),
       context.read<GroupService>().loadUserSplits(),
+      context.read<BudgetService>().loadUserBudgets(),
     ]);
   }
 
@@ -65,6 +69,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               
               // Financial Overview Cards
               _buildFinancialOverview(),
+              const SizedBox(height: 24),
+              
+              // Budget Alerts
+              _buildBudgetAlerts(),
               const SizedBox(height: 24),
               
               // Quick Actions
@@ -211,6 +219,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _buildBudgetAlerts() {
+    return Consumer2<BudgetService, ExpenseService>(
+      builder: (context, budgetService, expenseService, child) {
+        // Get categories with budgets
+        final categoriesWithBudgets = budgetService.getCategoriesWithBudgets();
+        
+        // Filter to only show categories that are near limit or exceeded
+        final alertCategories = categoriesWithBudgets.where((category) {
+          final currentSpending = expenseService.getTotalExpenseAmountByCategory(category);
+          final budget = budgetService.getBudgetForCategory(category);
+          
+          if (budget == null || budget.amount <= 0) return false;
+          
+          return currentSpending >= budget.amount * 0.8; // 80% or more of budget
+        }).toList();
+        
+        if (alertCategories.isEmpty) {
+          return const SizedBox.shrink(); // No alerts to show
+        }
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.warning_amber, color: Colors.orange),
+                const SizedBox(width: 8),
+                const Text(
+                  'Budget Alerts',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const BudgetScreen()),
+                    );
+                  },
+                  child: const Text('Manage Budgets'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            
+            // Alert Cards
+            ...alertCategories.map((category) {
+              final currentSpending = expenseService.getTotalExpenseAmountByCategory(category);
+              final budget = budgetService.getBudgetForCategory(category);
+              
+              if (budget == null) return const SizedBox.shrink();
+              
+              return BudgetProgressCard(
+                category: category,
+                budgetAmount: budget.amount,
+                currentSpending: currentSpending,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const BudgetScreen()),
+                  );
+                },
+              );
+            }).toList(),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildBalanceCard(String title, String amount, IconData icon, Color color, Color textColor) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -323,16 +405,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildActionCard(
-                'Settle Up',
-                'Pay or request money',
-                Icons.handshake,
+                'Set Budgets',
+                'Manage category budgets',
+                Icons.account_balance_wallet,
                 Colors.green,
-                () {
-                  // Navigate to settle up screen
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Settle up feature coming soon!')),
-                  );
-                },
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const BudgetScreen()),
+                ),
               ),
             ),
           ],
