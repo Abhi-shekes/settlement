@@ -9,7 +9,8 @@ class GroupModel {
   final DateTime createdAt;
   final String? imageUrl;
   final List<String> expenseIds;
-  final Map<String, double> balances; // User ID -> Balance (positive = owed to them, negative = they owe)
+  final Map<String, double>
+  balances; // User ID -> Balance (positive = owed to them, negative = they owe)
 
   GroupModel({
     required this.id,
@@ -68,9 +69,9 @@ class GroupModel {
   String getFormattedBalance(String userId) {
     final balance = getUserBalance(userId);
     if (balance > 0) {
-      return 'Gets back ₹${balance.toStringAsFixed(2)}';
+      return 'Gets back ₹${balance.toInt()}';
     } else if (balance < 0) {
-      return 'Owes ₹${(-balance).toStringAsFixed(2)}';
+      return 'Owes ₹${(-balance).toInt()}';
     } else {
       return 'Settled up';
     }

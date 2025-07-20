@@ -18,7 +18,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   ExpenseCategory? _selectedCategory;
   String _sortBy = 'date'; // 'date', 'amount', 'category'
   bool _sortAscending = false;
-  
+
   final TextEditingController _searchController = TextEditingController();
   final DateTimeRange _initialDateRange = DateTimeRange(
     start: DateTime.now().subtract(const Duration(days: 30)),
@@ -46,30 +46,39 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   List<ExpenseModel> _getFilteredExpenses() {
     final expenseService = context.watch<ExpenseService>();
     List<ExpenseModel> filteredExpenses = List.from(expenseService.expenses);
-    
+
     // Apply search filter
     if (_searchQuery.isNotEmpty) {
-      filteredExpenses = filteredExpenses.where((expense) {
-        return expense.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-               expense.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-               expense.tags.any((tag) => tag.toLowerCase().contains(_searchQuery.toLowerCase()));
-      }).toList();
+      filteredExpenses =
+          filteredExpenses.where((expense) {
+            return expense.title.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ||
+                expense.description.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                );
+          }).toList();
     }
-    
+
     // Apply category filter
     if (_selectedCategory != null) {
-      filteredExpenses = filteredExpenses.where((expense) => 
-        expense.category == _selectedCategory).toList();
+      filteredExpenses =
+          filteredExpenses
+              .where((expense) => expense.category == _selectedCategory)
+              .toList();
     }
-    
+
     // Apply date range filter
     if (_selectedDateRange != null) {
-      filteredExpenses = filteredExpenses.where((expense) {
-        return expense.createdAt.isAfter(_selectedDateRange!.start) && 
-               expense.createdAt.isBefore(_selectedDateRange!.end.add(const Duration(days: 1)));
-      }).toList();
+      filteredExpenses =
+          filteredExpenses.where((expense) {
+            return expense.createdAt.isAfter(_selectedDateRange!.start) &&
+                expense.createdAt.isBefore(
+                  _selectedDateRange!.end.add(const Duration(days: 1)),
+                );
+          }).toList();
     }
-    
+
     // Apply sorting
     filteredExpenses.sort((a, b) {
       int result;
@@ -88,35 +97,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       }
       return _sortAscending ? result : -result;
     });
-    
-    return filteredExpenses;
-  }
 
-  Future<void> _selectDateRange() async {
-    final DateTimeRange? picked = await showDateRangePicker(
-      context: context,
-      initialDateRange: _selectedDateRange,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF008080),
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    
-    if (picked != null && picked != _selectedDateRange) {
-      setState(() {
-        _selectedDateRange = picked;
-      });
-    }
+    return filteredExpenses;
   }
 
   void _clearFilters() {
@@ -142,10 +124,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             children: [
               const Text(
                 'Sort By',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               _buildSortOption('Date', 'date'),
@@ -153,7 +132,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               _buildSortOption('Category', 'category'),
               const Divider(),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -180,10 +162,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         minHeight: 36,
                         minWidth: 72,
                       ),
-                      children: const [
-                        Text('Ascending'),
-                        Text('Descending'),
-                      ],
+                      children: const [Text('Ascending'), Text('Descending')],
                     ),
                   ],
                 ),
@@ -198,7 +177,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   Widget _buildSortOption(String title, String value) {
     return ListTile(
       title: Text(title),
-      trailing: _sortBy == value ? const Icon(Icons.check, color: Color(0xFF008080)) : null,
+      trailing:
+          _sortBy == value
+              ? const Icon(Icons.check, color: Color(0xFF008080))
+              : null,
       onTap: () {
         setState(() {
           _sortBy = value;
@@ -212,7 +194,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   Widget build(BuildContext context) {
     final filteredExpenses = _getFilteredExpenses();
     final expenseService = context.watch<ExpenseService>();
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Expenses'),
@@ -250,17 +232,18 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               decoration: InputDecoration(
                 hintText: 'Search expenses...',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          setState(() {
-                            _searchQuery = '';
-                            _searchController.clear();
-                          });
-                        },
-                      )
-                    : null,
+                suffixIcon:
+                    _searchQuery.isNotEmpty
+                        ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            setState(() {
+                              _searchQuery = '';
+                              _searchController.clear();
+                            });
+                          },
+                        )
+                        : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Colors.grey[300]!),
@@ -283,9 +266,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               },
             ),
           ),
-          
+
           // Active Filters
-          if (_selectedCategory != null || _searchQuery.isNotEmpty || 
+          if (_selectedCategory != null ||
+              _searchQuery.isNotEmpty ||
               _selectedDateRange != _initialDateRange)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -293,10 +277,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 children: [
                   const Text(
                     'Active Filters:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -306,7 +287,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         children: [
                           if (_selectedCategory != null)
                             _buildFilterChip(
-                              _selectedCategory!.toString().split('.').last.toUpperCase(),
+                              _selectedCategory!
+                                  .toString()
+                                  .split('.')
+                                  .last
+                                  .toUpperCase(),
                               () {
                                 setState(() {
                                   _selectedCategory = null;
@@ -314,15 +299,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                               },
                             ),
                           if (_searchQuery.isNotEmpty)
-                            _buildFilterChip(
-                              'Search: $_searchQuery',
-                              () {
-                                setState(() {
-                                  _searchQuery = '';
-                                  _searchController.clear();
-                                });
-                              },
-                            ),
+                            _buildFilterChip('Search: $_searchQuery', () {
+                              setState(() {
+                                _searchQuery = '';
+                                _searchController.clear();
+                              });
+                            }),
                           if (_selectedDateRange != _initialDateRange)
                             _buildFilterChip(
                               'Date: ${DateFormat('MMM d').format(_selectedDateRange!.start)} - ${DateFormat('MMM d').format(_selectedDateRange!.end)}',
@@ -348,7 +330,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 ],
               ),
             ),
-          
+
           // Category Chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -358,32 +340,37 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 _buildCategoryChip(null, 'All'),
                 ...ExpenseCategory.values.map((category) {
                   return _buildCategoryChip(
-                    category, 
+                    category,
                     category.toString().split('.').last.toUpperCase(),
                   );
                 }),
               ],
             ),
           ),
-          
+
           // Expenses List
           Expanded(
-            child: expenseService.isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF008080)))
-                : filteredExpenses.isEmpty
+            child:
+                expenseService.isLoading
+                    ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF008080),
+                      ),
+                    )
+                    : filteredExpenses.isEmpty
                     ? _buildEmptyState()
                     : RefreshIndicator(
-                        onRefresh: _refreshExpenses,
-                        color: const Color(0xFF008080),
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: filteredExpenses.length,
-                          itemBuilder: (context, index) {
-                            final expense = filteredExpenses[index];
-                            return _buildExpenseCard(expense);
-                          },
-                        ),
+                      onRefresh: _refreshExpenses,
+                      color: const Color(0xFF008080),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: filteredExpenses.length,
+                        itemBuilder: (context, index) {
+                          final expense = filteredExpenses[index];
+                          return _buildExpenseCard(expense);
+                        },
                       ),
+                    ),
           ),
         ],
       ),
@@ -429,7 +416,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Date Range
                     const Text(
                       'Date Range',
@@ -459,7 +446,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             );
                           },
                         );
-                        
+
                         if (picked != null) {
                           setState(() {
                             _selectedDateRange = picked;
@@ -480,13 +467,16 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                               '${DateFormat('MMM d, y').format(_selectedDateRange!.start)} - ${DateFormat('MMM d, y').format(_selectedDateRange!.end)}',
                               style: const TextStyle(fontSize: 16),
                             ),
-                            const Icon(Icons.calendar_today, color: Color(0xFF008080)),
+                            const Icon(
+                              Icons.calendar_today,
+                              color: Color(0xFF008080),
+                            ),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Categories
                     const Text(
                       'Categories',
@@ -511,7 +501,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       ],
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Apply and Reset Buttons
                     Row(
                       children: [
@@ -563,10 +553,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     );
   }
 
-  Widget _buildCategoryFilterChip(ExpenseCategory? category, String label, StateSetter setState) {
-    final isSelected = category == _selectedCategory || 
-                      (category == null && _selectedCategory == null);
-    
+  Widget _buildCategoryFilterChip(
+    ExpenseCategory? category,
+    String label,
+    StateSetter setState,
+  ) {
+    final isSelected =
+        category == _selectedCategory ||
+        (category == null && _selectedCategory == null);
+
     return FilterChip(
       label: Text(label),
       selected: isSelected,
@@ -587,9 +582,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   }
 
   Widget _buildCategoryChip(ExpenseCategory? category, String label) {
-    final isSelected = category == _selectedCategory || 
-                      (category == null && _selectedCategory == null);
-    
+    final isSelected =
+        category == _selectedCategory ||
+        (category == null && _selectedCategory == null);
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ChoiceChip(
@@ -614,10 +610,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Chip(
-        label: Text(
-          label,
-          style: const TextStyle(fontSize: 12),
-        ),
+        label: Text(label, style: const TextStyle(fontSize: 12)),
         deleteIcon: const Icon(Icons.close, size: 16),
         onDeleted: onRemove,
         backgroundColor: const Color(0xFF008080).withOpacity(0.1),
@@ -632,11 +625,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.receipt_long,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.receipt_long, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'No expenses found',
@@ -648,21 +637,24 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            _searchQuery.isNotEmpty || _selectedCategory != null || _selectedDateRange != _initialDateRange
+            _searchQuery.isNotEmpty ||
+                    _selectedCategory != null ||
+                    _selectedDateRange != _initialDateRange
                 ? 'Try changing your filters'
                 : 'Add your first expense',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
           const SizedBox(height: 24),
-          if (_searchQuery.isEmpty && _selectedCategory == null && _selectedDateRange == _initialDateRange)
+          if (_searchQuery.isEmpty &&
+              _selectedCategory == null &&
+              _selectedDateRange == _initialDateRange)
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const AddExpenseScreen(),
+                  ),
                 );
               },
               icon: const Icon(Icons.add),
@@ -670,7 +662,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF008080),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -685,9 +680,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -711,7 +704,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: _getCategoryColor(expense.category).withOpacity(0.1),
+                      color: _getCategoryColor(
+                        expense.category,
+                      ).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -721,7 +716,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  
+
                   // Title and Description
                   Expanded(
                     child: Column(
@@ -738,8 +733,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          expense.description.isEmpty 
-                              ? expense.categoryDisplayName 
+                          expense.description.isEmpty
+                              ? expense.categoryDisplayName
                               : expense.description,
                           style: TextStyle(
                             fontSize: 14,
@@ -751,7 +746,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       ],
                     ),
                   ),
-                  
+
                   // Amount
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -767,41 +762,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       const SizedBox(height: 4),
                       Text(
                         DateFormat('MMM d, y').format(expense.createdAt),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
                   ),
                 ],
               ),
-              
-              // Tags
-              if (expense.tags.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: expense.tags.map((tag) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF008080).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          tag,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF008080),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
             ],
           ),
         ),

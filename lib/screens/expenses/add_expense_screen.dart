@@ -19,9 +19,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
-  
+
   ExpenseCategory _selectedCategory = ExpenseCategory.food;
-  final List<String> _tags = [];
   final _tagController = TextEditingController();
 
   @override
@@ -40,22 +39,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.dispose();
   }
 
-  void _addTag() {
-    final tag = _tagController.text.trim();
-    if (tag.isNotEmpty && !_tags.contains(tag)) {
-      setState(() {
-        _tags.add(tag);
-        _tagController.clear();
-      });
-    }
-  }
-
-  void _removeTag(String tag) {
-    setState(() {
-      _tags.remove(tag);
-    });
-  }
-
   Future<void> _saveExpense() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -67,15 +50,16 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
     // Get amount from controller
     final amount = double.parse(_amountController.text);
-    
+
     // Check if this expense will exceed budget
-    final currentCategorySpending = expenseService.getTotalExpenseAmountByCategory(_selectedCategory);
+    final currentCategorySpending = expenseService
+        .getTotalExpenseAmountByCategory(_selectedCategory);
     final budgetCheck = budgetService.checkBudgetExceeded(
-      _selectedCategory, 
-      amount, 
-      currentCategorySpending
+      _selectedCategory,
+      amount,
+      currentCategorySpending,
     );
-    
+
     // Create the expense
     final expense = ExpenseModel(
       id: const Uuid().v4(),
@@ -85,43 +69,45 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       amount: amount,
       category: _selectedCategory,
       createdAt: DateTime.now(),
-      tags: _tags,
     );
 
     try {
       // Save the expense
       await expenseService.addExpense(expense);
-      
+
       if (mounted) {
         // Show budget alert if needed
         if (budgetCheck != null) {
           // Show different alerts for exceeded vs approaching
-          if (budgetCheck.containsKey('isApproaching') && budgetCheck['isApproaching']) {
+          if (budgetCheck.containsKey('isApproaching') &&
+              budgetCheck['isApproaching']) {
             // Approaching budget limit
             showDialog(
               context: context,
-              builder: (context) => BudgetAlertDialog(
-                category: budgetCheck['category'],
-                budgetAmount: budgetCheck['budgetAmount'],
-                currentSpending: budgetCheck['currentSpending'],
-                newSpending: budgetCheck['newSpending'],
-                exceededBy: 0, // Not exceeded yet
-                percentage: budgetCheck['percentage'],
-                isApproaching: true,
-              ),
+              builder:
+                  (context) => BudgetAlertDialog(
+                    category: budgetCheck['category'],
+                    budgetAmount: budgetCheck['budgetAmount'],
+                    currentSpending: budgetCheck['currentSpending'],
+                    newSpending: budgetCheck['newSpending'],
+                    exceededBy: 0, // Not exceeded yet
+                    percentage: budgetCheck['percentage'],
+                    isApproaching: true,
+                  ),
             );
           } else {
             // Exceeded budget
             showDialog(
               context: context,
-              builder: (context) => BudgetAlertDialog(
-                category: budgetCheck['category'],
-                budgetAmount: budgetCheck['budgetAmount'],
-                currentSpending: budgetCheck['currentSpending'],
-                newSpending: budgetCheck['newSpending'],
-                exceededBy: budgetCheck['exceededBy'],
-                percentage: budgetCheck['percentage'],
-              ),
+              builder:
+                  (context) => BudgetAlertDialog(
+                    category: budgetCheck['category'],
+                    budgetAmount: budgetCheck['budgetAmount'],
+                    currentSpending: budgetCheck['currentSpending'],
+                    newSpending: budgetCheck['newSpending'],
+                    exceededBy: budgetCheck['exceededBy'],
+                    percentage: budgetCheck['percentage'],
+                  ),
             );
           }
         } else {
@@ -209,12 +195,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.category),
                 ),
-                items: ExpenseCategory.values.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category.toString().split('.').last.toUpperCase()),
-                  );
-                }).toList(),
+                items:
+                    ExpenseCategory.values.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(
+                          category.toString().split('.').last.toUpperCase(),
+                        ),
+                      );
+                    }).toList(),
                 onChanged: (value) {
                   setState(() {
                     _selectedCategory = value!;
@@ -235,58 +224,20 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Tags
-              const Text(
-                'Tags',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _tagController,
-                      decoration: const InputDecoration(
-                        hintText: 'Add a tag',
-                        border: OutlineInputBorder(),
-                      ),
-                      onSubmitted: (_) => _addTag(),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: _addTag,
-                    icon: const Icon(Icons.add),
-                    style: IconButton.styleFrom(
-                      backgroundColor: const Color(0xFF008080),
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: _tags.map((tag) {
-                  return Chip(
-                    label: Text(tag),
-                    onDeleted: () => _removeTag(tag),
-                    backgroundColor: const Color(0xFF008080).withOpacity(0.1),
-                  );
-                }).toList(),
-              ),
-              
               // Budget Info
               Consumer2<BudgetService, ExpenseService>(
                 builder: (context, budgetService, expenseService, child) {
-                  final budget = budgetService.getBu  budgetService, expenseService, child) {
-                  final budget = budgetService.getBudgetForCategory(_selectedCategory);
-                  final currentSpending = expenseService.getTotalExpenseAmountByCategory(_selectedCategory);
-                  
+                  final budget = budgetService.getBudgetForCategory(
+                    _selectedCategory,
+                  );
+                  final currentSpending = expenseService
+                      .getTotalExpenseAmountByCategory(_selectedCategory);
+
                   if (budget != null && budget.amount > 0) {
                     // Calculate usage percentage
-                    final usagePercentage = (currentSpending / budget.amount) * 100;
-                    
+                    final usagePercentage =
+                        (currentSpending / budget.amount) * 100;
+
                     return Container(
                       margin: const EdgeInsets.only(top: 16, bottom: 16),
                       padding: const EdgeInsets.all(16),
@@ -309,27 +260,32 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: usagePercentage > 100 
-                                      ? Colors.red.withOpacity(0.1)
-                                      : usagePercentage >= 80
+                                  color:
+                                      usagePercentage > 100
+                                          ? Colors.red.withOpacity(0.1)
+                                          : usagePercentage >= 80
                                           ? Colors.orange.withOpacity(0.1)
                                           : Colors.green.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  usagePercentage > 100 
+                                  usagePercentage > 100
                                       ? 'Exceeded'
                                       : usagePercentage >= 80
-                                          ? 'Near Limit'
-                                          : 'On Track',
+                                      ? 'Near Limit'
+                                      : 'On Track',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: usagePercentage > 100 
-                                        ? Colors.red
-                                        : usagePercentage >= 80
+                                    color:
+                                        usagePercentage > 100
+                                            ? Colors.red
+                                            : usagePercentage >= 80
                                             ? Colors.orange
                                             : Colors.green,
                                   ),
@@ -346,7 +302,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                 style: const TextStyle(fontSize: 14),
                               ),
                               Text(
-                                'Spent: ₹${currentSpending.toStringAsFixed(2)}',
+                                'Spent: ₹${currentSpending.toInt()}',
                                 style: const TextStyle(fontSize: 14),
                               ),
                             ],
@@ -355,11 +311,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: LinearProgressIndicator(
-                              value: usagePercentage > 100 ? 1.0 : usagePercentage / 100,
+                              value:
+                                  usagePercentage > 100
+                                      ? 1.0
+                                      : usagePercentage / 100,
                               backgroundColor: Colors.grey[200],
-                              color: usagePercentage > 100 
-                                  ? Colors.red
-                                  : usagePercentage >= 80
+                              color:
+                                  usagePercentage > 100
+                                      ? Colors.red
+                                      : usagePercentage >= 80
                                       ? Colors.orange
                                       : const Color(0xFF008080),
                               minHeight: 8,
@@ -367,7 +327,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Adding this expense might ${usagePercentage > 100 ? 'further exceed' : usagePercentage >= 80 ? 'exceed' : 'affect'} your budget.',
+                            'Adding this expense might ${usagePercentage > 100
+                                ? 'further exceed'
+                                : usagePercentage >= 80
+                                ? 'exceed'
+                                : 'affect'} your budget.',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[600],
@@ -378,7 +342,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       ),
                     );
                   }
-                  
+
                   return const SizedBox.shrink();
                 },
               ),

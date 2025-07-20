@@ -23,7 +23,7 @@ class BudgetProgressCard extends StatelessWidget {
       usagePercentage = (currentSpending / budgetAmount) * 100;
       if (usagePercentage > 100) usagePercentage = 100;
     }
-    
+
     // Determine progress color based on usage
     Color progressColor;
     if (budgetAmount > 0 && currentSpending > budgetAmount) {
@@ -33,7 +33,7 @@ class BudgetProgressCard extends StatelessWidget {
     } else {
       progressColor = const Color(0xFF008080);
     }
-    
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
@@ -70,7 +70,10 @@ class BudgetProgressCard extends StatelessWidget {
                   const Spacer(),
                   if (budgetAmount > 0 && currentSpending > budgetAmount)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -84,9 +87,14 @@ class BudgetProgressCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  if (budgetAmount > 0 && currentSpending >= budgetAmount * 0.8 && currentSpending <= budgetAmount)
+                  if (budgetAmount > 0 &&
+                      currentSpending >= budgetAmount * 0.8 &&
+                      currentSpending <= budgetAmount)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -102,9 +110,9 @@ class BudgetProgressCard extends StatelessWidget {
                     ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Budget Info
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,14 +122,11 @@ class BudgetProgressCard extends StatelessWidget {
                     children: [
                       const Text(
                         'Budget',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '₹${budgetAmount.toStringAsFixed(2)}',
+                        '₹${budgetAmount.toInt()}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -134,14 +139,11 @@ class BudgetProgressCard extends StatelessWidget {
                     children: [
                       const Text(
                         'Spent',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '₹${currentSpending.toStringAsFixed(2)}',
+                        '₹${currentSpending.toInt()}',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -152,9 +154,9 @@ class BudgetProgressCard extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Progress Bar
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
@@ -165,15 +167,15 @@ class BudgetProgressCard extends StatelessWidget {
                   minHeight: 8,
                 ),
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               // Usage Percentage
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${usagePercentage.toStringAsFixed(1)}% used',
+                    '${usagePercentage.toInt()}% used',
                     style: TextStyle(
                       fontSize: 12,
                       color: progressColor,
@@ -183,11 +185,14 @@ class BudgetProgressCard extends StatelessWidget {
                   if (budgetAmount > 0)
                     Text(
                       budgetAmount > currentSpending
-                          ? 'Remaining: ₹${(budgetAmount - currentSpending).toStringAsFixed(2)}'
-                          : 'Exceeded: ₹${(currentSpending - budgetAmount).toStringAsFixed(2)}',
+                          ? 'Remaining: ₹${(budgetAmount - currentSpending).toInt()}'
+                          : 'Exceeded: ₹${(currentSpending - budgetAmount).toInt()}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: budgetAmount > currentSpending ? Colors.green : Colors.red,
+                        color:
+                            budgetAmount > currentSpending
+                                ? Colors.green
+                                : Colors.red,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -199,7 +204,7 @@ class BudgetProgressCard extends StatelessWidget {
       ),
     );
   }
-  
+
   IconData _getCategoryIcon(ExpenseCategory category) {
     switch (category) {
       case ExpenseCategory.food:
@@ -220,7 +225,7 @@ class BudgetProgressCard extends StatelessWidget {
         return Icons.category;
     }
   }
-  
+
   Color _getCategoryColor(ExpenseCategory category) {
     switch (category) {
       case ExpenseCategory.food:

@@ -17,7 +17,7 @@ class LoginScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              
+
               // App Logo and Title
               Column(
                 children: [
@@ -28,10 +28,9 @@ class LoginScreen extends StatelessWidget {
                       color: const Color(0xFF008080),
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    child: const Icon(
-                      Icons.account_balance_wallet,
-                      size: 60,
-                      color: Colors.white,
+                    child: Image.asset(
+                      'assets/images/handshake-color.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -46,17 +45,14 @@ class LoginScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   const Text(
                     'Track expenses, split bills, settle up',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
                     textAlign: TextAlign.center,
                   ),
                 ],
               ),
-              
+
               const Spacer(),
-              
+
               // Features List
               Container(
                 padding: const EdgeInsets.all(20),
@@ -86,43 +82,51 @@ class LoginScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Google Sign In Button
               Consumer<AuthService>(
                 builder: (context, authService, child) {
                   return ElevatedButton.icon(
-                    onPressed: authService.isLoading ? null : () async {
-                      try {
-                        await authService.signInWithGoogle();
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Sign in failed: ${e.toString()}'),
-                              backgroundColor: const Color(0xFFFF7F50),
+                    onPressed:
+                        authService.isLoading
+                            ? null
+                            : () async {
+                              try {
+                                await authService.signInWithGoogle();
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Sign in failed: ${e.toString()}',
+                                      ),
+                                      backgroundColor: const Color(0xFFFF7F50),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                    icon:
+                        authService.isLoading
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : Image.asset(
+                              'assets/images/google_logo.png',
+                              width: 20,
+                              height: 20,
                             ),
-                          );
-                        }
-                      }
-                    },
-                    icon: authService.isLoading 
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Image.asset(
-                            'assets/images/google_logo.png',
-                            width: 20,
-                            height: 20,
-                          ),
                     label: Text(
-                      authService.isLoading ? 'Signing in...' : 'Continue with Google',
+                      authService.isLoading
+                          ? 'Signing in...'
+                          : 'Continue with Google',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -139,20 +143,8 @@ class LoginScreen extends StatelessWidget {
                   );
                 },
               ),
-              
+
               const SizedBox(height: 16),
-              
-              // Terms and Privacy
-              Text(
-                'By continuing, you agree to our Terms of Service and Privacy Policy',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              
-              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -170,11 +162,7 @@ class LoginScreen extends StatelessWidget {
             color: const Color(0xFF008080).withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: const Color(0xFF008080),
-            size: 24,
-          ),
+          child: Icon(icon, color: const Color(0xFF008080), size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -192,10 +180,7 @@ class LoginScreen extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 description,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
             ],
           ),
