@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import '../../models/expense_model.dart';
 import '../../services/budget_service.dart';
 import '../../services/expense_service.dart';
-import '../../services/auth_service.dart';
 
 class BudgetScreen extends StatefulWidget {
   const BudgetScreen({super.key});
@@ -15,14 +14,14 @@ class BudgetScreen extends StatefulWidget {
 
 class _BudgetScreenState extends State<BudgetScreen> {
   final Map<ExpenseCategory, TextEditingController> _controllers = {};
-  
+
   @override
   void initState() {
     super.initState();
     _initControllers();
     _loadBudgets();
   }
-  
+
   @override
   void dispose() {
     // Dispose all controllers
@@ -31,16 +30,16 @@ class _BudgetScreenState extends State<BudgetScreen> {
     }
     super.dispose();
   }
-  
+
   void _initControllers() {
     for (final category in ExpenseCategory.values) {
       _controllers[category] = TextEditingController();
     }
   }
-  
+
   Future<void> _loadBudgets() async {
     await context.read<BudgetService>().loadUserBudgets();
-    
+
     // Set controller values from loaded budgets
     final budgetService = context.read<BudgetService>();
     for (final category in ExpenseCategory.values) {
@@ -52,18 +51,20 @@ class _BudgetScreenState extends State<BudgetScreen> {
       }
     }
   }
-  
+
   Future<void> _saveBudget(ExpenseCategory category, String value) async {
     if (value.isEmpty) return;
-    
+
     final amount = double.tryParse(value);
     if (amount == null || amount <= 0) return;
-    
+
     try {
       await context.read<BudgetService>().setBudget(category, amount);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Budget for ${category.toString().split('.').last.toUpperCase()} updated'),
+          content: Text(
+            'Budget for ${category.toString().split('.').last.toUpperCase()} updated',
+          ),
           backgroundColor: const Color(0xFF008080),
         ),
       );
@@ -76,7 +77,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
       );
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,13 +89,15 @@ class _BudgetScreenState extends State<BudgetScreen> {
       body: Consumer2<BudgetService, ExpenseService>(
         builder: (context, budgetService, expenseService, child) {
           if (budgetService.isLoading) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFF008080)));
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF008080)),
+            );
           }
-          
+
           // Get current month for display
           final now = DateTime.now();
           final currentMonth = DateFormat('MMMM yyyy').format(now);
-          
+
           return RefreshIndicator(
             onRefresh: _loadBudgets,
             color: const Color(0xFF008080),
@@ -136,9 +139,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Budget Instructions
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -178,9 +181,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Category Budgets
                   const Text(
                     'Category Budgets',
@@ -191,29 +194,31 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   ...ExpenseCategory.values.map((category) {
-                    final currentSpending = expenseService.getTotalExpenseAmountByCategory(category);
+                    final currentSpending = expenseService
+                        .getTotalExpenseAmountByCategory(category);
                     final budget = budgetService.getBudgetForCategory(category);
                     final budgetAmount = budget?.amount ?? 0;
-                    
+
                     // Calculate usage percentage
                     double usagePercentage = 0;
                     if (budgetAmount > 0) {
                       usagePercentage = (currentSpending / budgetAmount) * 100;
                       if (usagePercentage > 100) usagePercentage = 100;
                     }
-                    
+
                     // Determine progress color based on usage
                     Color progressColor;
                     if (budgetAmount > 0 && currentSpending > budgetAmount) {
                       progressColor = Colors.red;
-                    } else if (budgetAmount > 0 && currentSpending >= budgetAmount * 0.8) {
+                    } else if (budgetAmount > 0 &&
+                        currentSpending >= budgetAmount * 0.8) {
                       progressColor = Colors.orange;
                     } else {
                       progressColor = const Color(0xFF008080);
                     }
-                    
+
                     return _buildBudgetCard(
                       category,
                       _controllers[category]!,
@@ -223,9 +228,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       progressColor,
                     );
                   }).toList(),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Save All Button
                   SizedBox(
                     width: double.infinity,
@@ -238,7 +243,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                             await _saveBudget(entry.key, value);
                           }
                         }
-                        
+
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('All budgets updated successfully'),
@@ -256,7 +261,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       ),
                       child: const Text(
                         'Save All Budgets',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -268,7 +276,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
       ),
     );
   }
-  
+
   Widget _buildBudgetCard(
     ExpenseCategory category,
     TextEditingController controller,
@@ -311,7 +319,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 const Spacer(),
                 if (budgetAmount > 0 && currentSpending > budgetAmount)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.red.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
@@ -325,9 +336,14 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       ),
                     ),
                   ),
-                if (budgetAmount > 0 && currentSpending >= budgetAmount * 0.8 && currentSpending <= budgetAmount)
+                if (budgetAmount > 0 &&
+                    currentSpending >= budgetAmount * 0.8 &&
+                    currentSpending <= budgetAmount)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.orange.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
@@ -343,9 +359,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                   ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Budget Input
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,10 +372,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     children: [
                       const Text(
                         'Set Monthly Budget',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
@@ -370,10 +383,14 @@ class _BudgetScreenState extends State<BudgetScreen> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
                         ),
                         keyboardType: TextInputType.number,
-                        onFieldSubmitted: (value) => _saveBudget(category, value),
+                        onFieldSubmitted:
+                            (value) => _saveBudget(category, value),
                       ),
                     ],
                   ),
@@ -385,20 +402,20 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     children: [
                       const Text(
                         'Current Spending',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 14,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey.shade300),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          '₹ ${currentSpending.toStringAsFixed(2)}',
+                          '₹ ${currentSpending.toInt()}',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -410,16 +427,16 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Budget Progress
             if (budgetAmount > 0) ...[
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Used: ${usagePercentage.toStringAsFixed(1)}%',
+                    'Used: ${usagePercentage.toInt()}%',
                     style: TextStyle(
                       fontSize: 14,
                       color: progressColor,
@@ -428,11 +445,14 @@ class _BudgetScreenState extends State<BudgetScreen> {
                   ),
                   Text(
                     budgetAmount > currentSpending
-                        ? 'Remaining: ₹${(budgetAmount - currentSpending).toStringAsFixed(2)}'
-                        : 'Exceeded by: ₹${(currentSpending - budgetAmount).toStringAsFixed(2)}',
+                        ? 'Remaining: ₹${(budgetAmount - currentSpending).toInt()}'
+                        : 'Exceeded by: ₹${(currentSpending - budgetAmount).toInt()}',
                     style: TextStyle(
                       fontSize: 14,
-                      color: budgetAmount > currentSpending ? Colors.green : Colors.red,
+                      color:
+                          budgetAmount > currentSpending
+                              ? Colors.green
+                              : Colors.red,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -454,7 +474,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
       ),
     );
   }
-  
+
   IconData _getCategoryIcon(ExpenseCategory category) {
     switch (category) {
       case ExpenseCategory.food:
@@ -475,7 +495,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
         return Icons.category;
     }
   }
-  
+
   Color _getCategoryColor(ExpenseCategory category) {
     switch (category) {
       case ExpenseCategory.food:

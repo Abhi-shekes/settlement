@@ -5,11 +5,8 @@ import '../../services/expense_service.dart';
 
 class EditExpenseScreen extends StatefulWidget {
   final ExpenseModel expense;
-  
-  const EditExpenseScreen({
-    super.key,
-    required this.expense,
-  });
+
+  const EditExpenseScreen({super.key, required this.expense});
 
   @override
   State<EditExpenseScreen> createState() => _EditExpenseScreenState();
@@ -20,19 +17,21 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
   late TextEditingController _amountController;
-  
+
   late ExpenseCategory _selectedCategory;
-  late List<String> _tags;
   final _tagController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.expense.title);
-    _descriptionController = TextEditingController(text: widget.expense.description);
-    _amountController = TextEditingController(text: widget.expense.amount.toString());
+    _descriptionController = TextEditingController(
+      text: widget.expense.description,
+    );
+    _amountController = TextEditingController(
+      text: widget.expense.amount.toString(),
+    );
     _selectedCategory = widget.expense.category;
-    _tags = List.from(widget.expense.tags);
   }
 
   @override
@@ -42,22 +41,6 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
     _amountController.dispose();
     _tagController.dispose();
     super.dispose();
-  }
-
-  void _addTag() {
-    final tag = _tagController.text.trim();
-    if (tag.isNotEmpty && !_tags.contains(tag)) {
-      setState(() {
-        _tags.add(tag);
-        _tagController.clear();
-      });
-    }
-  }
-
-  void _removeTag(String tag) {
-    setState(() {
-      _tags.remove(tag);
-    });
   }
 
   Future<void> _updateExpense() async {
@@ -73,7 +56,6 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
       amount: double.parse(_amountController.text),
       category: _selectedCategory,
       createdAt: widget.expense.createdAt,
-      tags: _tags,
       groupId: widget.expense.groupId,
       isSettled: widget.expense.isSettled,
     );
@@ -163,12 +145,15 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.category),
                 ),
-                items: ExpenseCategory.values.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category.toString().split('.').last.toUpperCase()),
-                  );
-                }).toList(),
+                items:
+                    ExpenseCategory.values.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(
+                          category.toString().split('.').last.toUpperCase(),
+                        ),
+                      );
+                    }).toList(),
                 onChanged: (value) {
                   setState(() {
                     _selectedCategory = value!;
@@ -188,48 +173,6 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                 maxLines: 3,
               ),
               const SizedBox(height: 16),
-
-              // Tags
-              const Text(
-                'Tags',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _tagController,
-                      decoration: const InputDecoration(
-                        hintText: 'Add a tag',
-                        border: OutlineInputBorder(),
-                      ),
-                      onSubmitted: (_) => _addTag(),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: _addTag,
-                    icon: const Icon(Icons.add),
-                    style: IconButton.styleFrom(
-                      backgroundColor: const Color(0xFF008080),
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: _tags.map((tag) {
-                  return Chip(
-                    label: Text(tag),
-                    onDeleted: () => _removeTag(tag),
-                    backgroundColor: const Color(0xFF008080).withOpacity(0.1),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 32),
 
               // Update Button
               SizedBox(

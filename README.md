@@ -1,4 +1,4 @@
-# settlement_app
+# settlement
 
 A new Flutter project.
 

@@ -10,7 +10,8 @@ class FriendsScreen extends StatefulWidget {
   State<FriendsScreen> createState() => _FriendsScreenState();
 }
 
-class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProviderStateMixin {
+class _FriendsScreenState extends State<FriendsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<UserModel> _friends = [];
   bool _isLoading = true;
@@ -35,7 +36,7 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final friends = await context.read<AuthService>().getFriends();
       setState(() {
@@ -59,29 +60,20 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
 
   List<UserModel> _getFilteredFriends() {
     if (_searchQuery.isEmpty) return _friends;
-    
-    return _friends.where((friend) {
-      return friend.displayName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             friend.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             friend.friendCode.toLowerCase().contains(_searchQuery.toLowerCase());
-    }).toList();
-  }
 
-  void _showAddFriendDialog() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => const AddFriendBottomSheet(),
-    ).then((_) => _loadFriends());
+    return _friends.where((friend) {
+      return friend.displayName.toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ) ||
+          friend.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          friend.friendCode.toLowerCase().contains(_searchQuery.toLowerCase());
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final filteredFriends = _getFilteredFriends();
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Friends'),
@@ -92,10 +84,7 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(text: 'Friends'),
-            Tab(text: 'Add Friend'),
-          ],
+          tabs: const [Tab(text: 'Friends'), Tab(text: 'Add Friend')],
         ),
       ),
       body: TabBarView(
@@ -112,17 +101,18 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
                   decoration: InputDecoration(
                     hintText: 'Search friends...',
                     prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              setState(() {
-                                _searchQuery = '';
-                                _searchController.clear();
-                              });
-                            },
-                          )
-                        : null,
+                    suffixIcon:
+                        _searchQuery.isNotEmpty
+                            ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                setState(() {
+                                  _searchQuery = '';
+                                  _searchController.clear();
+                                });
+                              },
+                            )
+                            : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: Colors.grey[300]!),
@@ -145,43 +135,49 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
                   },
                 ),
               ),
-              
+
               // Friends List
               Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator(color: Color(0xFF008080)))
-                    : filteredFriends.isEmpty
+                child:
+                    _isLoading
+                        ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF008080),
+                          ),
+                        )
+                        : filteredFriends.isEmpty
                         ? _buildEmptyState()
                         : RefreshIndicator(
-                            onRefresh: _loadFriends,
-                            color: const Color(0xFF008080),
-                            child: ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              itemCount: filteredFriends.length,
-                              itemBuilder: (context, index) {
-                                final friend = filteredFriends[index];
-                                return _buildFriendCard(friend);
-                              },
-                            ),
+                          onRefresh: _loadFriends,
+                          color: const Color(0xFF008080),
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: filteredFriends.length,
+                            itemBuilder: (context, index) {
+                              final friend = filteredFriends[index];
+                              return _buildFriendCard(friend);
+                            },
                           ),
+                        ),
               ),
             ],
           ),
-          
+
           // Add Friend Tab
           const AddFriendTab(),
         ],
       ),
-      floatingActionButton: _tabController.index == 0
-          ? FloatingActionButton(
-              onPressed: () {
-                _tabController.animateTo(1);
-              },
-              backgroundColor: const Color(0xFF008080),
-              foregroundColor: Colors.white,
-              child: const Icon(Icons.person_add),
-            )
-          : null,
+      //   floatingActionButton:
+      //       _tabController.index == 0
+      //           ? FloatingActionButton(
+      //             onPressed: () {
+      //               _tabController.animateTo(1);
+      //             },
+      //             backgroundColor: const Color(0xFF008080),
+      //             foregroundColor: Colors.white,
+      //             child: const Icon(Icons.person_add),
+      //           )
+      //           : null,
     );
   }
 
@@ -190,11 +186,7 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.people,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.people, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             _searchQuery.isNotEmpty ? 'No friends found' : 'No friends yet',
@@ -206,13 +198,10 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
           ),
           const SizedBox(height: 8),
           Text(
-            _searchQuery.isNotEmpty 
+            _searchQuery.isNotEmpty
                 ? 'Try changing your search query'
                 : 'Add friends to start splitting expenses',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -224,7 +213,10 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF008080),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -238,9 +230,7 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
   Widget _buildFriendCard(UserModel friend) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -248,21 +238,23 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
             CircleAvatar(
               radius: 28,
               backgroundColor: const Color(0xFF008080).withOpacity(0.1),
-              backgroundImage: friend.photoURL != null 
-                  ? NetworkImage(friend.photoURL!) 
-                  : null,
-              child: friend.photoURL == null
-                  ? Text(
-                      friend.displayName.isNotEmpty
-                          ? friend.displayName[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        color: Color(0xFF008080),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                    )
-                  : null,
+              backgroundImage:
+                  friend.photoURL != null
+                      ? NetworkImage(friend.photoURL!)
+                      : null,
+              child:
+                  friend.photoURL == null
+                      ? Text(
+                        friend.displayName.isNotEmpty
+                            ? friend.displayName[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: Color(0xFF008080),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      )
+                      : null,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -279,40 +271,26 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
                   const SizedBox(height: 4),
                   Text(
                     friend.email,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Friend Code: ${friend.friendCode}',
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
                   ),
                 ],
               ),
             ),
             PopupMenuButton(
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'split',
-                  child: Text('Split Bill'),
-                ),
-                const PopupMenuItem(
-                  value: 'remove',
-                  child: Text('Remove Friend'),
-                ),
-              ],
+              itemBuilder:
+                  (context) => [
+                    const PopupMenuItem(
+                      value: 'remove',
+                      child: Text('Remove Friend'),
+                    ),
+                  ],
               onSelected: (value) {
                 switch (value) {
-                  case 'split':
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Split bill feature coming soon!')),
-                    );
-                    break;
                   case 'remove':
                     _showRemoveFriendDialog(friend);
                     break;
@@ -328,26 +306,31 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
   void _showRemoveFriendDialog(UserModel friend) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove Friend'),
-        content: Text('Are you sure you want to remove ${friend.displayName} from your friends list?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Remove Friend'),
+            content: Text(
+              'Are you sure you want to remove ${friend.displayName} from your friends list?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Remove friend feature coming soon!'),
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Remove'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Remove friend feature coming soon!')),
-              );
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -390,7 +373,7 @@ class _AddFriendTabState extends State<AddFriendTab> {
     try {
       final authService = context.read<AuthService>();
       final user = await authService.getUserByFriendCode(friendCode);
-      
+
       if (user == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -447,7 +430,7 @@ class _AddFriendTabState extends State<AddFriendTab> {
     try {
       final authService = context.read<AuthService>();
       final user = await authService.getUserByEmail(email);
-      
+
       if (user == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -504,10 +487,7 @@ class _AddFriendTabState extends State<AddFriendTab> {
           const SizedBox(height: 8),
           Text(
             'Enter your friend\'s unique friend code to add them',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
           const SizedBox(height: 16),
           Row(
@@ -529,27 +509,31 @@ class _AddFriendTabState extends State<AddFriendTab> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF008080),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Add'),
+                child:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                        : const Text('Add'),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Divider
           Row(
             children: [
@@ -567,9 +551,9 @@ class _AddFriendTabState extends State<AddFriendTab> {
               Expanded(child: Divider(color: Colors.grey[300])),
             ],
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Add by Email
           const Text(
             'Add by Email',
@@ -582,10 +566,7 @@ class _AddFriendTabState extends State<AddFriendTab> {
           const SizedBox(height: 8),
           Text(
             'Enter your friend\'s email address to send them a friend request',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
           const SizedBox(height: 16),
           Row(
@@ -607,27 +588,31 @@ class _AddFriendTabState extends State<AddFriendTab> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF008080),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Add'),
+                child:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                        : const Text('Add'),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Tips
           Container(
             padding: const EdgeInsets.all(16),
@@ -640,11 +625,7 @@ class _AddFriendTabState extends State<AddFriendTab> {
               children: [
                 const Row(
                   children: [
-                    Icon(
-                      Icons.lightbulb,
-                      color: Color(0xFF008080),
-                      size: 20,
-                    ),
+                    Icon(Icons.lightbulb, color: Color(0xFF008080), size: 20),
                     SizedBox(width: 8),
                     Text(
                       'Tips',
@@ -660,10 +641,7 @@ class _AddFriendTabState extends State<AddFriendTab> {
                   '• Share your friend code from the profile screen\n'
                   '• Friend codes are unique 8-character identifiers\n'
                   '• Both users must add each other to become friends',
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.grey[700], fontSize: 14),
                 ),
               ],
             ),
@@ -679,9 +657,6 @@ class AddFriendBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(16),
-      child: AddFriendTab(),
-    );
+    return const Padding(padding: EdgeInsets.all(16), child: AddFriendTab());
   }
 }

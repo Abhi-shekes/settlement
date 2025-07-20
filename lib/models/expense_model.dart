@@ -1,12 +1,26 @@
+// enum ExpenseCategory {
+//   food,
+//   travel,
+//   shopping,
+//   entertainment,
+//   utilities,
+//   healthcare,
+//   education,
+//   other,
+// }
+
 enum ExpenseCategory {
-  food,
-  travel,
-  shopping,
-  entertainment,
-  utilities,
-  healthcare,
-  education,
-  other,
+  food('Food'),
+  travel('Travel'),
+  shopping('Shopping'),
+  entertainment('Entertainment'),
+  utilities('Utilities'),
+  healthcare('Healthcare'),
+  education('Education'),
+  other('Other');
+
+  const ExpenseCategory(this.categoryDisplayName);
+  final String categoryDisplayName;
 }
 
 class ExpenseModel {
@@ -17,7 +31,6 @@ class ExpenseModel {
   final double amount; // Amount in INR
   final ExpenseCategory category;
   final DateTime createdAt;
-  final List<String> tags;
   final String? groupId;
   final bool isSettled;
 
@@ -29,7 +42,6 @@ class ExpenseModel {
     required this.amount,
     required this.category,
     required this.createdAt,
-    this.tags = const [],
     this.groupId,
     this.isSettled = false,
   });
@@ -46,7 +58,6 @@ class ExpenseModel {
         orElse: () => ExpenseCategory.other,
       ),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
-      tags: List<String>.from(map['tags'] ?? []),
       groupId: map['groupId'],
       isSettled: map['isSettled'] ?? false,
     );
@@ -61,7 +72,6 @@ class ExpenseModel {
       'amount': amount,
       'category': category.toString(),
       'createdAt': createdAt.millisecondsSinceEpoch,
-      'tags': tags,
       'groupId': groupId,
       'isSettled': isSettled,
     };
@@ -88,5 +98,5 @@ class ExpenseModel {
     }
   }
 
-  String get formattedAmount => '₹${amount.toStringAsFixed(2)}';
+  String get formattedAmount => '₹${amount.toInt()}';
 }

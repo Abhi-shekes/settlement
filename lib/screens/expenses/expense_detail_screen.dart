@@ -7,11 +7,8 @@ import 'edit_expense_screen.dart';
 
 class ExpenseDetailScreen extends StatelessWidget {
   final ExpenseModel expense;
-  
-  const ExpenseDetailScreen({
-    super.key,
-    required this.expense,
-  });
+
+  const ExpenseDetailScreen({super.key, required this.expense});
 
   @override
   Widget build(BuildContext context) {
@@ -64,10 +61,7 @@ class ExpenseDetailScreen extends StatelessWidget {
                   children: [
                     const Text(
                       'Amount',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -80,7 +74,10 @@ class ExpenseDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
@@ -97,9 +94,9 @@ class ExpenseDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Expense Details
             const Text(
               'Expense Details',
@@ -112,52 +109,20 @@ class ExpenseDetailScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _buildDetailCard([
               _buildDetailRow('Title', expense.title),
-              _buildDetailRow('Date', DateFormat('EEEE, MMMM d, y').format(expense.createdAt)),
-              _buildDetailRow('Time', DateFormat('h:mm a').format(expense.createdAt)),
+              _buildDetailRow(
+                'Date',
+                DateFormat('EEEE, MMMM d, y').format(expense.createdAt),
+              ),
+              _buildDetailRow(
+                'Time',
+                DateFormat('h:mm a').format(expense.createdAt),
+              ),
               if (expense.description.isNotEmpty)
                 _buildDetailRow('Description', expense.description),
             ]),
-            
+
             const SizedBox(height: 24),
-            
-            // Tags
-            if (expense.tags.isNotEmpty) ...[
-              const Text(
-                'Tags',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF008080),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: expense.tags.map((tag) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF008080).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: const Color(0xFF008080).withOpacity(0.3),
-                      ),
-                    ),
-                    child: Text(
-                      tag,
-                      style: const TextStyle(
-                        color: Color(0xFF008080),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-            
-            const SizedBox(height: 32),
-            
+
             // Delete Button
             SizedBox(
               width: double.infinity,
@@ -190,9 +155,7 @@ class ExpenseDetailScreen extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: children,
-        ),
+        child: Column(children: children),
       ),
     );
   }
@@ -207,19 +170,13 @@ class ExpenseDetailScreen extends StatelessWidget {
             width: 100,
             child: Text(
               label,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -230,45 +187,50 @@ class ExpenseDetailScreen extends StatelessWidget {
   void _showDeleteConfirmation(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Expense'),
-        content: const Text('Are you sure you want to delete this expense? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Expense'),
+            content: const Text(
+              'Are you sure you want to delete this expense? This action cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context); // Close dialog
+
+                  try {
+                    await context.read<ExpenseService>().deleteExpense(
+                      expense.id,
+                    );
+                    if (context.mounted) {
+                      Navigator.pop(context); // Return to expenses list
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Expense deleted successfully'),
+                          backgroundColor: Color(0xFF008080),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error deleting expense: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context); // Close dialog
-              
-              try {
-                await context.read<ExpenseService>().deleteExpense(expense.id);
-                if (context.mounted) {
-                  Navigator.pop(context); // Return to expenses list
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Expense deleted successfully'),
-                      backgroundColor: Color(0xFF008080),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error deleting expense: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
   }
 }

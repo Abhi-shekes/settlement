@@ -1,3 +1,5 @@
+import 'package:settlement/models/expense_model.dart';
+
 class BudgetModel {
   final String id;
   final String userId;
@@ -64,14 +66,24 @@ class BudgetModel {
     );
   }
 
-  String get formattedAmount => '₹${amount.toStringAsFixed(2)}';
-  
+  String get formattedAmount => '₹${amount.toInt()}';
+
   String get monthYear => '${_getMonthName(month.month)} ${month.year}';
-  
+
   String _getMonthName(int month) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month - 1];
   }
