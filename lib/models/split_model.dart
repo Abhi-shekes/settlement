@@ -11,7 +11,6 @@ class SplitModel {
   final Map<String, double> splitAmounts; // User ID -> Amount owed
   final DateTime createdAt;
   final String? groupId;
-  final List<String> tags;
   final String notes;
   final bool isFullySettled;
   final List<SettlementModel> settlements;
@@ -27,7 +26,6 @@ class SplitModel {
     required this.splitAmounts,
     required this.createdAt,
     this.groupId,
-    this.tags = const [],
     this.notes = '',
     this.isFullySettled = false,
     this.settlements = const [],
@@ -52,12 +50,12 @@ class SplitModel {
       ),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
       groupId: map['groupId'],
-      tags: List<String>.from(map['tags'] ?? []),
       notes: map['notes'] ?? '',
       isFullySettled: map['isFullySettled'] ?? false,
-      settlements: (map['settlements'] as List<dynamic>? ?? [])
-          .map((e) => SettlementModel.fromMap(e))
-          .toList(),
+      settlements:
+          (map['settlements'] as List<dynamic>? ?? [])
+              .map((e) => SettlementModel.fromMap(e))
+              .toList(),
     );
   }
 
@@ -73,14 +71,13 @@ class SplitModel {
       'splitAmounts': splitAmounts,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'groupId': groupId,
-      'tags': tags,
       'notes': notes,
       'isFullySettled': isFullySettled,
       'settlements': settlements.map((e) => e.toMap()).toList(),
     };
   }
 
-  String get formattedTotalAmount => '₹${totalAmount.toStringAsFixed(2)}';
+  String get formattedTotalAmount => '₹${totalAmount.toInt()}';
 
   double getAmountOwedBy(String userId) {
     return splitAmounts[userId] ?? 0.0;
@@ -99,16 +96,16 @@ class SplitModel {
 
 class SettlementModel {
   final String id;
-  final String splitId;
-  final String fromUserId; // Who is paying
-  final String toUserId; // Who is receiving
-  final double amount; // Amount settled in INR
+  final String? splitId; // Make it nullable
+  final String fromUserId;
+  final String toUserId;
+  final double amount;
   final DateTime settledAt;
   final String notes;
 
   SettlementModel({
     required this.id,
-    required this.splitId,
+    this.splitId, // Optional
     required this.fromUserId,
     required this.toUserId,
     required this.amount,
@@ -119,7 +116,7 @@ class SettlementModel {
   factory SettlementModel.fromMap(Map<String, dynamic> map) {
     return SettlementModel(
       id: map['id'] ?? '',
-      splitId: map['splitId'] ?? '',
+      splitId: map['splitId'], // Handle nullable
       fromUserId: map['fromUserId'] ?? '',
       toUserId: map['toUserId'] ?? '',
       amount: (map['amount'] ?? 0).toDouble(),
@@ -131,7 +128,7 @@ class SettlementModel {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'splitId': splitId,
+      'splitId': splitId, // Include even if null
       'fromUserId': fromUserId,
       'toUserId': toUserId,
       'amount': amount,
@@ -140,5 +137,5 @@ class SettlementModel {
     };
   }
 
-  String get formattedAmount => '₹${amount.toStringAsFixed(2)}';
+  String get formattedAmount => '₹${amount.toInt()}';
 }

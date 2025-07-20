@@ -18,7 +18,10 @@ class AuthService extends ChangeNotifier {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final random = Random();
     return String.fromCharCodes(
-      Iterable.generate(8, (_) => chars.codeUnitAt(random.nextInt(chars.length))),
+      Iterable.generate(
+        8,
+        (_) => chars.codeUnitAt(random.nextInt(chars.length)),
+      ),
     );
   }
 
@@ -34,14 +37,17 @@ class AuthService extends ChangeNotifier {
         return null;
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
-      
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
       // Create or update user document in Firestore
       if (userCredential.user != null) {
         await _createOrUpdateUserDocument(userCredential.user!);
@@ -60,7 +66,7 @@ class AuthService extends ChangeNotifier {
 
   Future<void> _createOrUpdateUserDocument(User user) async {
     final userDoc = await _firestore.collection('users').doc(user.uid).get();
-    
+
     if (!userDoc.exists) {
       // Create new user document
       final userModel = UserModel(
@@ -71,7 +77,7 @@ class AuthService extends ChangeNotifier {
         friendCode: _generateFriendCode(),
         createdAt: DateTime.now(),
       );
-      
+
       await _firestore.collection('users').doc(user.uid).set(userModel.toMap());
     } else {
       // Update existing user document
@@ -84,9 +90,10 @@ class AuthService extends ChangeNotifier {
 
   Future<UserModel?> getCurrentUserModel() async {
     if (currentUser == null) return null;
-    
+
     try {
-      final doc = await _firestore.collection('users').doc(currentUser!.uid).get();
+      final doc =
+          await _firestore.collection('users').doc(currentUser!.uid).get();
       if (doc.exists) {
         return UserModel.fromMap(doc.data()!);
       }
@@ -98,12 +105,13 @@ class AuthService extends ChangeNotifier {
 
   Future<UserModel?> getUserByFriendCode(String friendCode) async {
     try {
-      final query = await _firestore
-          .collection('users')
-          .where('friendCode', isEqualTo: friendCode.toUpperCase())
-          .limit(1)
-          .get();
-      
+      final query =
+          await _firestore
+              .collection('users')
+              .where('friendCode', isEqualTo: friendCode.toUpperCase())
+              .limit(1)
+              .get();
+
       if (query.docs.isNotEmpty) {
         return UserModel.fromMap(query.docs.first.data());
       }
@@ -115,12 +123,13 @@ class AuthService extends ChangeNotifier {
 
   Future<UserModel?> getUserByEmail(String email) async {
     try {
-      final query = await _firestore
-          .collection('users')
-          .where('email', isEqualTo: email.toLowerCase())
-          .limit(1)
-          .get();
-      
+      final query =
+          await _firestore
+              .collection('users')
+              .where('email', isEqualTo: email.toLowerCase())
+              .limit(1)
+              .get();
+
       if (query.docs.isNotEmpty) {
         return UserModel.fromMap(query.docs.first.data());
       }
@@ -132,13 +141,13 @@ class AuthService extends ChangeNotifier {
 
   Future<void> addFriend(String friendId) async {
     if (currentUser == null) return;
-    
+
     try {
       // Add friend to current user's friends list
       await _firestore.collection('users').doc(currentUser!.uid).update({
         'friends': FieldValue.arrayUnion([friendId]),
       });
-      
+
       // Add current user to friend's friends list
       await _firestore.collection('users').doc(friendId).update({
         'friends': FieldValue.arrayUnion([currentUser!.uid]),
@@ -151,19 +160,21 @@ class AuthService extends ChangeNotifier {
 
   Future<List<UserModel>> getFriends() async {
     if (currentUser == null) return [];
-    
+
     try {
-      final userDoc = await _firestore.collection('users').doc(currentUser!.uid).get();
+      final userDoc =
+          await _firestore.collection('users').doc(currentUser!.uid).get();
       if (!userDoc.exists) return [];
-      
+
       final userData = UserModel.fromMap(userDoc.data()!);
       if (userData.friends.isEmpty) return [];
-      
-      final friendsQuery = await _firestore
-          .collection('users')
-          .where(FieldPath.documentId, whereIn: userData.friends)
-          .get();
-      
+
+      final friendsQuery =
+          await _firestore
+              .collection('users')
+              .where(FieldPath.documentId, whereIn: userData.friends)
+              .get();
+
       return friendsQuery.docs
           .map((doc) => UserModel.fromMap(doc.data()))
           .toList();
@@ -173,10 +184,24 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  Future<UserModel?> getUserById(String userId) async {
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      if (doc.exists) {
+        return UserModel.fromMap(doc.data()!);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting user by ID: $e');
+      return null;
+    }
+  }
+
   Future<void> signOut() async {
     try {
       await _googleSignIn.signOut();
       await _auth.signOut();
+      notifyListeners(); // <-- add this
     } catch (e) {
       print('Error signing out: $e');
       rethrow;

@@ -35,9 +35,10 @@ class BudgetAlertDialog extends StatelessWidget {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: isApproaching 
-                    ? Colors.orange.withOpacity(0.1) 
-                    : Colors.red.withOpacity(0.1),
+                color:
+                    isApproaching
+                        ? Colors.orange.withOpacity(0.1)
+                        : Colors.red.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -47,12 +48,10 @@ class BudgetAlertDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Alert Title
             Text(
-              isApproaching 
-                  ? 'Approaching Budget Limit' 
-                  : 'Budget Exceeded',
+              isApproaching ? 'Approaching Budget Limit' : 'Budget Exceeded',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -60,37 +59,34 @@ class BudgetAlertDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            
+
             // Category
             Text(
               category.toString().split('.').last.toUpperCase(),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 24),
-            
+
             // Budget Details
-            _buildDetailRow('Budget Amount:', '₹${budgetAmount.toStringAsFixed(2)}'),
+            _buildDetailRow('Budget Amount:', '₹${budgetAmount.toInt()}'),
             const SizedBox(height: 8),
-            _buildDetailRow('Current Spending:', '₹${newSpending.toStringAsFixed(2)}'),
+            _buildDetailRow('Current Spending:', '₹${newSpending.toInt()}'),
             const SizedBox(height: 8),
             _buildDetailRow(
               isApproaching ? 'Remaining:' : 'Exceeded By:',
-              isApproaching 
-                  ? '₹${(budgetAmount - newSpending).toStringAsFixed(2)}' 
-                  : '₹${exceededBy.toStringAsFixed(2)}',
+              isApproaching
+                  ? '₹${(budgetAmount - newSpending).toInt()}'
+                  : '₹${exceededBy.toInt()}',
               isApproaching ? Colors.orange : Colors.red,
             ),
             const SizedBox(height: 8),
             _buildDetailRow(
               'Usage:',
-              '${percentage.toStringAsFixed(1)}%',
+              '${percentage.toInt()}%',
               isApproaching ? Colors.orange : Colors.red,
             ),
             const SizedBox(height: 16),
-            
+
             // Progress Bar
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -102,20 +98,17 @@ class BudgetAlertDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Message
             Text(
               isApproaching
                   ? 'You\'re approaching your monthly budget limit for this category. Consider reducing expenses to stay within budget.'
                   : 'You\'ve exceeded your monthly budget for this category. Consider adjusting your budget or reducing expenses.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[700],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
             ),
             const SizedBox(height: 24),
-            
+
             // Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -157,18 +150,12 @@ class BudgetAlertDialog extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildDetailRow(String label, String value, [Color? valueColor]) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
         Text(
           value,
           style: TextStyle(

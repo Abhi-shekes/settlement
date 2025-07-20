@@ -14,7 +14,8 @@ class SplitsScreen extends StatefulWidget {
   State<SplitsScreen> createState() => _SplitsScreenState();
 }
 
-class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderStateMixin {
+class _SplitsScreenState extends State<SplitsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -50,7 +51,7 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           tabs: const [
-            Tab(text: 'All'),
+            // Tab(text: 'All'),
             Tab(text: 'You Owe'),
             Tab(text: 'Owed to You'),
           ],
@@ -66,17 +67,18 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
               decoration: InputDecoration(
                 hintText: 'Search splits...',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          setState(() {
-                            _searchQuery = '';
-                            _searchController.clear();
-                          });
-                        },
-                      )
-                    : null,
+                suffixIcon:
+                    _searchQuery.isNotEmpty
+                        ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            setState(() {
+                              _searchQuery = '';
+                              _searchController.clear();
+                            });
+                          },
+                        )
+                        : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Colors.grey[300]!),
@@ -99,13 +101,13 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
               },
             ),
           ),
-          
+
           // Tab Content
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildSplitsList(SplitListType.all),
+                // _buildSplitsList(SplitListType.all),
                 _buildSplitsList(SplitListType.youOwe),
                 _buildSplitsList(SplitListType.owedToYou),
               ],
@@ -133,12 +135,14 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
     return Consumer2<GroupService, AuthService>(
       builder: (context, groupService, authService, child) {
         if (groupService.isLoading) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFF008080)));
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF008080)),
+          );
         }
-        
+
         final currentUserId = authService.currentUser?.uid ?? '';
         List<SplitModel> splits;
-        
+
         switch (type) {
           case SplitListType.all:
             splits = groupService.splits;
@@ -150,20 +154,24 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
             splits = groupService.getUserOwingSplits(currentUserId);
             break;
         }
-        
+
         // Apply search filter
         if (_searchQuery.isNotEmpty) {
-          splits = splits.where((split) {
-            return split.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                   split.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                   split.tags.any((tag) => tag.toLowerCase().contains(_searchQuery.toLowerCase()));
-          }).toList();
+          splits =
+              splits.where((split) {
+                return split.title.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ||
+                    split.description.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    );
+              }).toList();
         }
-        
+
         if (splits.isEmpty) {
           return _buildEmptyState(type);
         }
-        
+
         return RefreshIndicator(
           onRefresh: _refreshSplits,
           color: const Color(0xFF008080),
@@ -183,34 +191,34 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
   Widget _buildSplitCard(SplitModel split, String currentUserId) {
     final isGroupSplit = split.groupId != null;
     final isPayer = split.paidBy == currentUserId;
-    
+
     // Calculate amount for current user
     double amount = 0;
     String amountText = '';
     Color amountColor = Colors.black;
-    
+
     if (isPayer) {
       // You paid, others owe you
       amount = split.participants
           .where((p) => p != currentUserId)
           .fold(0.0, (sum, p) => sum + split.getRemainingAmount(p));
-      
+
       if (amount > 0) {
-        amountText = '+₹${amount.toStringAsFixed(2)}';
+        amountText = '+₹${amount.toInt()}';
         amountColor = Colors.green;
       } else {
-        amountText = '₹${amount.toStringAsFixed(2)}';
+        amountText = '₹${amount.toInt()}';
         amountColor = Colors.grey;
       }
     } else {
       // Someone else paid, you owe
       amount = split.getRemainingAmount(currentUserId);
-      
+
       if (amount > 0) {
-        amountText = '-₹${amount.toStringAsFixed(2)}';
+        amountText = '-₹${amount.toInt()}';
         amountColor = const Color(0xFFFF7F50);
       } else {
-        amountText = '₹${amount.toStringAsFixed(2)}';
+        amountText = '₹${amount.toInt()}';
         amountColor = Colors.grey;
       }
     }
@@ -218,9 +226,7 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -244,19 +250,23 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: isGroupSplit 
-                          ? Colors.purple.withOpacity(0.1) 
-                          : const Color(0xFFFF7F50).withOpacity(0.1),
+                      color:
+                          isGroupSplit
+                              ? Colors.purple.withOpacity(0.1)
+                              : const Color(0xFFFF7F50).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       isGroupSplit ? Icons.groups : Icons.person,
-                      color: isGroupSplit ? Colors.purple : const Color(0xFFFF7F50),
+                      color:
+                          isGroupSplit
+                              ? Colors.purple
+                              : const Color(0xFFFF7F50),
                       size: 24,
                     ),
                   ),
                   const SizedBox(width: 16),
-                  
+
                   // Title and Description
                   Expanded(
                     child: Column(
@@ -273,8 +283,10 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          split.description.isEmpty 
-                              ? (isPayer ? 'You paid' : 'You owe ${_getPayerName(split, context)}')
+                          split.description.isEmpty
+                              ? (isPayer
+                                  ? 'You paid'
+                                  : 'You owe ${_getPayerName(split, context)}')
                               : split.description,
                           style: TextStyle(
                             fontSize: 14,
@@ -295,7 +307,7 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
                       ],
                     ),
                   ),
-                  
+
                   // Amount
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -311,18 +323,19 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
                       const SizedBox(height: 4),
                       Text(
                         DateFormat('MMM d, y').format(split.createdAt),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: split.isFullySettled 
-                              ? Colors.green.withOpacity(0.1) 
-                              : Colors.orange.withOpacity(0.1),
+                          color:
+                              split.isFullySettled
+                                  ? Colors.green.withOpacity(0.1)
+                                  : Colors.orange.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -330,7 +343,10 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w500,
-                            color: split.isFullySettled ? Colors.green : Colors.orange,
+                            color:
+                                split.isFullySettled
+                                    ? Colors.green
+                                    : Colors.orange,
                           ),
                         ),
                       ),
@@ -338,34 +354,6 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
                   ),
                 ],
               ),
-              
-              // Tags
-              if (split.tags.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: split.tags.map((tag) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isGroupSplit 
-                              ? Colors.purple.withOpacity(0.1) 
-                              : const Color(0xFFFF7F50).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          tag,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isGroupSplit ? Colors.purple : const Color(0xFFFF7F50),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
             ],
           ),
         ),
@@ -383,40 +371,39 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
     String message;
     String subMessage;
     IconData icon;
-    
+
     switch (type) {
       case SplitListType.all:
         message = 'No splits found';
-        subMessage = _searchQuery.isNotEmpty 
-            ? 'Try changing your search query' 
-            : 'Start by splitting a bill with friends';
+        subMessage =
+            _searchQuery.isNotEmpty
+                ? 'Try changing your search query'
+                : 'Start by splitting a bill with friends';
         icon = Icons.call_split;
         break;
       case SplitListType.youOwe:
         message = 'You don\'t owe anyone';
-        subMessage = _searchQuery.isNotEmpty 
-            ? 'Try changing your search query' 
-            : 'All your debts are settled';
+        subMessage =
+            _searchQuery.isNotEmpty
+                ? 'Try changing your search query'
+                : 'All your debts are settled';
         icon = Icons.check_circle;
         break;
       case SplitListType.owedToYou:
         message = 'No one owes you';
-        subMessage = _searchQuery.isNotEmpty 
-            ? 'Try changing your search query' 
-            : 'All your friends have settled up';
+        subMessage =
+            _searchQuery.isNotEmpty
+                ? 'Try changing your search query'
+                : 'All your friends have settled up';
         icon = Icons.account_balance_wallet;
         break;
     }
-    
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(icon, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             message,
@@ -429,10 +416,7 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
           const SizedBox(height: 8),
           Text(
             subMessage,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
           const SizedBox(height: 24),
           if (_searchQuery.isEmpty && type == SplitListType.all)
@@ -440,7 +424,9 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AddSplitScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const AddSplitScreen(),
+                  ),
                 );
               },
               icon: const Icon(Icons.add),
@@ -448,7 +434,10 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF008080),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -460,8 +449,4 @@ class _SplitsScreenState extends State<SplitsScreen> with SingleTickerProviderSt
   }
 }
 
-enum SplitListType {
-  all,
-  youOwe,
-  owedToYou,
-}
+enum SplitListType { all, youOwe, owedToYou }

@@ -4,8 +4,7 @@ import '../../services/auth_service.dart';
 import '../../services/expense_service.dart';
 import '../../services/group_service.dart';
 import '../../services/budget_service.dart';
-import '../../models/expense_model.dart';
-import '../../models/split_model.dart';
+
 import '../../widgets/budget_progress_card.dart';
 import '../expenses/add_expense_screen.dart';
 import '../splits/add_split_screen.dart';
@@ -48,10 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refreshData,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _refreshData),
         ],
       ),
       body: RefreshIndicator(
@@ -66,19 +62,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Welcome Section
               _buildWelcomeSection(),
               const SizedBox(height: 24),
-              
+
               // Financial Overview Cards
               _buildFinancialOverview(),
               const SizedBox(height: 24),
-              
+
               // Budget Alerts
               _buildBudgetAlerts(),
               const SizedBox(height: 24),
-              
+
               // Quick Actions
               _buildQuickActions(),
               const SizedBox(height: 24),
-              
+
               // Recent Activity
               _buildRecentActivity(),
             ],
@@ -114,7 +110,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                authService.currentUser?.displayName?.split(' ').first ?? 'User',
+                authService.currentUser?.displayName?.split(' ').first ??
+                    'User',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -139,8 +136,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildFinancialOverview() {
     return Consumer2<ExpenseService, GroupService>(
       builder: (context, expenseService, groupService, child) {
-        final currentUserId = context.read<AuthService>().currentUser?.uid ?? '';
-        
+        final currentUserId =
+            context.read<AuthService>().currentUser?.uid ?? '';
+
         // Calculate totals
         final totalExpenses = expenseService.getTotalExpenseAmount();
         final totalOwed = groupService.getTotalAmountOwed(currentUserId);
@@ -159,14 +157,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Main Balance Cards
             Row(
               children: [
                 Expanded(
                   child: _buildBalanceCard(
                     'Total Expenses',
-                    '₹${totalExpenses.toStringAsFixed(2)}',
+                    '₹${totalExpenses.toInt()}',
                     Icons.receipt_long,
                     const Color(0xFF008080),
                     Colors.white,
@@ -176,9 +174,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Expanded(
                   child: _buildBalanceCard(
                     'Net Balance',
-                    netBalance >= 0 
-                        ? '+₹${netBalance.toStringAsFixed(2)}'
-                        : '-₹${(-netBalance).toStringAsFixed(2)}',
+                    netBalance >= 0
+                        ? '+₹${netBalance.toInt()}'
+                        : '-₹${(-netBalance).toInt()}',
                     netBalance >= 0 ? Icons.trending_up : Icons.trending_down,
                     netBalance >= 0 ? Colors.green : const Color(0xFFFF7F50),
                     Colors.white,
@@ -186,16 +184,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Owe Cards
             Row(
               children: [
                 Expanded(
                   child: _buildBalanceCard(
                     'You Owe',
-                    '₹${totalOwed.toStringAsFixed(2)}',
+                    '₹${totalOwed.toInt()}',
                     Icons.arrow_upward,
                     const Color(0xFFFF7F50),
                     Colors.white,
@@ -205,7 +203,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Expanded(
                   child: _buildBalanceCard(
                     'Owed to You',
-                    '₹${totalOwing.toStringAsFixed(2)}',
+                    '₹${totalOwing.toInt()}',
                     Icons.arrow_downward,
                     Colors.green,
                     Colors.white,
@@ -224,21 +222,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context, budgetService, expenseService, child) {
         // Get categories with budgets
         final categoriesWithBudgets = budgetService.getCategoriesWithBudgets();
-        
+
         // Filter to only show categories that are near limit or exceeded
-        final alertCategories = categoriesWithBudgets.where((category) {
-          final currentSpending = expenseService.getTotalExpenseAmountByCategory(category);
-          final budget = budgetService.getBudgetForCategory(category);
-          
-          if (budget == null || budget.amount <= 0) return false;
-          
-          return currentSpending >= budget.amount * 0.8; // 80% or more of budget
-        }).toList();
-        
+        final alertCategories =
+            categoriesWithBudgets.where((category) {
+              final currentSpending = expenseService
+                  .getTotalExpenseAmountByCategory(category);
+              final budget = budgetService.getBudgetForCategory(category);
+
+              if (budget == null || budget.amount <= 0) return false;
+
+              return currentSpending >=
+                  budget.amount * 0.8; // 80% or more of budget
+            }).toList();
+
         if (alertCategories.isEmpty) {
           return const SizedBox.shrink(); // No alerts to show
         }
-        
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -259,7 +260,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const BudgetScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const BudgetScreen(),
+                      ),
                     );
                   },
                   child: const Text('Manage Budgets'),
@@ -267,14 +270,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Alert Cards
             ...alertCategories.map((category) {
-              final currentSpending = expenseService.getTotalExpenseAmountByCategory(category);
+              final currentSpending = expenseService
+                  .getTotalExpenseAmountByCategory(category);
               final budget = budgetService.getBudgetForCategory(category);
-              
+
               if (budget == null) return const SizedBox.shrink();
-              
+
               return BudgetProgressCard(
                 category: category,
                 budgetAmount: budget.amount,
@@ -282,7 +286,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const BudgetScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const BudgetScreen(),
+                    ),
                   );
                 },
               );
@@ -293,7 +299,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildBalanceCard(String title, String amount, IconData icon, Color color, Color textColor) {
+  Widget _buildBalanceCard(
+    String title,
+    String amount,
+    IconData icon,
+    Color color,
+    Color textColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -316,7 +328,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Icon(icon, color: textColor, size: 24),
               if (title == 'Net Balance')
                 Icon(
-                  amount.startsWith('+') ? Icons.sentiment_satisfied : Icons.sentiment_dissatisfied,
+                  amount.startsWith('+')
+                      ? Icons.sentiment_satisfied
+                      : Icons.sentiment_dissatisfied,
                   color: textColor,
                   size: 20,
                 ),
@@ -368,7 +382,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const Color(0xFF008080),
                 () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const AddExpenseScreen(),
+                  ),
                 ),
               ),
             ),
@@ -381,7 +397,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const Color(0xFFFF7F50),
                 () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AddSplitScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const AddSplitScreen(),
+                  ),
                 ),
               ),
             ),
@@ -398,7 +416,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Colors.purple,
                 () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CreateGroupScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const CreateGroupScreen(),
+                  ),
                 ),
               ),
             ),
@@ -421,7 +441,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildActionCard(String title, String subtitle, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionCard(
+    String title,
+    String subtitle,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -462,10 +488,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -479,37 +502,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // Combine recent expenses and splits
         final recentExpenses = expenseService.expenses.take(3).toList();
         final recentSplits = groupService.splits.take(3).toList();
-        
+
         // Create a combined list with timestamps for sorting
         final List<ActivityItem> activities = [];
-        
+
         for (final expense in recentExpenses) {
-          activities.add(ActivityItem(
-            type: ActivityType.personalExpense,
-            title: expense.title,
-            amount: expense.amount,
-            date: expense.createdAt,
-            icon: Icons.receipt,
-            color: const Color(0xFF008080),
-            subtitle: expense.categoryDisplayName,
-          ));
+          activities.add(
+            ActivityItem(
+              type: ActivityType.personalExpense,
+              title: expense.title,
+              amount: expense.amount,
+              date: expense.createdAt,
+              icon: Icons.receipt,
+              color: const Color(0xFF008080),
+              subtitle: expense.categoryDisplayName,
+            ),
+          );
         }
-        
+
         for (final split in recentSplits) {
-          final currentUserId = context.read<AuthService>().currentUser?.uid ?? '';
+          final currentUserId =
+              context.read<AuthService>().currentUser?.uid ?? '';
           final isGroupSplit = split.groupId != null;
-          
-          activities.add(ActivityItem(
-            type: isGroupSplit ? ActivityType.groupSplit : ActivityType.individualSplit,
-            title: split.title,
-            amount: split.totalAmount,
-            date: split.createdAt,
-            icon: isGroupSplit ? Icons.groups : Icons.person,
-            color: isGroupSplit ? Colors.purple : const Color(0xFFFF7F50),
-            subtitle: split.paidBy == currentUserId ? 'You paid' : 'Split expense',
-          ));
+
+          activities.add(
+            ActivityItem(
+              type:
+                  isGroupSplit
+                      ? ActivityType.groupSplit
+                      : ActivityType.individualSplit,
+              title: split.title,
+              amount: split.totalAmount,
+              date: split.createdAt,
+              icon: isGroupSplit ? Icons.groups : Icons.person,
+              color: isGroupSplit ? Colors.purple : const Color(0xFFFF7F50),
+              subtitle:
+                  split.paidBy == currentUserId ? 'You paid' : 'Split expense',
+            ),
+          );
         }
-        
+
         // Sort by date (most recent first)
         activities.sort((a, b) => b.date.compareTo(a.date));
         final displayActivities = activities.take(5).toList();
@@ -528,19 +560,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     color: Color(0xFF008080),
                   ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    // Navigate to full activity screen
-                  },
-                  child: const Text(
-                    'View All',
-                    style: TextStyle(color: Color(0xFF008080)),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 16),
-            
+
             if (displayActivities.isEmpty)
               Container(
                 width: double.infinity,
@@ -551,11 +574,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.history,
-                      size: 48,
-                      color: Colors.grey[400],
-                    ),
+                    Icon(Icons.history, size: 48, color: Colors.grey[400]),
                     const SizedBox(height: 16),
                     Text(
                       'No recent activity',
@@ -568,10 +587,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Start by adding an expense or splitting a bill',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[500],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -594,10 +610,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: displayActivities.length,
-                  separatorBuilder: (context, index) => Divider(
-                    height: 1,
-                    color: Colors.grey[200],
-                  ),
+                  separatorBuilder:
+                      (context, index) =>
+                          Divider(height: 1, color: Colors.grey[200]),
                   itemBuilder: (context, index) {
                     final activity = displayActivities[index];
                     return _buildActivityItem(activity);
@@ -620,18 +635,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           color: activity.color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(
-          activity.icon,
-          color: activity.color,
-          size: 24,
-        ),
+        child: Icon(activity.icon, color: activity.color, size: 24),
       ),
       title: Text(
         activity.title,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 16,
-        ),
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -641,18 +649,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 4),
           Text(
             activity.subtitle,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
           const SizedBox(height: 2),
           Text(
             _formatDate(activity.date),
-            style: TextStyle(
-              color: Colors.grey[500],
-              fontSize: 12,
-            ),
+            style: TextStyle(color: Colors.grey[500], fontSize: 12),
           ),
         ],
       ),
@@ -661,7 +663,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
-            '₹${activity.amount.toStringAsFixed(2)}',
+            '₹${activity.amount.toInt()}',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
@@ -692,7 +694,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays == 0) {
       return 'Today';
     } else if (difference.inDays == 1) {
@@ -716,11 +718,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-enum ActivityType {
-  personalExpense,
-  individualSplit,
-  groupSplit,
-}
+enum ActivityType { personalExpense, individualSplit, groupSplit }
 
 class ActivityItem {
   final ActivityType type;
