@@ -270,7 +270,7 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: overallPercentage / 100,
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
               color: Colors.white,
               minHeight: 8,
             ),
@@ -288,7 +288,7 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.2),
+                  color: statusColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -313,7 +313,7 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
         ),
         const SizedBox(height: 4),
         Text(

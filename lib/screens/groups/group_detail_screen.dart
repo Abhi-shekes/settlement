@@ -7,7 +7,6 @@ import '../../models/user_model.dart';
 import '../../services/group_service.dart';
 import '../../services/auth_service.dart';
 import 'edit_group_screen.dart';
-import 'add_group_expense_screen.dart';
 import 'group_settle_screen.dart';
 import '../../models/expense_model.dart';
 
@@ -25,6 +24,17 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
   late TabController _tabController;
   bool _isLoading = false;
   List<UserModel> _friends = [];
+
+  /// Always read the freshest copy of the group from the service (balances and
+  /// members change as expenses/settlements happen), falling back to the
+  /// snapshot passed into the route.
+  GroupModel get group {
+    final groups = context.read<GroupService>().groups;
+    return groups.firstWhere(
+      (g) => g.id == widget.group.id,
+      orElse: () => widget.group,
+    );
+  }
 
   @override
   void initState() {
@@ -53,7 +63,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
   void _showAddMemberDialog() {
     final availableFriends =
         _friends
-            .where((friend) => !widget.group.allMemberIds.contains(friend.uid))
+            .where((friend) => !group.allMemberIds.contains(friend.uid))
             .toList();
 
     if (availableFriends.isEmpty) {
@@ -99,7 +109,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                           leading: CircleAvatar(
                             backgroundColor: const Color(
                               0xFF008080,
-                            ).withOpacity(0.1),
+                            ).withValues(alpha: 0.1),
                             backgroundImage:
                                 friend.photoURL != null
                                     ? NetworkImage(friend.photoURL!)
@@ -146,7 +156,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
 
     try {
       await context.read<GroupService>().addMemberToGroup(
-        widget.group.id,
+        group.id,
         userId,
       );
 
@@ -180,12 +190,14 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Rebuild whenever group data (balances/members) changes.
+    context.watch<GroupService>();
     final currentUserId = context.read<AuthService>().currentUser?.uid ?? '';
-    final isAdmin = widget.group.adminId == currentUserId;
+    final isAdmin = group.adminId == currentUserId;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.group.name),
+        title: Text(group.name),
         backgroundColor: const Color(0xFF008080),
         foregroundColor: Colors.white,
         actions: [
@@ -216,7 +228,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                     context,
                     MaterialPageRoute(
                       builder:
-                          (context) => EditGroupScreen(group: widget.group),
+                          (context) => EditGroupScreen(group: group),
                     ),
                   );
                   break;
@@ -260,8 +272,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
 
   Widget _buildOverviewTab() {
     final currentUserId = context.read<AuthService>().currentUser?.uid ?? '';
-    final userBalance = widget.group.getUserBalance(currentUserId);
-    final memberCount = widget.group.allMemberIds.length;
+    final userBalance = group.getUserBalance(currentUserId);
+    final memberCount = group.allMemberIds.length;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -291,15 +303,15 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child:
-                        widget.group.imageUrl != null
+                        group.imageUrl != null
                             ? ClipRRect(
                               borderRadius: BorderRadius.circular(20),
                               child: Image.network(
-                                widget.group.imageUrl!,
+                                group.imageUrl!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return const Icon(
@@ -318,7 +330,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    widget.group.name,
+                    group.name,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -326,12 +338,12 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  if (widget.group.description.isNotEmpty) ...[
+                  if (group.description.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(
-                      widget.group.description,
+                      group.description,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 16,
                       ),
                       textAlign: TextAlign.center,
@@ -354,7 +366,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                           Text(
                             'Members',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 14,
                             ),
                           ),
@@ -363,14 +375,14 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       Container(
                         width: 1,
                         height: 40,
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                       ),
                       Column(
                         children: [
                           Text(
                             DateFormat(
                               'MMM yyyy',
-                            ).format(widget.group.createdAt),
+                            ).format(group.createdAt),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -380,7 +392,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                           Text(
                             'Created',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 14,
                             ),
                           ),
@@ -426,9 +438,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  widget.group.getFormattedBalance(currentUserId),
+                  group.getFormattedBalance(currentUserId),
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 16,
                   ),
                 ),
@@ -461,7 +473,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       MaterialPageRoute(
                         builder:
                             (context) => AddGroupExpenseWithSplitScreen(
-                              group: widget.group,
+                              group: group,
                             ),
                       ),
                     );
@@ -479,7 +491,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       context,
                       MaterialPageRoute(
                         builder:
-                            (context) => GroupSettleScreen(group: widget.group),
+                            (context) => GroupSettleScreen(group: group),
                       ),
                     );
                   },
@@ -522,7 +534,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
 
   Widget _buildMembersTab() {
     final currentUserId = context.read<AuthService>().currentUser?.uid ?? '';
-    final isAdmin = widget.group.adminId == currentUserId;
+    final isAdmin = group.adminId == currentUserId;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -533,7 +545,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Members (${widget.group.allMemberIds.length})',
+                'Members (${group.allMemberIds.length})',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -558,9 +570,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
           const SizedBox(height: 16),
 
           // Admin
-          _buildMemberCard(widget.group.adminId, true, currentUserId),
+          _buildMemberCard(group.adminId, true, currentUserId),
 
-          ...widget.group.memberIds.map(
+          ...group.memberIds.map(
             (memberId) => _buildMemberCard(memberId, false, currentUserId),
           ),
         ],
@@ -570,7 +582,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
 
   Widget _buildExpensesTab() {
     return FutureBuilder<List<ExpenseModel>>(
-      future: context.read<GroupService>().getGroupExpenses(widget.group.id),
+      future: context.read<GroupService>().getGroupExpenses(group.id),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -603,7 +615,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                         MaterialPageRoute(
                           builder:
                               (context) => AddGroupExpenseWithSplitScreen(
-                                group: widget.group,
+                                group: group,
                               ),
                         ),
                       );
@@ -692,7 +704,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
 
   Widget _buildMemberCard(String memberId, bool isAdmin, String currentUserId) {
     final isCurrentUser = memberId == currentUserId;
-    final userBalance = widget.group.getUserBalance(memberId);
+    final userBalance = group.getUserBalance(memberId);
     final authService = context.read<AuthService>();
 
     return FutureBuilder<UserModel?>(
@@ -703,7 +715,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
         final initials =
             isCurrentUser
                 ? 'Y'
-                : (user?.displayName?.isNotEmpty == true
+                : (user?.displayName.isNotEmpty == true
                     ? user!.displayName[0].toUpperCase()
                     : 'U');
 
@@ -718,7 +730,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: const Color(0xFF008080).withOpacity(0.1),
+                  backgroundColor: const Color(0xFF008080).withValues(alpha: 0.1),
                   backgroundImage:
                       user?.photoURL != null
                           ? NetworkImage(user!.photoURL!)
@@ -754,7 +766,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF008080).withOpacity(0.1),
+                                color: const Color(0xFF008080).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Text(
@@ -770,7 +782,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        widget.group.getFormattedBalance(memberId),
+                        group.getFormattedBalance(memberId),
                         style: TextStyle(
                           color:
                               userBalance >= 0
@@ -820,7 +832,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF008080).withOpacity(0.1),
+                    color: const Color(0xFF008080).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -926,7 +938,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
 
                   try {
                     await context.read<GroupService>().deleteGroup(
-                      widget.group.id,
+                      group.id,
                     );
                     if (mounted) {
                       Navigator.pop(context); // Return to groups list
@@ -958,7 +970,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
 
   void _showLeaveConfirmation() {
     final currentUserId = context.read<AuthService>().currentUser?.uid ?? '';
-    final isAdmin = widget.group.adminId == currentUserId;
+    final isAdmin = group.adminId == currentUserId;
 
     showDialog(
       context: context,
@@ -982,7 +994,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
 
                     try {
                       await context.read<GroupService>().leaveGroup(
-                        widget.group.id,
+                        group.id,
                         currentUserId,
                       );
                       if (mounted) {

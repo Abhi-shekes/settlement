@@ -3,6 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
+import '../../services/expense_service.dart';
+import '../../services/group_service.dart';
+import '../../services/budget_service.dart';
+import '../../services/invitation_service.dart';
+import '../../services/notification_service.dart';
 import 'friends_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -51,11 +56,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextButton(
                 onPressed: () async {
                   Navigator.pop(context);
+                  // Clear cached account data before signing out; the auth gate
+                  // in main.dart handles navigation back to the login screen.
+                  context.read<ExpenseService>().reset();
+                  context.read<GroupService>().reset();
+                  context.read<BudgetService>().reset();
+                  context.read<InvitationService>().reset();
+                  final authService = context.read<AuthService>();
+                  final uid = authService.currentUser?.uid;
+                  if (uid != null) {
+                    await NotificationService.instance.unregisterDevice(uid);
+                  }
+                  authService.reset();
                   try {
-                    await context.read<AuthService>().signOut();
-                    Navigator.of(
-                      context,
-                    ).pushNamedAndRemoveUntil('/login', (route) => false);
+                    await authService.signOut();
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -220,7 +234,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(25),
             ),
             child:
@@ -234,7 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           return Icon(
                             Icons.person,
                             size: 50,
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                           );
                         },
                       ),
@@ -242,7 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     : Icon(
                       Icons.person,
                       size: 50,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
           ),
           const SizedBox(height: 16),
@@ -262,7 +276,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Text(
             _currentUser?.email ?? '',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 16,
             ),
           ),
@@ -272,7 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -330,7 +344,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: const Color(0xFF008080).withOpacity(0.1),
+            color: const Color(0xFF008080).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: const Color(0xFF008080), size: 24),

@@ -18,6 +18,12 @@ class BudgetService extends ChangeNotifier {
   // Near limit threshold (percentage)
   final double _nearLimitThreshold = 0.8; // 80%
   
+  /// Clears cached data (e.g. on sign-out).
+  void reset() {
+    _budgets = [];
+    notifyListeners();
+  }
+
   // Load user budgets for the current month
   Future<void> loadUserBudgets() async {
     if (_auth.currentUser == null) return;
@@ -45,7 +51,7 @@ class BudgetService extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error loading budgets: $e');
+      debugPrint('Error loading budgets: $e');
     }
   }
   
@@ -99,7 +105,7 @@ class BudgetService extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error setting budget: $e');
+      debugPrint('Error setting budget: $e');
       rethrow;
     }
   }
@@ -111,7 +117,7 @@ class BudgetService extends ChangeNotifier {
       _budgets.removeWhere((b) => b.id == budgetId);
       notifyListeners();
     } catch (e) {
-      print('Error deleting budget: $e');
+      debugPrint('Error deleting budget: $e');
       rethrow;
     }
   }

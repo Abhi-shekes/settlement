@@ -4,12 +4,14 @@ import '../../services/auth_service.dart';
 import '../../services/expense_service.dart';
 import '../../services/group_service.dart';
 import '../../services/budget_service.dart';
+import '../../services/invitation_service.dart';
 
 import '../../widgets/budget_progress_card.dart';
 import '../expenses/add_expense_screen.dart';
 import '../splits/add_split_screen.dart';
 import '../groups/create_group_screen.dart';
 import '../budgets/budget_screen.dart';
+import '../requests/requests_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -31,6 +33,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context.read<GroupService>().loadUserGroups(),
       context.read<GroupService>().loadUserSplits(),
       context.read<BudgetService>().loadUserBudgets(),
+      context.read<AuthService>().loadIncomingFriendRequests(),
+      context.read<InvitationService>().loadReceivedInvitations(),
     ]);
   }
 
@@ -47,6 +51,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          Consumer3<AuthService, GroupService, InvitationService>(
+            builder: (context, auth, groups, invites, _) {
+              final count = pendingRequestCount(auth, groups, invites);
+              return IconButton(
+                tooltip: 'Requests',
+                icon: RequestBadge(
+                  count: count,
+                  child: const Icon(Icons.notifications_none),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RequestsScreen(),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _refreshData),
         ],
       ),
@@ -104,7 +128,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text(
                 'Welcome back,',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 16,
                 ),
               ),
@@ -122,7 +146,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text(
                 'Here\'s your financial overview',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 14,
                 ),
               ),
@@ -313,7 +337,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -340,7 +364,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Text(
             title,
             style: TextStyle(
-              color: textColor.withOpacity(0.8),
+              color: textColor.withValues(alpha: 0.8),
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -455,10 +479,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -471,7 +495,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: color, size: 24),
@@ -600,7 +624,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -632,7 +656,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: activity.color.withOpacity(0.1),
+          color: activity.color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(activity.icon, color: activity.color, size: 24),
@@ -674,7 +698,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: activity.color.withOpacity(0.1),
+              color: activity.color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

@@ -149,10 +149,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       //     width: 100,
                       //     height: 100,
                       //     decoration: BoxDecoration(
-                      //       color: Colors.purple.withOpacity(0.1),
+                      //       color: Colors.purple.withValues(alpha: 0.1),
                       //       borderRadius: BorderRadius.circular(20),
                       //       border: Border.all(
-                      //         color: Colors.purple.withOpacity(0.3),
+                      //         color: Colors.purple.withValues(alpha: 0.3),
                       //         width: 2,
                       //       ),
                       //     ),
@@ -252,7 +252,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                                 decoration: BoxDecoration(
                                   color: const Color(
                                     0xFF008080,
-                                  ).withOpacity(0.1),
+                                  ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Row(
@@ -313,7 +313,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                                                     ? Colors.transparent
                                                     : const Color(
                                                       0xFF008080,
-                                                    ).withOpacity(0.1),
+                                                    ).withValues(alpha: 0.1),
                                             backgroundImage:
                                                 friend.photoURL != null
                                                     ? NetworkImage(

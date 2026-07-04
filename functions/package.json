@@ -1,0 +1,13 @@
+{
+  "name": "settlement-functions",
+  "description": "Cloud Functions that push FCM notifications for Settlement app events",
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.1.0"
+  }
+}

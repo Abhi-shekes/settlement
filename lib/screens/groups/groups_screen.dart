@@ -239,7 +239,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      color: Colors.purple.withOpacity(0.1),
+                      color: Colors.purple.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child:
@@ -293,7 +293,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                                 decoration: BoxDecoration(
                                   color: const Color(
                                     0xFF008080,
-                                  ).withOpacity(0.1),
+                                  ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Text(

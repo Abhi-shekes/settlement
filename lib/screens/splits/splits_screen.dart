@@ -6,6 +6,7 @@ import '../../services/group_service.dart';
 import '../../services/auth_service.dart';
 import 'add_split_screen.dart';
 import 'split_detail_screen.dart';
+import '../requests/requests_screen.dart';
 
 class SplitsScreen extends StatefulWidget {
   const SplitsScreen({super.key});
@@ -59,6 +60,7 @@ class _SplitsScreenState extends State<SplitsScreen>
       ),
       body: Column(
         children: [
+          _pendingBanner(),
           // Search Bar
           Padding(
             padding: const EdgeInsets.all(16),
@@ -128,6 +130,59 @@ class _SplitsScreenState extends State<SplitsScreen>
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  Widget _pendingBanner() {
+    return Consumer2<GroupService, AuthService>(
+      builder: (context, groups, auth, _) {
+        final me = auth.currentUser?.uid ?? '';
+        final approvals = groups.splitsAwaitingApprovalFrom(me).length;
+        final confirms = groups.pendingSettlementsToConfirm(me).length;
+        final total = approvals + confirms;
+        if (total == 0) return const SizedBox.shrink();
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: Material(
+            color: const Color(0xFFFF7F50).withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const RequestsScreen(),
+                  ),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    const Icon(Icons.handshake, color: Color(0xFFFF7F50)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        '$total item${total == 1 ? '' : 's'} need your confirmation',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFBF5A38),
+                        ),
+                      ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: Color(0xFFFF7F50),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -252,8 +307,8 @@ class _SplitsScreenState extends State<SplitsScreen>
                     decoration: BoxDecoration(
                       color:
                           isGroupSplit
-                              ? Colors.purple.withOpacity(0.1)
-                              : const Color(0xFFFF7F50).withOpacity(0.1),
+                              ? Colors.purple.withValues(alpha: 0.1)
+                              : const Color(0xFFFF7F50).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -334,8 +389,8 @@ class _SplitsScreenState extends State<SplitsScreen>
                         decoration: BoxDecoration(
                           color:
                               split.isFullySettled
-                                  ? Colors.green.withOpacity(0.1)
-                                  : Colors.orange.withOpacity(0.1),
+                                  ? Colors.green.withValues(alpha: 0.1)
+                                  : Colors.orange.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../models/group_model.dart';
 import '../../models/split_model.dart';
+import '../../models/user_model.dart';
 import '../../services/group_service.dart';
 import '../../services/auth_service.dart';
 import 'package:uuid/uuid.dart';
@@ -20,16 +21,37 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _amountController = TextEditingController();
-  String? _selectedToUserId;
-  String? _selectedSplitId;
   bool _isLoading = false;
   List<SplitModel> _groupSplits = [];
+  final Map<String, UserModel> _memberDetails = {};
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadMemberDetails();
     _loadGroupSplits();
+  }
+
+  Future<void> _loadMemberDetails() async {
+    final authService = context.read<AuthService>();
+    for (final memberId in widget.group.allMemberIds) {
+      final user = await authService.getUserById(memberId);
+      if (user != null && mounted) {
+        setState(() => _memberDetails[memberId] = user);
+      }
+    }
+  }
+
+  String _nameFor(String userId) {
+    final currentUserId = context.read<AuthService>().currentUser?.uid;
+    if (userId == currentUserId) return 'You';
+    return _memberDetails[userId]?.displayName ?? 'Member';
+  }
+
+  String _initialFor(String userId) {
+    final name = _nameFor(userId);
+    return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 
   @override
@@ -50,75 +72,11 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
       _groupSplits =
           allSplits.where((split) => split.groupId == widget.group.id).toList();
     } catch (e) {
-      print('Error loading group splits: $e');
+      debugPrint('Error loading group splits: $e');
     } finally {
       setState(() {
         _isLoading = false;
       });
-    }
-  }
-
-  Future<void> _settleGroupBalance() async {
-    if (_selectedToUserId == null || _amountController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a member and enter an amount'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final amount = double.tryParse(_amountController.text);
-    if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid amount'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final currentUserId = context.read<AuthService>().currentUser!.uid;
-      await context.read<GroupService>().settleGroupBalance(
-        widget.group.id,
-        currentUserId,
-        _selectedToUserId!,
-        amount,
-      );
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Group balance settled successfully!'),
-            backgroundColor: Color(0xFF008080),
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error settling balance: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
     }
   }
 
@@ -170,9 +128,11 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
         amount: amount,
         settledAt: DateTime.now(),
         notes: 'Split settlement',
+        status: SettlementStatus.pending,
+        recordedBy: currentUserId,
       );
 
-      await context.read<GroupService>().addSettlement(split.id, settlement);
+      await context.read<GroupService>().recordSettlement(split.id, settlement);
       await _loadGroupSplits(); // Refresh splits
 
       setState(() {
@@ -183,7 +143,9 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Split amount settled successfully!'),
+            content: Text(
+              'Payment recorded — waiting for the other person to confirm.',
+            ),
             backgroundColor: Color(0xFF008080),
           ),
         );
@@ -243,6 +205,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
               (split) =>
                   split.participants.contains(currentUserId) &&
                   split.paidBy != currentUserId &&
+                  split.hasAcceptedShare(currentUserId) &&
                   split.getRemainingAmount(currentUserId) > 0,
             )
             .toList();
@@ -289,7 +252,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                 Text(
                   '${userOwedSplits.length} outstanding splits',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 16,
                   ),
                 ),
@@ -303,9 +266,9 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
               width: double.infinity,
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
               ),
               child: Column(
                 children: [
@@ -372,7 +335,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF7F50).withOpacity(0.1),
+                    color: const Color(0xFFFF7F50).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -472,42 +435,42 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
 
             const SizedBox(height: 16),
 
-            // Settle Button
-            // Row(
-            //   children: [
-            //     Expanded(
-            //       child: OutlinedButton(
-            //         onPressed:
-            //             () => _showSettleSplitDialog(split, currentUserId),
-            //         style: OutlinedButton.styleFrom(
-            //           side: const BorderSide(color: Color(0xFF008080)),
-            //           shape: RoundedRectangleBorder(
-            //             borderRadius: BorderRadius.circular(8),
-            //           ),
-            //         ),
-            //         child: const Text(
-            //           'Settle Partial',
-            //           style: TextStyle(color: Color(0xFF008080)),
-            //         ),
-            //       ),
-            //     ),
-            //     const SizedBox(width: 12),
-            //     Expanded(
-            //       child: ElevatedButton(
-            //         onPressed:
-            //             () => _settleFullSplitAmount(split, currentUserId),
-            //         style: ElevatedButton.styleFrom(
-            //           backgroundColor: const Color(0xFF008080),
-            //           foregroundColor: Colors.white,
-            //           shape: RoundedRectangleBorder(
-            //             borderRadius: BorderRadius.circular(8),
-            //           ),
-            //         ),
-            //         child: const Text('Settle Full'),
-            //       ),
-            //     ),
-            //   ],
-            // ),
+            // Settle Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed:
+                        () => _showSettleSplitDialog(split, currentUserId),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF008080)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Settle Partial',
+                      style: TextStyle(color: Color(0xFF008080)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed:
+                        () => _settleFullSplitAmount(split, currentUserId),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF008080),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Settle Full'),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -558,7 +521,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                   return;
                 }
                 Navigator.pop(context);
-                _amountController.text = amount.toInt() as String;
+                _amountController.text = amount.toString();
                 _settleSplitAmount(split);
               },
               style: ElevatedButton.styleFrom(
@@ -584,7 +547,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
       );
       return;
     }
-    _amountController.text = remainingAmount.toInt() as String;
+    _amountController.text = remainingAmount.toString();
     _settleSplitAmount(split);
   }
 
@@ -596,7 +559,9 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                   split.paidBy == currentUserId &&
                   split.participants.any(
                     (p) =>
-                        p != currentUserId && split.getRemainingAmount(p) > 0,
+                        p != currentUserId &&
+                        split.hasAcceptedShare(p) &&
+                        split.getRemainingAmount(p) > 0,
                   ),
             )
             .toList();
@@ -646,7 +611,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                 Text(
                   '${splitsOwedToUser.length} pending splits',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 16,
                   ),
                 ),
@@ -660,9 +625,9 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
               width: double.infinity,
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
               ),
               child: Column(
                 children: [
@@ -718,7 +683,12 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
   Widget _buildOwedToYouSplitCard(SplitModel split, String currentUserId) {
     final participantsWhoOwe =
         split.participants
-            .where((p) => p != currentUserId && split.getRemainingAmount(p) > 0)
+            .where(
+              (p) =>
+                  p != currentUserId &&
+                  split.hasAcceptedShare(p) &&
+                  split.getRemainingAmount(p) > 0,
+            )
             .toList();
 
     final totalOwedForThisSplit = participantsWhoOwe.fold(
@@ -739,7 +709,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -829,9 +799,9 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                   children: [
                     CircleAvatar(
                       radius: 16,
-                      backgroundColor: Colors.green.withOpacity(0.1),
+                      backgroundColor: Colors.green.withValues(alpha: 0.1),
                       child: Text(
-                        'M', // Replace with actual name
+                        _initialFor(participantId),
                         style: const TextStyle(
                           color: Colors.green,
                           fontWeight: FontWeight.bold,
@@ -844,9 +814,9 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Member', // Replace with actual name
-                            style: TextStyle(
+                          Text(
+                            _nameFor(participantId),
+                            style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
@@ -955,7 +925,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                             borderRadius: BorderRadius.circular(8),
                             color:
                                 selectedParticipants[participantId]!
-                                    ? const Color(0xFF008080).withOpacity(0.1)
+                                    ? const Color(0xFF008080).withValues(alpha: 0.1)
                                     : null,
                           ),
                           child: Column(
@@ -977,9 +947,9 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
-                                          'Member', // Replace with actual name
-                                          style: TextStyle(
+                                        Text(
+                                          _nameFor(participantId),
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -1075,12 +1045,12 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
           final amount = double.tryParse(amountText);
           final maxAmount = split.getRemainingAmount(participantId);
 
+          final memberName = _nameFor(participantId);
+
           if (amount == null || amount <= 0) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(
-                  'Invalid amount for Member',
-                ), // Replace with actual name
+                content: Text('Invalid amount for $memberName'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -1091,7 +1061,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Amount cannot exceed ₹${maxAmount.toInt()} for Member', // Replace with actual name
+                  'Amount cannot exceed ₹${maxAmount.toInt()} for $memberName',
                 ),
                 backgroundColor: Colors.red,
               ),
@@ -1106,14 +1076,16 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
             toUserId: currentUserId,
             amount: amount,
             settledAt: DateTime.now(),
-            notes: 'Payment received and marked by ${currentUserId}',
+            notes: 'Payment received and marked by $currentUserId',
+            status: SettlementStatus.pending,
+            recordedBy: currentUserId,
           );
 
-          await context.read<GroupService>().addSettlement(
+          await context.read<GroupService>().recordSettlement(
             split.id,
             settlement,
           );
-          processedMembers.add('Member'); // Replace with actual name
+          processedMembers.add(memberName);
         }
       }
 
@@ -1127,7 +1099,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Payment received from ${processedMembers.join(', ')}!',
+              'Recorded — waiting for ${processedMembers.join(', ')} to confirm.',
             ),
             backgroundColor: Colors.green,
           ),

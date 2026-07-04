@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:settlement/models/group_Invitation_model.dart';
-import 'package:settlement/services/Invitation_service.dart';
+import 'package:settlement/models/group_invitation_model.dart';
+import 'package:settlement/services/invitation_service.dart';
 
 class InvitationsScreen extends StatefulWidget {
   const InvitationsScreen({super.key});
@@ -166,7 +166,7 @@ class _InvitationsScreenState extends State<InvitationsScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF008080).withOpacity(0.1),
+                    color: const Color(0xFF008080).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -200,7 +200,7 @@ class _InvitationsScreenState extends State<InvitationsScreen>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Text(
@@ -279,7 +279,7 @@ class _InvitationsScreenState extends State<InvitationsScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF008080).withOpacity(0.1),
+                    color: const Color(0xFF008080).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -313,7 +313,7 @@ class _InvitationsScreenState extends State<InvitationsScreen>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(invitation.status).withOpacity(0.1),
+                    color: _getStatusColor(invitation.status).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

@@ -1,0 +1,6 @@
+# Copy this file to android/key.properties and fill in real values to sign
+# release builds. android/key.properties is git-ignored — never commit it.
+storePassword=your-keystore-password
+keyPassword=your-key-password
+keyAlias=your-key-alias
+storeFile=/absolute/path/to/your-release-key.jks

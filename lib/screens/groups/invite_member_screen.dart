@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:settlement/services/Invitation_service.dart';
+import 'package:settlement/services/invitation_service.dart';
 import '../../models/group_model.dart';
 
 class InviteMemberScreen extends StatefulWidget {
@@ -103,7 +103,7 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF008080).withOpacity(0.1),
+                          color: const Color(0xFF008080).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -223,7 +223,7 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
+                          color: Colors.blue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(

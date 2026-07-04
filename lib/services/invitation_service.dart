@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:settlement/models/group_Invitation_model.dart';
+import 'package:settlement/models/group_invitation_model.dart';
+import 'package:settlement/models/group_model.dart';
 import 'package:uuid/uuid.dart';
 
 class InvitationService extends ChangeNotifier {
@@ -16,6 +17,13 @@ class InvitationService extends ChangeNotifier {
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  /// Clears cached data (e.g. on sign-out).
+  void reset() {
+    _receivedInvitations = [];
+    _sentInvitations = [];
+    notifyListeners();
+  }
 
   Future<void> sendGroupInvitation({
     required String groupId,
@@ -54,7 +62,7 @@ class InvitationService extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error sending invitation: $e');
+      debugPrint('Error sending invitation: $e');
       rethrow;
     }
   }
@@ -86,7 +94,7 @@ class InvitationService extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error loading received invitations: $e');
+      debugPrint('Error loading received invitations: $e');
     }
   }
 
@@ -108,7 +116,7 @@ class InvitationService extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      print('Error loading sent invitations: $e');
+      debugPrint('Error loading sent invitations: $e');
     }
   }
 
@@ -120,6 +128,39 @@ class InvitationService extends ChangeNotifier {
       final invitation = _receivedInvitations.firstWhere(
         (inv) => inv.id == invitationId,
       );
+
+      // Reject expired invitations.
+      if (invitation.isExpired) {
+        await _firestore
+            .collection('group_invitations')
+            .doc(invitationId)
+            .update({'status': 'expired'});
+        _receivedInvitations.removeWhere((inv) => inv.id == invitationId);
+        _isLoading = false;
+        notifyListeners();
+        throw Exception('This invitation has expired.');
+      }
+
+      // Verify the group still exists and the user isn't already a member.
+      final groupDoc =
+          await _firestore.collection('groups').doc(invitation.groupId).get();
+      if (!groupDoc.exists) {
+        _receivedInvitations.removeWhere((inv) => inv.id == invitationId);
+        _isLoading = false;
+        notifyListeners();
+        throw Exception('This group no longer exists.');
+      }
+      final group = GroupModel.fromMap(groupDoc.data()!);
+      if (group.allMemberIds.contains(_auth.currentUser!.uid)) {
+        await _firestore
+            .collection('group_invitations')
+            .doc(invitationId)
+            .update({'status': 'accepted'});
+        _receivedInvitations.removeWhere((inv) => inv.id == invitationId);
+        _isLoading = false;
+        notifyListeners();
+        return; // Already a member — nothing more to do.
+      }
 
       // Update invitation status
       await _firestore.collection('group_invitations').doc(invitationId).update(
@@ -144,7 +185,7 @@ class InvitationService extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error accepting invitation: $e');
+      debugPrint('Error accepting invitation: $e');
       rethrow;
     }
   }
@@ -158,7 +199,7 @@ class InvitationService extends ChangeNotifier {
       _receivedInvitations.removeWhere((inv) => inv.id == invitationId);
       notifyListeners();
     } catch (e) {
-      print('Error declining invitation: $e');
+      debugPrint('Error declining invitation: $e');
       rethrow;
     }
   }
@@ -173,7 +214,7 @@ class InvitationService extends ChangeNotifier {
       _sentInvitations.removeWhere((inv) => inv.id == invitationId);
       notifyListeners();
     } catch (e) {
-      print('Error canceling invitation: $e');
+      debugPrint('Error canceling invitation: $e');
       rethrow;
     }
   }

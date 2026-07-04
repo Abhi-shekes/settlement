@@ -5,6 +5,7 @@ import '../../models/split_model.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/group_service.dart';
+import '../../utils/money.dart';
 
 class AddSplitScreen extends StatefulWidget {
   const AddSplitScreen({super.key});
@@ -96,17 +97,15 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
   }
 
   void _calculateEqualSplits() {
-    if (_amountController.text.isEmpty) return;
+    final totalAmount = double.tryParse(_amountController.text);
+    if (totalAmount == null) return;
 
-    final totalAmount = double.parse(_amountController.text);
     final currentUserId = context.read<AuthService>().currentUser!.uid;
     final participants = [currentUserId, ..._selectedFriendIds];
-    final perPersonAmount = totalAmount / participants.length;
 
-    _customAmounts.clear();
-    for (final participantId in participants) {
-      _customAmounts[participantId] = perPersonAmount;
-    }
+    _customAmounts
+      ..clear()
+      ..addAll(splitEvenly(totalAmount, participants));
     setState(() {}); // Trigger rebuild to update UI
   }
 
@@ -372,7 +371,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                                         radius: 20,
                                         backgroundColor: const Color(
                                           0xFF008080,
-                                        ).withOpacity(0.1),
+                                        ).withValues(alpha: 0.1),
                                         child: Text(
                                           friend.displayName.isNotEmpty
                                               ? friend.displayName[0]
@@ -459,7 +458,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                           margin: const EdgeInsets.only(top: 16, bottom: 16),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF008080).withOpacity(0.1),
+                            color: const Color(0xFF008080).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: const Color(0xFF008080)),
                           ),
@@ -597,7 +596,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
         decoration: BoxDecoration(
           color:
               isSelected
-                  ? const Color(0xFF008080).withOpacity(0.1)
+                  ? const Color(0xFF008080).withValues(alpha: 0.1)
                   : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(

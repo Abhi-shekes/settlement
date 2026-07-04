@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/expense_service.dart';
 import '../../services/group_service.dart';
+import '../../services/auth_service.dart';
+import '../../services/notification_service.dart';
 import 'dashboard_screen.dart';
 import '../expenses/expenses_screen.dart';
 import '../splits/splits_screen.dart';
@@ -39,6 +41,10 @@ class _HomeScreenState extends State<HomeScreen> {
       context.read<ExpenseService>().loadUserExpenses();
       context.read<GroupService>().loadUserGroups();
       context.read<GroupService>().loadUserSplits();
+
+      // Register this device for push notifications now that we're signed in.
+      final uid = context.read<AuthService>().currentUser?.uid;
+      if (uid != null) NotificationService.instance.registerDevice(uid);
     });
   }
 

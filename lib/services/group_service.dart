@@ -4,7 +4,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/group_model.dart';
 import '../models/split_model.dart';
 import '../models/expense_model.dart';
-import 'package:uuid/uuid.dart';
+
+/// A pending settlement paired with the split it belongs to, for the confirm
+/// inbox.
+class PendingSettlement {
+  final SplitModel split;
+  final SettlementModel settlement;
+  PendingSettlement({required this.split, required this.settlement});
+}
 
 class GroupService extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -18,6 +25,13 @@ class GroupService extends ChangeNotifier {
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  /// Clears cached data (e.g. on sign-out).
+  void reset() {
+    _groups = [];
+    _splits = [];
+    notifyListeners();
+  }
 
   Future<void> createGroup(GroupModel group) async {
     try {
@@ -38,7 +52,7 @@ class GroupService extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error creating group: $e');
+      debugPrint('Error creating group: $e');
       rethrow;
     }
   }
@@ -88,7 +102,7 @@ class GroupService extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error loading groups: $e');
+      debugPrint('Error loading groups: $e');
     }
   }
 
@@ -112,7 +126,7 @@ class GroupService extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error adding member to group: $e');
+      debugPrint('Error adding member to group: $e');
       rethrow;
     }
   }
@@ -122,60 +136,31 @@ class GroupService extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      await _firestore.collection('splits').doc(split.id).set(split.toMap());
-      _splits.add(split);
-
-      // Update group balances if it's a group split
-      if (split.groupId != null) {
-        await _updateGroupBalances(split.groupId!, split);
+      // Handshake: the payer is auto-accepted, but every other participant must
+      // approve their share before it becomes a real debt — so we do NOT touch
+      // group balances here. Balances move in [acceptSplitShare].
+      final status = <String, String>{};
+      for (final p in split.participants) {
+        status[p] =
+            p == split.paidBy
+                ? ParticipantStatus.accepted
+                : ParticipantStatus.pending;
       }
+      final pendingSplit = split.copyWith(participantStatus: status);
+
+      await _firestore
+          .collection('splits')
+          .doc(pendingSplit.id)
+          .set(pendingSplit.toMap());
+      _splits.add(pendingSplit);
 
       _isLoading = false;
       notifyListeners();
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error creating split: $e');
+      debugPrint('Error creating split: $e');
       rethrow;
-    }
-  }
-
-  Future<void> _updateGroupBalances(String groupId, SplitModel split) async {
-    try {
-      final groupDoc = await _firestore.collection('groups').doc(groupId).get();
-      if (!groupDoc.exists) return;
-
-      final group = GroupModel.fromMap(groupDoc.data()!);
-      final updatedBalances = Map<String, double>.from(group.balances);
-
-      // Update balances based on the split
-      for (final participantId in split.participants) {
-        if (participantId == split.paidBy) {
-          // Person who paid gets credited
-          updatedBalances[participantId] =
-              (updatedBalances[participantId] ?? 0) +
-              split.totalAmount -
-              split.splitAmounts[participantId]!;
-        } else {
-          // Others get debited
-          updatedBalances[participantId] =
-              (updatedBalances[participantId] ?? 0) -
-              split.splitAmounts[participantId]!;
-        }
-      }
-
-      await _firestore.collection('groups').doc(groupId).update({
-        'balances': updatedBalances,
-      });
-
-      // Update local group
-      final groupIndex = _groups.indexWhere((g) => g.id == groupId);
-      if (groupIndex != -1) {
-        _groups[groupIndex] = group.copyWith(balances: updatedBalances);
-        notifyListeners();
-      }
-    } catch (e) {
-      print('Error updating group balances: $e');
     }
   }
 
@@ -201,81 +186,275 @@ class GroupService extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error loading splits: $e');
+      debugPrint('Error loading splits: $e');
     }
   }
 
-  Future<void> addSettlement(String splitId, SettlementModel settlement) async {
+  // ---------------------------------------------------------------------------
+  // Split-share approval (per-participant handshake)
+  // ---------------------------------------------------------------------------
+
+  /// A participant approves their share. Only now does their portion of the
+  /// debt post to the group balances (payer credited, participant debited).
+  Future<void> acceptSplitShare(String splitId, String userId) async {
     try {
-      final splitDoc = await _firestore.collection('splits').doc(splitId).get();
-      if (!splitDoc.exists) return;
+      final splitRef = _firestore.collection('splits').doc(splitId);
 
-      final split = SplitModel.fromMap(splitDoc.data()!);
-      final updatedSettlements = [...split.settlements, settlement];
+      final result = await _firestore.runTransaction((txn) async {
+        final splitDoc = await txn.get(splitRef);
+        if (!splitDoc.exists) return null;
 
-      // Check if split is fully settled
-      final totalOwed = split.getAmountOwedBy(settlement.fromUserId);
-      final totalSettled = updatedSettlements
-          .where((s) => s.fromUserId == settlement.fromUserId)
-          .fold(0.0, (sum, s) => sum + s.amount);
+        final split = SplitModel.fromMap(splitDoc.data()!);
+        if (split.statusFor(userId) == ParticipantStatus.accepted) {
+          return null; // idempotent
+        }
 
-      final isFullySettled = totalSettled >= totalOwed;
+        final status = Map<String, String>.from(split.participantStatus);
+        status[userId] = ParticipantStatus.accepted;
+        final share = split.getAmountOwedBy(userId);
 
-      await _firestore.collection('splits').doc(splitId).update({
-        'settlements': updatedSettlements.map((s) => s.toMap()).toList(),
-        'isFullySettled': isFullySettled,
+        DocumentReference? groupRef;
+        Map<String, double>? balances;
+        if (split.groupId != null && share != 0) {
+          groupRef = _firestore.collection('groups').doc(split.groupId);
+          final groupDoc = await txn.get(groupRef);
+          if (groupDoc.exists) {
+            final group = GroupModel.fromMap(
+              groupDoc.data()! as Map<String, dynamic>,
+            );
+            balances = Map<String, double>.from(group.balances);
+            balances[userId] = (balances[userId] ?? 0) - share;
+            balances[split.paidBy] = (balances[split.paidBy] ?? 0) + share;
+          }
+        }
+
+        txn.update(splitRef, {'participantStatus': status});
+        if (groupRef != null && balances != null) {
+          txn.update(groupRef, {'balances': balances});
+        }
+
+        return {
+          'split': split.copyWith(participantStatus: status),
+          'groupId': split.groupId,
+          'balances': balances,
+        };
       });
 
-      // Update local splits list
-      final splitIndex = _splits.indexWhere((s) => s.id == splitId);
-      if (splitIndex != -1) {
-        _splits[splitIndex] = split.copyWith(
-          settlements: updatedSettlements,
-          isFullySettled: isFullySettled,
-        );
-        notifyListeners();
-      }
-
-      // Update group balances if it's a group split
-      if (split.groupId != null) {
-        await _updateGroupBalancesForSettlement(split.groupId!, settlement);
-      }
+      if (result == null) return;
+      _applyLocalSplitAndBalances(result);
+      notifyListeners();
     } catch (e) {
-      print('Error adding settlement: $e');
+      debugPrint('Error accepting split share: $e');
       rethrow;
     }
   }
 
-  Future<void> _updateGroupBalancesForSettlement(
-    String groupId,
+  /// A participant declines their share; it never becomes a debt.
+  Future<void> declineSplitShare(String splitId, String userId) async {
+    try {
+      final splitRef = _firestore.collection('splits').doc(splitId);
+      final splitDoc = await splitRef.get();
+      if (!splitDoc.exists) return;
+
+      final split = SplitModel.fromMap(splitDoc.data()!);
+      final status = Map<String, String>.from(split.participantStatus);
+      status[userId] = ParticipantStatus.declined;
+
+      await splitRef.update({'participantStatus': status});
+
+      final idx = _splits.indexWhere((s) => s.id == splitId);
+      if (idx != -1) {
+        _splits[idx] = split.copyWith(participantStatus: status);
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error declining split share: $e');
+      rethrow;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Settlements (record → the other party confirms)
+  // ---------------------------------------------------------------------------
+
+  /// Records a settlement as PENDING. Balances do not move until the other
+  /// party confirms it via [confirmSettlement]. [settlement] must carry
+  /// status = pending and recordedBy = the current user.
+  Future<void> recordSettlement(
+    String splitId,
     SettlementModel settlement,
   ) async {
     try {
-      final groupDoc = await _firestore.collection('groups').doc(groupId).get();
-      if (!groupDoc.exists) return;
+      final splitRef = _firestore.collection('splits').doc(splitId);
+      final splitDoc = await splitRef.get();
+      if (!splitDoc.exists) return;
 
-      final group = GroupModel.fromMap(groupDoc.data()!);
-      final updatedBalances = Map<String, double>.from(group.balances);
+      final split = SplitModel.fromMap(splitDoc.data()!);
+      final updated = [...split.settlements, settlement];
 
-      // Update balances: fromUser pays, toUser receives
-      updatedBalances[settlement.fromUserId] =
-          (updatedBalances[settlement.fromUserId] ?? 0) + settlement.amount;
-      updatedBalances[settlement.toUserId] =
-          (updatedBalances[settlement.toUserId] ?? 0) - settlement.amount;
-
-      await _firestore.collection('groups').doc(groupId).update({
-        'balances': updatedBalances,
+      await splitRef.update({
+        'settlements': updated.map((s) => s.toMap()).toList(),
       });
 
-      // Update local group
-      final groupIndex = _groups.indexWhere((g) => g.id == groupId);
-      if (groupIndex != -1) {
-        _groups[groupIndex] = group.copyWith(balances: updatedBalances);
-        notifyListeners();
+      final idx = _splits.indexWhere((s) => s.id == splitId);
+      if (idx != -1) {
+        _splits[idx] = split.copyWith(settlements: updated);
       }
+      notifyListeners();
     } catch (e) {
-      print('Error updating group balances for settlement: $e');
+      debugPrint('Error recording settlement: $e');
+      rethrow;
     }
+  }
+
+  /// The counterparty confirms a pending settlement: only now do balances move
+  /// and the split can become fully settled.
+  Future<void> confirmSettlement(String splitId, String settlementId) async {
+    try {
+      final splitRef = _firestore.collection('splits').doc(splitId);
+
+      final result = await _firestore.runTransaction((txn) async {
+        final splitDoc = await txn.get(splitRef);
+        if (!splitDoc.exists) return null;
+
+        final split = SplitModel.fromMap(splitDoc.data()!);
+        final sIdx = split.settlements.indexWhere((s) => s.id == settlementId);
+        if (sIdx == -1) return null;
+        final target = split.settlements[sIdx];
+        if (target.status != SettlementStatus.pending) return null;
+
+        final updatedSettlements = List<SettlementModel>.from(
+          split.settlements,
+        );
+        updatedSettlements[sIdx] = target.copyWith(
+          status: SettlementStatus.confirmed,
+        );
+
+        // Fully settled only when every ACCEPTED non-payer participant is clear.
+        final probe = split.copyWith(settlements: updatedSettlements);
+        final acceptedDebtors =
+            split.participants
+                .where((p) => p != split.paidBy && split.hasAcceptedShare(p))
+                .toList();
+        final isFullySettled =
+            acceptedDebtors.isNotEmpty &&
+            acceptedDebtors.every(
+              (p) => probe.getRemainingAmount(p) <= 0.01,
+            );
+
+        DocumentReference? groupRef;
+        Map<String, double>? balances;
+        if (split.groupId != null) {
+          groupRef = _firestore.collection('groups').doc(split.groupId);
+          final groupDoc = await txn.get(groupRef);
+          if (groupDoc.exists) {
+            final group = GroupModel.fromMap(
+              groupDoc.data()! as Map<String, dynamic>,
+            );
+            balances = Map<String, double>.from(group.balances);
+            balances[target.fromUserId] =
+                (balances[target.fromUserId] ?? 0) + target.amount;
+            balances[target.toUserId] =
+                (balances[target.toUserId] ?? 0) - target.amount;
+          }
+        }
+
+        txn.update(splitRef, {
+          'settlements': updatedSettlements.map((s) => s.toMap()).toList(),
+          'isFullySettled': isFullySettled,
+        });
+        if (groupRef != null && balances != null) {
+          txn.update(groupRef, {'balances': balances});
+        }
+
+        return {
+          'split': split.copyWith(
+            settlements: updatedSettlements,
+            isFullySettled: isFullySettled,
+          ),
+          'groupId': split.groupId,
+          'balances': balances,
+        };
+      });
+
+      if (result == null) return;
+      _applyLocalSplitAndBalances(result);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error confirming settlement: $e');
+      rethrow;
+    }
+  }
+
+  /// The counterparty rejects a pending settlement; balances are untouched.
+  Future<void> rejectSettlement(String splitId, String settlementId) async {
+    try {
+      final splitRef = _firestore.collection('splits').doc(splitId);
+      final splitDoc = await splitRef.get();
+      if (!splitDoc.exists) return;
+
+      final split = SplitModel.fromMap(splitDoc.data()!);
+      final sIdx = split.settlements.indexWhere((s) => s.id == settlementId);
+      if (sIdx == -1) return;
+
+      final updated = List<SettlementModel>.from(split.settlements);
+      updated[sIdx] = updated[sIdx].copyWith(status: SettlementStatus.rejected);
+
+      await splitRef.update({
+        'settlements': updated.map((s) => s.toMap()).toList(),
+      });
+
+      final idx = _splits.indexWhere((s) => s.id == splitId);
+      if (idx != -1) {
+        _splits[idx] = split.copyWith(settlements: updated);
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error rejecting settlement: $e');
+      rethrow;
+    }
+  }
+
+  void _applyLocalSplitAndBalances(Map<String, dynamic> result) {
+    final updatedSplit = result['split'] as SplitModel;
+    final idx = _splits.indexWhere((s) => s.id == updatedSplit.id);
+    if (idx != -1) {
+      _splits[idx] = updatedSplit;
+    }
+    final groupId = result['groupId'] as String?;
+    final balances = result['balances'] as Map<String, double>?;
+    if (groupId != null && balances != null) {
+      final gi = _groups.indexWhere((g) => g.id == groupId);
+      if (gi != -1) {
+        _groups[gi] = _groups[gi].copyWith(balances: balances);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Pending-confirmation feeds (for the Requests inbox / inline surfaces)
+  // ---------------------------------------------------------------------------
+
+  /// Splits where [userId] still has to approve their share.
+  List<SplitModel> splitsAwaitingApprovalFrom(String userId) {
+    return _splits
+        .where(
+          (s) => s.paidBy != userId && s.isAwaitingApprovalFrom(userId),
+        )
+        .toList();
+  }
+
+  /// Pending settlements that [userId] is the one who must confirm.
+  List<PendingSettlement> pendingSettlementsToConfirm(String userId) {
+    final result = <PendingSettlement>[];
+    for (final s in _splits) {
+      for (final st in s.settlements) {
+        if (st.isPending && st.confirmerId == userId) {
+          result.add(PendingSettlement(split: s, settlement: st));
+        }
+      }
+    }
+    return result;
   }
 
   List<SplitModel> getGroupSplits(String groupId) {
@@ -288,6 +467,7 @@ class GroupService extends ChangeNotifier {
           (s) =>
               s.participants.contains(userId) &&
               s.paidBy != userId &&
+              s.hasAcceptedShare(userId) &&
               s.getRemainingAmount(userId) > 0,
         )
         .toList();
@@ -299,7 +479,10 @@ class GroupService extends ChangeNotifier {
           (s) =>
               s.paidBy == userId &&
               s.participants.any(
-                (p) => p != userId && s.getRemainingAmount(p) > 0,
+                (p) =>
+                    p != userId &&
+                    s.hasAcceptedShare(p) &&
+                    s.getRemainingAmount(p) > 0,
               ),
         )
         .toList();
@@ -317,7 +500,7 @@ class GroupService extends ChangeNotifier {
       (sum, split) =>
           sum +
           split.participants
-              .where((p) => p != userId)
+              .where((p) => p != userId && split.hasAcceptedShare(p))
               .fold(0.0, (pSum, p) => pSum + split.getRemainingAmount(p)),
     );
   }
@@ -332,7 +515,7 @@ class GroupService extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error updating group: $e');
+      debugPrint('Error updating group: $e');
       rethrow;
     }
   }
@@ -367,7 +550,7 @@ class GroupService extends ChangeNotifier {
       _splits.removeWhere((s) => s.groupId == groupId);
       notifyListeners();
     } catch (e) {
-      print('Error deleting group: $e');
+      debugPrint('Error deleting group: $e');
       rethrow;
     }
   }
@@ -401,7 +584,7 @@ class GroupService extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error leaving group: $e');
+      debugPrint('Error leaving group: $e');
       rethrow;
     }
   }
@@ -432,52 +615,7 @@ class GroupService extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error adding group expense: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> settleGroupBalance(
-    String groupId,
-    String fromUserId,
-    String toUserId,
-    double amount,
-  ) async {
-    try {
-      final groupDoc = await _firestore.collection('groups').doc(groupId).get();
-      if (!groupDoc.exists) return;
-
-      final group = GroupModel.fromMap(groupDoc.data()!);
-      final updatedBalances = Map<String, double>.from(group.balances);
-
-      // Update balances: fromUser pays, toUser receives
-      updatedBalances[fromUserId] = (updatedBalances[fromUserId] ?? 0) + amount;
-      updatedBalances[toUserId] = (updatedBalances[toUserId] ?? 0) - amount;
-
-      await _firestore.collection('groups').doc(groupId).update({
-        'balances': updatedBalances,
-      });
-
-      // Create a settlement record
-      final settlement = SettlementModel(
-        id: const Uuid().v4(),
-        fromUserId: fromUserId,
-        toUserId: toUserId,
-        amount: amount,
-        settledAt: DateTime.now(),
-        notes: 'Group settlement',
-      );
-
-      await _firestore.collection('settlements').add(settlement.toMap());
-
-      // Update local group
-      final groupIndex = _groups.indexWhere((g) => g.id == groupId);
-      if (groupIndex != -1) {
-        _groups[groupIndex] = group.copyWith(balances: updatedBalances);
-        notifyListeners();
-      }
-    } catch (e) {
-      print('Error settling group balance: $e');
+      debugPrint('Error adding group expense: $e');
       rethrow;
     }
   }
@@ -498,7 +636,7 @@ class GroupService extends ChangeNotifier {
           .map((doc) => ExpenseModel.fromMap(doc.data()))
           .toList();
     } catch (e) {
-      print('Error getting group expenses: $e');
+      debugPrint('Error getting group expenses: $e');
       return [];
     }
   }
@@ -545,6 +683,7 @@ extension SplitModelExtension on SplitModel {
     String? notes,
     bool? isFullySettled,
     List<SettlementModel>? settlements,
+    Map<String, String>? participantStatus,
   }) {
     return SplitModel(
       id: id ?? this.id,
@@ -560,6 +699,7 @@ extension SplitModelExtension on SplitModel {
       notes: notes ?? this.notes,
       isFullySettled: isFullySettled ?? this.isFullySettled,
       settlements: settlements ?? this.settlements,
+      participantStatus: participantStatus ?? this.participantStatus,
     );
   }
 }

@@ -1,20 +1,20 @@
 {
   "project_info": {
-    "project_number": "467775485394",
-    "project_id": "settlement-588f5",
-    "storage_bucket": "settlement-588f5.firebasestorage.app"
+    "project_number": "558917768047",
+    "project_id": "settlement-fec28",
+    "storage_bucket": "settlement-fec28.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:467775485394:android:655ae604090fd66e70c40b",
+        "mobilesdk_app_id": "1:558917768047:android:7e3deaa58588adca858e9a",
         "android_client_info": {
           "package_name": "com.example.settlement"
         }
       },
       "oauth_client": [
         {
-          "client_id": "467775485394-t0nvib8rm8tn30t8o3qhaq0do2rogo1f.apps.googleusercontent.com",
+          "client_id": "558917768047-cernddi44ng2flnuc6h7sp10g3tnl9mt.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.settlement",
@@ -22,20 +22,20 @@
           }
         },
         {
-          "client_id": "467775485394-3cn48p21e0mrd5ad8jptq7d9p1genblo.apps.googleusercontent.com",
+          "client_id": "558917768047-qh90bdr8r19k5a6mkcoj800ihr1bdkt2.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBM-gkJKP1iDumExGIO2z0wWTRYlIv1AsI"
+          "current_key": "AIzaSyBhrfdGO8jQ_qoWrlgdJMuOpxnJdEfICTg"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "467775485394-3cn48p21e0mrd5ad8jptq7d9p1genblo.apps.googleusercontent.com",
+              "client_id": "558917768047-qh90bdr8r19k5a6mkcoj800ihr1bdkt2.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

@@ -37,8 +37,8 @@ class BudgetAlertDialog extends StatelessWidget {
               decoration: BoxDecoration(
                 color:
                     isApproaching
-                        ? Colors.orange.withOpacity(0.1)
-                        : Colors.red.withOpacity(0.1),
+                        ? Colors.orange.withValues(alpha: 0.1)
+                        : Colors.red.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
