@@ -134,8 +134,7 @@ class SplitModel {
     return settlements
         .where(
           (s) =>
-              s.fromUserId == userId &&
-              s.status == SettlementStatus.confirmed,
+              s.fromUserId == userId && s.status == SettlementStatus.confirmed,
         )
         .fold(0.0, (sum, s) => sum + s.amount);
   }

@@ -313,7 +313,9 @@ class _InvitationsScreenState extends State<InvitationsScreen>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(invitation.status).withValues(alpha: 0.1),
+                    color: _getStatusColor(
+                      invitation.status,
+                    ).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

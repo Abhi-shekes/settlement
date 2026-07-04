@@ -111,10 +111,7 @@ class ExpenseService extends ChangeNotifier {
     // [start, end): include the exact start instant (e.g. midnight) so an
     // expense created at 00:00:00.000 is not dropped from its own day.
     return _expenses
-        .where(
-          (e) =>
-              !e.createdAt.isBefore(start) && e.createdAt.isBefore(end),
-        )
+        .where((e) => !e.createdAt.isBefore(start) && e.createdAt.isBefore(end))
         .toList();
   }
 

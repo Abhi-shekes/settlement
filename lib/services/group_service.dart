@@ -338,9 +338,7 @@ class GroupService extends ChangeNotifier {
                 .toList();
         final isFullySettled =
             acceptedDebtors.isNotEmpty &&
-            acceptedDebtors.every(
-              (p) => probe.getRemainingAmount(p) <= 0.01,
-            );
+            acceptedDebtors.every((p) => probe.getRemainingAmount(p) <= 0.01);
 
         DocumentReference? groupRef;
         Map<String, double>? balances;
@@ -438,9 +436,7 @@ class GroupService extends ChangeNotifier {
   /// Splits where [userId] still has to approve their share.
   List<SplitModel> splitsAwaitingApprovalFrom(String userId) {
     return _splits
-        .where(
-          (s) => s.paidBy != userId && s.isAwaitingApprovalFrom(userId),
-        )
+        .where((s) => s.paidBy != userId && s.isAwaitingApprovalFrom(userId))
         .toList();
   }
 

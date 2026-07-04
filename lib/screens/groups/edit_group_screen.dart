@@ -104,10 +104,14 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF008080).withValues(alpha: 0.1),
+                            color: const Color(
+                              0xFF008080,
+                            ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: const Color(0xFF008080).withValues(alpha: 0.3),
+                              color: const Color(
+                                0xFF008080,
+                              ).withValues(alpha: 0.3),
                               width: 2,
                             ),
                           ),

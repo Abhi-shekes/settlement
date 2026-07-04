@@ -239,7 +239,9 @@ class _AddGroupExpenseWithSplitScreenState
                           color: const Color(0xFF008080).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFF008080).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFF008080,
+                            ).withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
@@ -248,7 +250,9 @@ class _AddGroupExpenseWithSplitScreenState
                               width: 50,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF008080).withValues(alpha: 0.2),
+                                color: const Color(
+                                  0xFF008080,
+                                ).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
