@@ -125,13 +125,13 @@ class ExpenseService extends ChangeNotifier {
   }
 
   double getTotalExpenseAmount() {
-    return _expenses.fold(0.0, (sum, expense) => sum + expense.amount);
+    return _expenses.fold(0.0, (acc, expense) => acc + expense.amount);
   }
 
   double getTotalExpenseAmountByCategory(ExpenseCategory category) {
     return getExpensesByCategory(
       category,
-    ).fold(0.0, (sum, expense) => sum + expense.amount);
+    ).fold(0.0, (acc, expense) => acc + expense.amount);
   }
 
   Map<ExpenseCategory, double> getCategoryWiseExpenses() {
@@ -181,7 +181,7 @@ class ExpenseService extends ChangeNotifier {
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
       final dailyExpenses = getExpensesByDateRange(startOfDay, endOfDay);
-      weeklyData[dayName] = dailyExpenses.fold(0.0, (sum, e) => sum + e.amount);
+      weeklyData[dayName] = dailyExpenses.fold(0.0, (acc, e) => acc + e.amount);
     }
 
     return weeklyData;
@@ -197,7 +197,7 @@ class ExpenseService extends ChangeNotifier {
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
       final dailyExpenses = getExpensesByDateRange(startOfDay, endOfDay);
-      monthlyData['$i'] = dailyExpenses.fold(0.0, (sum, e) => sum + e.amount);
+      monthlyData['$i'] = dailyExpenses.fold(0.0, (acc, e) => acc + e.amount);
     }
 
     return monthlyData;

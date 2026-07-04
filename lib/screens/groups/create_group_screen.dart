@@ -19,7 +19,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final _descriptionController = TextEditingController();
 
   List<UserModel> _friends = [];
-  List<String> _selectedFriendIds = [];
+  final List<String> _selectedFriendIds = [];
   bool _isLoading = false;
 
   @override

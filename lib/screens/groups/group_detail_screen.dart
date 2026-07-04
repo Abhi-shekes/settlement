@@ -934,30 +934,27 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
               ),
               TextButton(
                 onPressed: () async {
-                  Navigator.pop(context); // Close dialog
+                  final navigator = Navigator.of(context);
+                  final messenger = ScaffoldMessenger.of(context);
+                  final groupService = context.read<GroupService>();
+                  navigator.pop(); // Close dialog
 
                   try {
-                    await context.read<GroupService>().deleteGroup(
-                      group.id,
+                    await groupService.deleteGroup(group.id);
+                    navigator.pop(); // Return to groups list
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        content: Text('Group deleted successfully!'),
+                        backgroundColor: Color(0xFF008080),
+                      ),
                     );
-                    if (mounted) {
-                      Navigator.pop(context); // Return to groups list
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Group deleted successfully!'),
-                          backgroundColor: Color(0xFF008080),
-                        ),
-                      );
-                    }
                   } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error deleting group: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text('Error deleting group: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                   }
                 },
                 style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -990,31 +987,27 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
               if (!isAdmin)
                 TextButton(
                   onPressed: () async {
-                    Navigator.pop(context); // Close dialog
+                    final navigator = Navigator.of(context);
+                    final messenger = ScaffoldMessenger.of(context);
+                    final groupService = context.read<GroupService>();
+                    navigator.pop(); // Close dialog
 
                     try {
-                      await context.read<GroupService>().leaveGroup(
-                        group.id,
-                        currentUserId,
+                      await groupService.leaveGroup(group.id, currentUserId);
+                      navigator.pop(); // Return to groups list
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Left group successfully!'),
+                          backgroundColor: Color(0xFF008080),
+                        ),
                       );
-                      if (mounted) {
-                        Navigator.pop(context); // Return to groups list
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Left group successfully!'),
-                            backgroundColor: Color(0xFF008080),
-                          ),
-                        );
-                      }
                     } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error leaving group: $e'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text('Error leaving group: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
                     }
                   },
                   style: TextButton.styleFrom(foregroundColor: Colors.red),

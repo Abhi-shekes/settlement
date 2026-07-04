@@ -56,6 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextButton(
                 onPressed: () async {
                   Navigator.pop(context);
+                  final messenger = ScaffoldMessenger.of(context);
                   // Clear cached account data before signing out; the auth gate
                   // in main.dart handles navigation back to the login screen.
                   context.read<ExpenseService>().reset();
@@ -71,14 +72,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   try {
                     await authService.signOut();
                   } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error signing out: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text('Error signing out: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                   }
                 },
                 style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -305,15 +304,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 GestureDetector(
                   onTap: () async {
                     final friendCode = _currentUser?.friendCode ?? '';
+                    final messenger = ScaffoldMessenger.of(context);
                     if (friendCode.isNotEmpty) {
                       await Clipboard.setData(ClipboardData(text: friendCode));
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                         const SnackBar(
                           content: Text('Friend code copied to clipboard!'),
                         ),
                       );
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                         const SnackBar(
                           content: Text('No friend code to copy!'),
                         ),

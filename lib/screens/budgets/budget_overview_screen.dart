@@ -106,7 +106,7 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
                         );
                       },
                     );
-                  }).toList(),
+                  }),
 
                   const SizedBox(height: 24),
 
