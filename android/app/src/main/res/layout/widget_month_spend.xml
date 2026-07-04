@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_bg_card"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/month_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="This month"
+        android:textColor="#FF6B7A7A"
+        android:textSize="12sp"
+        android:letterSpacing="0.05"
+        android:textAllCaps="true" />
+
+    <TextView
+        android:id="@+id/month_spend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="₹0"
+        android:textColor="#FF008080"
+        android:textSize="28sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/month_top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:text="No spending yet"
+        android:textColor="#FF3A4A4A"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/updated"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text=""
+        android:textColor="#FF9AA5A5"
+        android:textSize="11sp" />
+</LinearLayout>

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/expense_model.dart';
+import 'account_service.dart';
 
 class ExpenseService extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -12,6 +13,15 @@ class ExpenseService extends ChangeNotifier {
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  /// Injected (via ChangeNotifierProxyProvider) so that expenses tied to an
+  /// account keep that account's balance in sync as they are added, edited, or
+  /// deleted. Kept as a dependency rather than adjusting balances at each call
+  /// site so the logic lives in one place and can't drift.
+  AccountService? _accountService;
+  void attachAccountService(AccountService accountService) {
+    _accountService = accountService;
+  }
 
   /// Clears cached data (e.g. on sign-out) so the next user never sees the
   /// previous account's expenses.
@@ -30,6 +40,14 @@ class ExpenseService extends ChangeNotifier {
           .doc(expense.id)
           .set(expense.toMap());
       _expenses.add(expense);
+
+      // Spending reduces the paying account's balance.
+      if (expense.accountId != null) {
+        await _accountService?.adjustBalance(
+          expense.accountId!,
+          -expense.amount,
+        );
+      }
 
       _isLoading = false;
       notifyListeners();
@@ -76,12 +94,26 @@ class ExpenseService extends ChangeNotifier {
 
   Future<void> updateExpense(ExpenseModel expense) async {
     try {
+      final index = _expenses.indexWhere((e) => e.id == expense.id);
+      final old = index != -1 ? _expenses[index] : null;
+
       await _firestore
           .collection('expenses')
           .doc(expense.id)
           .update(expense.toMap());
 
-      final index = _expenses.indexWhere((e) => e.id == expense.id);
+      // Keep account balances in sync: undo the old charge, then apply the new
+      // one. Correct even when the amount or the account itself changed.
+      if (old?.accountId != null) {
+        await _accountService?.adjustBalance(old!.accountId!, old.amount);
+      }
+      if (expense.accountId != null) {
+        await _accountService?.adjustBalance(
+          expense.accountId!,
+          -expense.amount,
+        );
+      }
+
       if (index != -1) {
         _expenses[index] = expense;
         notifyListeners();
@@ -94,13 +126,65 @@ class ExpenseService extends ChangeNotifier {
 
   Future<void> deleteExpense(String expenseId) async {
     try {
+      final index = _expenses.indexWhere((e) => e.id == expenseId);
+      final removed = index != -1 ? _expenses[index] : null;
+
       await _firestore.collection('expenses').doc(expenseId).delete();
       _expenses.removeWhere((e) => e.id == expenseId);
+
+      // Refund the account for the deleted charge.
+      if (removed?.accountId != null) {
+        await _accountService?.adjustBalance(
+          removed!.accountId!,
+          removed.amount,
+        );
+      }
+
       notifyListeners();
     } catch (e) {
       debugPrint('Error deleting expense: $e');
       rethrow;
     }
+  }
+
+  /// Records a refund/reversal of [original] for [amount] (a positive rupee
+  /// value). Stored as a linked expense with a negative amount so it credits
+  /// the account and reduces spending totals/budgets through the normal paths.
+  /// Credits [accountId] if given, otherwise the original expense's account.
+  Future<void> recordRefund(
+    ExpenseModel original, {
+    required double amount,
+    String? accountId,
+    String? note,
+  }) async {
+    if (_auth.currentUser == null) return;
+
+    final refund = ExpenseModel(
+      id: '${original.id}-refund-${DateTime.now().millisecondsSinceEpoch}',
+      userId: _auth.currentUser!.uid,
+      title: 'Refund: ${original.title}',
+      description:
+          note?.trim().isNotEmpty == true
+              ? note!.trim()
+              : 'Refund/reversal of "${original.title}"',
+      amount: -amount.abs(),
+      category: original.category,
+      createdAt: DateTime.now(),
+      accountId: accountId ?? original.accountId,
+      refundOfExpenseId: original.id,
+    );
+
+    await addExpense(refund);
+  }
+
+  /// All refund records linked to [expenseId].
+  List<ExpenseModel> getRefundsFor(String expenseId) {
+    return _expenses.where((e) => e.refundOfExpenseId == expenseId).toList();
+  }
+
+  /// Total amount already refunded against [expenseId] (positive rupees).
+  double totalRefundedFor(String expenseId) {
+    return getRefundsFor(expenseId).fold(0.0, (acc, r) => acc + r.amount.abs());
   }
 
   List<ExpenseModel> getExpensesByCategory(ExpenseCategory category) {
