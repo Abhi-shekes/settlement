@@ -928,7 +928,9 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                             borderRadius: BorderRadius.circular(8),
                             color:
                                 selectedParticipants[participantId]!
-                                    ? const Color(0xFF008080).withValues(alpha: 0.1)
+                                    ? const Color(
+                                      0xFF008080,
+                                    ).withValues(alpha: 0.1)
                                     : null,
                           ),
                           child: Column(

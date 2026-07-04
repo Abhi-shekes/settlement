@@ -458,7 +458,9 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                           margin: const EdgeInsets.only(top: 16, bottom: 16),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF008080).withValues(alpha: 0.1),
+                            color: const Color(
+                              0xFF008080,
+                            ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: const Color(0xFF008080)),
                           ),

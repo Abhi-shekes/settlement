@@ -203,7 +203,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                           dotData: const FlDotData(show: true),
                           belowBarData: BarAreaData(
                             show: true,
-                            color: const Color(0xFF008080).withValues(alpha: 0.1),
+                            color: const Color(
+                              0xFF008080,
+                            ).withValues(alpha: 0.1),
                           ),
                         ),
                       ],

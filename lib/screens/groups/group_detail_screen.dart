@@ -155,10 +155,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
     });
 
     try {
-      await context.read<GroupService>().addMemberToGroup(
-        group.id,
-        userId,
-      );
+      await context.read<GroupService>().addMemberToGroup(group.id, userId);
 
       setState(() {
         _isLoading = false;
@@ -227,8 +224,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder:
-                          (context) => EditGroupScreen(group: group),
+                      builder: (context) => EditGroupScreen(group: group),
                     ),
                   );
                   break;
@@ -380,9 +376,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       Column(
                         children: [
                           Text(
-                            DateFormat(
-                              'MMM yyyy',
-                            ).format(group.createdAt),
+                            DateFormat('MMM yyyy').format(group.createdAt),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -472,9 +466,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       context,
                       MaterialPageRoute(
                         builder:
-                            (context) => AddGroupExpenseWithSplitScreen(
-                              group: group,
-                            ),
+                            (context) =>
+                                AddGroupExpenseWithSplitScreen(group: group),
                       ),
                     );
                   },
@@ -490,8 +483,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder:
-                            (context) => GroupSettleScreen(group: group),
+                        builder: (context) => GroupSettleScreen(group: group),
                       ),
                     );
                   },
@@ -614,9 +606,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                         context,
                         MaterialPageRoute(
                           builder:
-                              (context) => AddGroupExpenseWithSplitScreen(
-                                group: group,
-                              ),
+                              (context) =>
+                                  AddGroupExpenseWithSplitScreen(group: group),
                         ),
                       );
                     },
@@ -730,7 +721,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: const Color(0xFF008080).withValues(alpha: 0.1),
+                  backgroundColor: const Color(
+                    0xFF008080,
+                  ).withValues(alpha: 0.1),
                   backgroundImage:
                       user?.photoURL != null
                           ? NetworkImage(user!.photoURL!)
@@ -766,7 +759,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF008080).withValues(alpha: 0.1),
+                                color: const Color(
+                                  0xFF008080,
+                                ).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Text(

@@ -172,10 +172,7 @@ class _SplitsScreenState extends State<SplitsScreen>
                         ),
                       ),
                     ),
-                    const Icon(
-                      Icons.chevron_right,
-                      color: Color(0xFFFF7F50),
-                    ),
+                    const Icon(Icons.chevron_right, color: Color(0xFFFF7F50)),
                   ],
                 ),
               ),
