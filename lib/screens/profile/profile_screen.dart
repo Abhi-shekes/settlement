@@ -3,12 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
+import '../../services/account_service.dart';
+import '../../services/recurring_service.dart';
 import '../../services/expense_service.dart';
 import '../../services/group_service.dart';
 import '../../services/budget_service.dart';
 import '../../services/invitation_service.dart';
 import '../../services/notification_service.dart';
 import 'friends_screen.dart';
+import '../accounts/accounts_screen.dart';
+import '../recurring/recurring_screen.dart';
+import '../import/scan_messages_screen.dart';
+import '../ai/ai_assistant_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -60,6 +66,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // Clear cached account data before signing out; the auth gate
                   // in main.dart handles navigation back to the login screen.
                   context.read<ExpenseService>().reset();
+                  context.read<AccountService>().reset();
+                  context.read<RecurringService>().reset();
                   context.read<GroupService>().reset();
                   context.read<BudgetService>().reset();
                   context.read<InvitationService>().reset();
@@ -114,6 +122,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 32),
 
                       // Menu Items
+                      _buildMenuItem(
+                        icon: Icons.auto_awesome,
+                        title: 'AI Assistant',
+                        subtitle: 'Natural-language entry & insights',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AiAssistantScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      _buildMenuItem(
+                        icon: Icons.account_balance_wallet,
+                        title: 'Accounts',
+                        subtitle: 'Cash, bank, cards & wallets',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AccountsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      _buildMenuItem(
+                        icon: Icons.mark_email_read,
+                        title: 'Import from Messages',
+                        subtitle: 'Scan SMS or paste a bank message',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ScanMessagesScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      _buildMenuItem(
+                        icon: Icons.autorenew,
+                        title: 'Recurring',
+                        subtitle: 'Salary, rent, subscriptions & bills',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RecurringScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
                       _buildMenuItem(
                         icon: Icons.people,
                         title: 'Friends',
