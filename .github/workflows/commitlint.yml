@@ -1,0 +1,45 @@
+name: Commit Lint
+
+# Enforces Conventional Commits on every PR so release-please can derive the
+# version bump and changelog. Lints both the individual commits and the PR title
+# (the PR title is what a squash-merge uses as the commit message).
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Lint commits in this PR
+        uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: .commitlintrc.yml
+
+      - name: Lint PR title (used by squash-merge)
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            perf
+            refactor
+            revert
+            docs
+            build
+            ci
+            chore
+            test
+            style

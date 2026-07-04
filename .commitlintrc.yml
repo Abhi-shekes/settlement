@@ -1,0 +1,26 @@
+# Conventional Commits config — https://www.conventionalcommits.org
+# Enforced in CI by .github/workflows/commitlint.yml (wagoid/commitlint-github-action).
+extends:
+  - "@commitlint/config-conventional"
+rules:
+  # Allowed commit types. `feat` -> minor bump, `fix` -> patch bump,
+  # `feat!:` or a `BREAKING CHANGE:` footer -> major bump (post-1.0.0).
+  type-enum:
+    - 2
+    - always
+    - - feat
+      - fix
+      - perf
+      - refactor
+      - revert
+      - docs
+      - build
+      - ci
+      - chore
+      - test
+      - style
+  # Keep the summary readable.
+  header-max-length:
+    - 2
+    - always
+    - 100
