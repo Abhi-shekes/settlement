@@ -80,10 +80,10 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   final me = auth.currentUser?.uid ?? '';
                   final friendReqs = auth.incomingFriendRequests;
                   final groupInvites = invites.receivedInvitations;
-                  final splitApprovals =
-                      groups.splitsAwaitingApprovalFrom(me);
-                  final settlementConfirms =
-                      groups.pendingSettlementsToConfirm(me);
+                  final splitApprovals = groups.splitsAwaitingApprovalFrom(me);
+                  final settlementConfirms = groups.pendingSettlementsToConfirm(
+                    me,
+                  );
 
                   final total =
                       friendReqs.length +
@@ -107,8 +107,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                           ]),
                         if (splitApprovals.isNotEmpty)
                           _section('Split Approvals', Icons.call_split, [
-                            for (final s in splitApprovals)
-                              _splitCard(s, me),
+                            for (final s in splitApprovals) _splitCard(s, me),
                           ]),
                         if (settlementConfirms.isNotEmpty)
                           _section('Confirm Payments', Icons.handshake, [
@@ -117,8 +116,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                           ]),
                         if (groupInvites.isNotEmpty)
                           _section('Group Invitations', Icons.groups, [
-                            for (final inv in groupInvites)
-                              _inviteCard(inv),
+                            for (final inv in groupInvites) _inviteCard(inv),
                           ]),
                       ],
                     ),
@@ -139,8 +137,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(height: 120),
-                  Icon(Icons.check_circle_outline,
-                      size: 72, color: Colors.grey[400]),
+                  Icon(
+                    Icons.check_circle_outline,
+                    size: 72,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'You\'re all caught up',
@@ -222,10 +223,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
                       ),
                     ],
                   ),
@@ -319,19 +317,13 @@ class _RequestsScreenState extends State<RequestsScreen> {
     final groups = context.read<GroupService>();
     final share = s.getAmountOwedBy(me);
     return _card(
-      avatar: _circleAvatar(
-        _nameFor(s.paidBy),
-        color: const Color(0xFFFF7F50),
-      ),
+      avatar: _circleAvatar(_nameFor(s.paidBy), color: const Color(0xFFFF7F50)),
       title: s.title,
       subtitle:
           '${_nameFor(s.paidBy)} split this — your share is ₹${share.toInt()}',
       acceptLabel: 'Approve',
       onAccept:
-          () => _run(
-            () => groups.acceptSplitShare(s.id, me),
-            'Share approved',
-          ),
+          () => _run(() => groups.acceptSplitShare(s.id, me), 'Share approved'),
       onDecline:
           () => _run(() => groups.declineSplitShare(s.id, me), 'Declined'),
     );
