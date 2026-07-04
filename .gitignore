@@ -48,6 +48,7 @@ app.*.map.json
 # Secrets / signing — never commit these
 *.keystore
 *.jks
+*.base64.txt
 key.properties
 **/key.properties
 android/app/google-services.json

@@ -5,6 +5,8 @@ import '../../models/expense_model.dart';
 import '../../services/expense_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/budget_service.dart';
+import '../../services/account_service.dart';
+import '../../services/ai_service.dart';
 import '../../widgets/budget_alert_dialog.dart';
 
 class AddExpenseScreen extends StatefulWidget {
@@ -21,6 +23,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _amountController = TextEditingController();
 
   ExpenseCategory _selectedCategory = ExpenseCategory.food;
+  String? _selectedAccountId;
+  bool _suggesting = false;
   final _tagController = TextEditingController();
 
   @override
@@ -28,6 +32,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.initState();
     // Load budgets when screen initializes
     context.read<BudgetService>().loadUserBudgets();
+    final accountService = context.read<AccountService>();
+    accountService.loadUserAccounts();
+    // Default to the first account if any exist so spending is attributed by
+    // default; the user can still switch to "None".
+    if (accountService.accounts.isNotEmpty) {
+      _selectedAccountId = accountService.accounts.first.id;
+    }
   }
 
   @override
@@ -37,6 +48,51 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     _amountController.dispose();
     _tagController.dispose();
     super.dispose();
+  }
+
+  Future<void> _suggestCategory() async {
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Enter a title first.')));
+      return;
+    }
+    final ai = context.read<AiService>();
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _suggesting = true);
+    try {
+      final suggestion = await ai.suggestCategory(
+        title: title,
+        description: _descriptionController.text.trim(),
+      );
+      if (!mounted) return;
+      if (suggestion != null) {
+        setState(() => _selectedCategory = suggestion);
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Suggested: ${suggestion.categoryDisplayName}'),
+            backgroundColor: const Color(0xFF008080),
+          ),
+        );
+      }
+    } catch (e) {
+      final msg = e.toString().toLowerCase();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            msg.contains('api') ||
+                    msg.contains('permission') ||
+                    msg.contains('not enabled')
+                ? 'Enable "Firebase AI Logic" in the Firebase console.'
+                : 'AI error: $e',
+          ),
+          backgroundColor: const Color(0xFFFF7F50),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _suggesting = false);
+    }
   }
 
   Future<void> _saveExpense() async {
@@ -69,6 +125,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       amount: amount,
       category: _selectedCategory,
       createdAt: DateTime.now(),
+      accountId: _selectedAccountId,
     );
 
     try {
@@ -210,7 +267,83 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   });
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+
+              // AI category suggestion
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _suggesting ? null : _suggestCategory,
+                  icon:
+                      _suggesting
+                          ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : const Icon(Icons.auto_awesome, size: 18),
+                  label: Text(
+                    _suggesting ? 'Suggesting…' : 'Suggest category with AI',
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF008080),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Account (paid from)
+              Consumer<AccountService>(
+                builder: (context, accountService, child) {
+                  if (accountService.accounts.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  // Guard against a stale selection (e.g. account deleted).
+                  if (_selectedAccountId != null &&
+                      accountService.getAccountById(_selectedAccountId) ==
+                          null) {
+                    _selectedAccountId = null;
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: DropdownButtonFormField<String?>(
+                      initialValue: _selectedAccountId,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Paid from',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.account_balance_wallet),
+                      ),
+                      items: [
+                        const DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text('None'),
+                        ),
+                        ...accountService.accounts.map(
+                          (a) => DropdownMenuItem<String?>(
+                            value: a.id,
+                            child: Row(
+                              children: [
+                                Icon(a.icon, size: 18, color: a.color),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${a.name} (${a.formattedBalance})',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() => _selectedAccountId = value);
+                      },
+                    ),
+                  );
+                },
+              ),
 
               // Description
               TextFormField(

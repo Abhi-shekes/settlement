@@ -753,10 +753,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     children: [
                       Text(
                         expense.formattedAmount,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF008080),
+                          color:
+                              expense.isRefund
+                                  ? const Color(0xFF2E7D32)
+                                  : const Color(0xFF008080),
                         ),
                       ),
                       const SizedBox(height: 4),

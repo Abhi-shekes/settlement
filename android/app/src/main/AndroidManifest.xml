@@ -4,6 +4,11 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Android 13+ requires runtime permission to post notifications. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Read bank/card transaction SMS to auto-create expenses (opt-in; the
+         user is prompted at runtime and can decline). -->
+    <uses-permission android:name="android.permission.READ_SMS"/>
+    <!-- Voice entry: dictate an expense (prompted at runtime). -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
         android:label="settlement"
         android:name="${applicationName}"
@@ -40,6 +45,49 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="settlement_default" />
+
+        <!-- Home-screen widgets (home_widget). The AppWidget framework delivers
+             updates to these even though they're not exported. -->
+        <receiver
+            android:name=".MonthSpendWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_month_spend_info" />
+        </receiver>
+        <receiver
+            android:name=".NetWorthWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_net_worth_info" />
+        </receiver>
+        <receiver
+            android:name=".BudgetWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_budget_info" />
+        </receiver>
+        <receiver
+            android:name=".QuickAddWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quick_add_info" />
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
@@ -50,6 +98,10 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Required on Android 11+ so speech_to_text can find a recognition service. -->
+        <intent>
+            <action android:name="android.speech.RecognitionService"/>
         </intent>
     </queries>
 </manifest>

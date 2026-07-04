@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../models/expense_model.dart';
 import '../../services/expense_service.dart';
+import '../../services/account_service.dart';
 import 'edit_expense_screen.dart';
+import 'record_refund_screen.dart';
 
 class ExpenseDetailScreen extends StatelessWidget {
   final ExpenseModel expense;
@@ -18,17 +20,20 @@ class ExpenseDetailScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF008080),
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EditExpenseScreen(expense: expense),
-                ),
-              );
-            },
-          ),
+          // Refunds are stored as negative-amount records; editing them through
+          // the normal form (which requires a positive amount) doesn't apply.
+          if (!expense.isRefund)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditExpenseScreen(expense: expense),
+                  ),
+                );
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () => _showDeleteConfirmation(context),
@@ -50,8 +55,11 @@ class ExpenseDetailScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF008080), Color(0xFF20B2AA)],
+                  gradient: LinearGradient(
+                    colors:
+                        expense.isRefund
+                            ? const [Color(0xFFFF7F50), Color(0xFFFFA07A)]
+                            : const [Color(0xFF008080), Color(0xFF20B2AA)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -59,9 +67,12 @@ class ExpenseDetailScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    const Text(
-                      'Amount',
-                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                    Text(
+                      expense.isRefund ? 'Refund' : 'Amount',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -119,9 +130,93 @@ class ExpenseDetailScreen extends StatelessWidget {
               ),
               if (expense.description.isNotEmpty)
                 _buildDetailRow('Description', expense.description),
+              Consumer<AccountService>(
+                builder: (context, accountService, _) {
+                  final account = accountService.getAccountById(
+                    expense.accountId,
+                  );
+                  if (account == null) return const SizedBox.shrink();
+                  return _buildDetailRow(
+                    expense.isRefund ? 'Credited to' : 'Paid from',
+                    '${account.name} (${account.type.displayName})',
+                  );
+                },
+              ),
             ]),
 
             const SizedBox(height: 24),
+
+            // Refund summary / actions (not shown for group expenses or for
+            // refund records themselves).
+            if (!expense.isRefund && expense.groupId == null)
+              Consumer<ExpenseService>(
+                builder: (context, expenseService, _) {
+                  final refunds = expenseService.getRefundsFor(expense.id);
+                  final refunded = expenseService.totalRefundedFor(expense.id);
+                  final fullyRefunded = refunded >= expense.amount - 0.001;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (refunds.isNotEmpty) ...[
+                        const Text(
+                          'Refunds',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF008080),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildDetailCard([
+                          _buildDetailRow(
+                            'Total refunded',
+                            '₹${refunded.toInt()}',
+                          ),
+                          _buildDetailRow(
+                            'Net spent',
+                            '₹${(expense.amount - refunded).toInt()}',
+                          ),
+                        ]),
+                        const SizedBox(height: 16),
+                      ],
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed:
+                              fullyRefunded
+                                  ? null
+                                  : () async {
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => RecordRefundScreen(
+                                              original: expense,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                          icon: const Icon(Icons.replay),
+                          label: Text(
+                            fullyRefunded
+                                ? 'Fully Refunded'
+                                : 'Record Refund / Reversal',
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF008080),
+                            side: const BorderSide(color: Color(0xFF008080)),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                },
+              ),
 
             // Delete Button
             SizedBox(

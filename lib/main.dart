@@ -7,7 +7,10 @@ import 'package:settlement/screens/invitations/invitations_screen.dart';
 import 'package:settlement/services/invitation_service.dart';
 import 'package:settlement/services/budget_service.dart';
 import 'services/auth_service.dart';
+import 'services/account_service.dart';
 import 'services/expense_service.dart';
+import 'services/recurring_service.dart';
+import 'services/ai_service.dart';
 import 'services/group_service.dart';
 import 'services/notification_service.dart';
 import 'screens/auth/login_screen.dart';
@@ -35,10 +38,33 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
-        ChangeNotifierProvider(create: (_) => ExpenseService()),
+        ChangeNotifierProvider(create: (_) => AccountService()),
+        // ExpenseService depends on AccountService to keep account balances in
+        // sync as expenses change, so it's created via a proxy provider.
+        ChangeNotifierProxyProvider<AccountService, ExpenseService>(
+          create: (_) => ExpenseService(),
+          update: (_, accountService, expenseService) {
+            (expenseService ??= ExpenseService()).attachAccountService(
+              accountService,
+            );
+            return expenseService;
+          },
+        ),
+        // RecurringService generates expenses through ExpenseService, so it
+        // depends on it.
+        ChangeNotifierProxyProvider<ExpenseService, RecurringService>(
+          create: (_) => RecurringService(),
+          update: (_, expenseService, recurringService) {
+            (recurringService ??= RecurringService()).attachExpenseService(
+              expenseService,
+            );
+            return recurringService;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => GroupService()),
         ChangeNotifierProvider(create: (_) => BudgetService()),
         ChangeNotifierProvider(create: (_) => InvitationService()),
+        ChangeNotifierProvider(create: (_) => AiService()),
       ],
       child: MaterialApp(
         title: 'Settlement App',
