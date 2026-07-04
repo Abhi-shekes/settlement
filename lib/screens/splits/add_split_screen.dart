@@ -25,8 +25,8 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
   SplitType _splitType = SplitType.equal;
   String? _selectedGroupId;
   List<UserModel> _friends = [];
-  List<String> _selectedFriendIds = [];
-  Map<String, double> _customAmounts = {};
+  final List<String> _selectedFriendIds = [];
+  final Map<String, double> _customAmounts = {};
   bool _isLoading = false;
 
   @override
