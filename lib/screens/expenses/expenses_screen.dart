@@ -320,12 +320,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   ),
                   TextButton(
                     onPressed: _clearFilters,
-                    child: const Text('Clear All'),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFF008080),
                       padding: EdgeInsets.zero,
                       minimumSize: const Size(50, 30),
                     ),
+                    child: const Text('Clear All'),
                   ),
                 ],
               ),

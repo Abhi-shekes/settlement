@@ -67,16 +67,19 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
     });
 
     try {
-      await context.read<GroupService>().loadUserSplits();
-      final allSplits = context.read<GroupService>().splits;
+      final groupService = context.read<GroupService>();
+      await groupService.loadUserSplits();
+      final allSplits = groupService.splits;
       _groupSplits =
           allSplits.where((split) => split.groupId == widget.group.id).toList();
     } catch (e) {
       debugPrint('Error loading group splits: $e');
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -854,7 +857,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                   ],
                 ),
               );
-            }).toList(),
+            }),
 
             const SizedBox(height: 16),
 
@@ -983,7 +986,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                             ],
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ),

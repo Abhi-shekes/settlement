@@ -33,9 +33,9 @@ class _AddGroupExpenseWithSplitScreenState
   // Split functionality
   bool _shouldSplit = true;
   SplitType _splitType = SplitType.equal;
-  Map<String, bool> _selectedMembers = {};
-  Map<String, double> _customAmounts = {};
-  Map<String, UserModel> _memberDetails = {};
+  final Map<String, bool> _selectedMembers = {};
+  final Map<String, double> _customAmounts = {};
+  final Map<String, UserModel> _memberDetails = {};
 
   @override
   void initState() {
@@ -330,7 +330,7 @@ class _AddGroupExpenseWithSplitScreenState
 
                       // Category
                       DropdownButtonFormField<ExpenseCategory>(
-                        value: _selectedCategory,
+                        initialValue: _selectedCategory,
                         decoration: const InputDecoration(
                           labelText: 'Category',
                           border: OutlineInputBorder(),
@@ -401,7 +401,7 @@ class _AddGroupExpenseWithSplitScreenState
                                       }
                                     });
                                   },
-                                  activeColor: const Color(0xFF008080),
+                                  activeThumbColor: const Color(0xFF008080),
                                 ),
                               ],
                             ),
@@ -409,38 +409,36 @@ class _AddGroupExpenseWithSplitScreenState
                               const SizedBox(height: 16),
 
                               // Split Type Selection
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: RadioListTile<SplitType>(
-                                      title: const Text('Equal Split'),
-                                      value: SplitType.equal,
-                                      groupValue: _splitType,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _splitType = value!;
-                                          _updateCustomAmounts();
-                                        });
-                                      },
-                                      activeColor: const Color(0xFF008080),
-                                      contentPadding: EdgeInsets.zero,
+                              RadioGroup<SplitType>(
+                                groupValue: _splitType,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _splitType = value!;
+                                    if (value == SplitType.equal) {
+                                      _updateCustomAmounts();
+                                    }
+                                  });
+                                },
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: RadioListTile<SplitType>(
+                                        title: const Text('Equal Split'),
+                                        value: SplitType.equal,
+                                        activeColor: const Color(0xFF008080),
+                                        contentPadding: EdgeInsets.zero,
+                                      ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    child: RadioListTile<SplitType>(
-                                      title: const Text('Custom'),
-                                      value: SplitType.unequal,
-                                      groupValue: _splitType,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _splitType = value!;
-                                        });
-                                      },
-                                      activeColor: const Color(0xFF008080),
-                                      contentPadding: EdgeInsets.zero,
+                                    Expanded(
+                                      child: RadioListTile<SplitType>(
+                                        title: const Text('Custom'),
+                                        value: SplitType.unequal,
+                                        activeColor: const Color(0xFF008080),
+                                        contentPadding: EdgeInsets.zero,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
 
                               const SizedBox(height: 16),
@@ -580,7 +578,7 @@ class _AddGroupExpenseWithSplitScreenState
                                     ],
                                   ),
                                 );
-                              }).toList(),
+                              }),
 
                               // Split Summary
                               const SizedBox(height: 16),

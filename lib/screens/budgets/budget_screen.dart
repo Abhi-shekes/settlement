@@ -39,6 +39,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
 
   Future<void> _loadBudgets() async {
     await context.read<BudgetService>().loadUserBudgets();
+    if (!mounted) return;
 
     // Set controller values from loaded budgets
     final budgetService = context.read<BudgetService>();
@@ -58,9 +59,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
     final amount = double.tryParse(value);
     if (amount == null || amount <= 0) return;
 
+    final messenger = ScaffoldMessenger.of(context);
     try {
       await context.read<BudgetService>().setBudget(category, amount);
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text(
             'Budget for ${category.toString().split('.').last.toUpperCase()} updated',
@@ -69,7 +71,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text('Error updating budget: $e'),
           backgroundColor: Colors.red,
@@ -227,7 +229,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       usagePercentage,
                       progressColor,
                     );
-                  }).toList(),
+                  }),
 
                   const SizedBox(height: 24),
 
@@ -236,6 +238,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () async {
+                        final messenger = ScaffoldMessenger.of(context);
                         // Save all budgets
                         for (final entry in _controllers.entries) {
                           final value = entry.value.text.trim();
@@ -244,7 +247,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                           }
                         }
 
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                           const SnackBar(
                             content: Text('All budgets updated successfully'),
                             backgroundColor: Color(0xFF008080),

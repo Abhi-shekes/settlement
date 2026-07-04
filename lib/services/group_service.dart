@@ -491,14 +491,14 @@ class GroupService extends ChangeNotifier {
   double getTotalAmountOwed(String userId) {
     return getUserOwedSplits(
       userId,
-    ).fold(0.0, (sum, split) => sum + split.getRemainingAmount(userId));
+    ).fold(0.0, (acc, split) => acc + split.getRemainingAmount(userId));
   }
 
   double getTotalAmountOwing(String userId) {
     return getUserOwingSplits(userId).fold(
       0.0,
-      (sum, split) =>
-          sum +
+      (acc, split) =>
+          acc +
           split.participants
               .where((p) => p != userId && split.hasAcceptedShare(p))
               .fold(0.0, (pSum, p) => pSum + split.getRemainingAmount(p)),
