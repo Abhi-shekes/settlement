@@ -572,7 +572,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         this.setState(() {});
       },
       backgroundColor: Colors.grey[200],
-      selectedColor: const Color(0xFF008080).withOpacity(0.2),
+      selectedColor: const Color(0xFF008080).withValues(alpha: 0.2),
       checkmarkColor: const Color(0xFF008080),
       labelStyle: TextStyle(
         color: isSelected ? const Color(0xFF008080) : Colors.black,
@@ -597,7 +597,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           });
         },
         backgroundColor: Colors.grey[200],
-        selectedColor: const Color(0xFF008080).withOpacity(0.2),
+        selectedColor: const Color(0xFF008080).withValues(alpha: 0.2),
         labelStyle: TextStyle(
           color: isSelected ? const Color(0xFF008080) : Colors.black,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -613,7 +613,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         label: Text(label, style: const TextStyle(fontSize: 12)),
         deleteIcon: const Icon(Icons.close, size: 16),
         onDeleted: onRemove,
-        backgroundColor: const Color(0xFF008080).withOpacity(0.1),
+        backgroundColor: const Color(0xFF008080).withValues(alpha: 0.1),
         deleteIconColor: const Color(0xFF008080),
         labelStyle: const TextStyle(color: Color(0xFF008080)),
       ),
@@ -706,7 +706,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     decoration: BoxDecoration(
                       color: _getCategoryColor(
                         expense.category,
-                      ).withOpacity(0.1),
+                      ).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(

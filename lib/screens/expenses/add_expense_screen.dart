@@ -267,10 +267,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                 decoration: BoxDecoration(
                                   color:
                                       usagePercentage > 100
-                                          ? Colors.red.withOpacity(0.1)
+                                          ? Colors.red.withValues(alpha: 0.1)
                                           : usagePercentage >= 80
-                                          ? Colors.orange.withOpacity(0.1)
-                                          : Colors.green.withOpacity(0.1),
+                                          ? Colors.orange.withValues(alpha: 0.1)
+                                          : Colors.green.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(

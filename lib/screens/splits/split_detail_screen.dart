@@ -140,6 +140,7 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
   }
 
   Future<void> _settleUp(String participantId, double amount) async {
+    final currentUserId = context.read<AuthService>().currentUser?.uid ?? '';
     final settlement = SettlementModel(
       id: const Uuid().v4(),
       splitId: widget.split.id,
@@ -148,6 +149,8 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
       amount: amount,
       settledAt: DateTime.now(),
       notes: _settlementNotesController.text.trim(),
+      status: SettlementStatus.pending,
+      recordedBy: currentUserId,
     );
 
     setState(() {
@@ -155,7 +158,7 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
     });
 
     try {
-      await context.read<GroupService>().addSettlement(
+      await context.read<GroupService>().recordSettlement(
         widget.split.id,
         settlement,
       );
@@ -167,7 +170,9 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Settlement recorded successfully!'),
+            content: Text(
+              'Payment recorded — waiting for the other person to confirm.',
+            ),
             backgroundColor: Color(0xFF008080),
           ),
         );
@@ -258,7 +263,7 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -461,8 +466,8 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
               radius: 20,
               backgroundColor:
                   isPayer
-                      ? Colors.green.withOpacity(0.1)
-                      : const Color(0xFFFF7F50).withOpacity(0.1),
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : const Color(0xFFFF7F50).withValues(alpha: 0.1),
               child: Icon(
                 isPayer ? Icons.check_circle : Icons.person,
                 color: isPayer ? Colors.green : const Color(0xFFFF7F50),
@@ -537,7 +542,7 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
           children: [
             CircleAvatar(
               radius: 20,
-              backgroundColor: Colors.green.withOpacity(0.1),
+              backgroundColor: Colors.green.withValues(alpha: 0.1),
               child: const Icon(Icons.check_circle, color: Colors.green),
             ),
             const SizedBox(width: 16),
