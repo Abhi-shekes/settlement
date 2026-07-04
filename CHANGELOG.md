@@ -7,6 +7,13 @@ is generated automatically from [Conventional Commits](https://www.conventionalc
 by [release-please](https://github.com/googleapis/release-please). **Do not edit
 entries below by hand** — write good commit messages instead.
 
+## [1.1.1](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.1.0...settlement-v1.1.1) (2026-07-04)
+
+
+### Bug Fixes
+
+* write release keystore to android/app so signing can find it ([#4](https://github.com/Abhi-shekes/settlement/issues/4)) ([e125eac](https://github.com/Abhi-shekes/settlement/commit/e125eacf8bdd3fb6d8243c2bd36eb27167e55a00))
+
 ## [1.1.0](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.0.0...settlement-v1.1.0) (2026-07-04)
 
 
