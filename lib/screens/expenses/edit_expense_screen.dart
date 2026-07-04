@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/expense_model.dart';
 import '../../services/expense_service.dart';
+import '../../services/account_service.dart';
 
 class EditExpenseScreen extends StatefulWidget {
   final ExpenseModel expense;
@@ -19,6 +20,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
   late TextEditingController _amountController;
 
   late ExpenseCategory _selectedCategory;
+  String? _selectedAccountId;
   final _tagController = TextEditingController();
 
   @override
@@ -32,6 +34,8 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
       text: widget.expense.amount.toString(),
     );
     _selectedCategory = widget.expense.category;
+    _selectedAccountId = widget.expense.accountId;
+    context.read<AccountService>().loadUserAccounts();
   }
 
   @override
@@ -58,6 +62,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
       createdAt: widget.expense.createdAt,
       groupId: widget.expense.groupId,
       isSettled: widget.expense.isSettled,
+      accountId: _selectedAccountId,
     );
 
     try {
@@ -161,6 +166,58 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                 },
               ),
               const SizedBox(height: 16),
+
+              // Account (paid from)
+              Consumer<AccountService>(
+                builder: (context, accountService, child) {
+                  if (accountService.accounts.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  if (_selectedAccountId != null &&
+                      accountService.getAccountById(_selectedAccountId) ==
+                          null) {
+                    _selectedAccountId = null;
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: DropdownButtonFormField<String?>(
+                      initialValue: _selectedAccountId,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Paid from',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.account_balance_wallet),
+                      ),
+                      items: [
+                        const DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text('None'),
+                        ),
+                        ...accountService.accounts.map(
+                          (a) => DropdownMenuItem<String?>(
+                            value: a.id,
+                            child: Row(
+                              children: [
+                                Icon(a.icon, size: 18, color: a.color),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${a.name} (${a.formattedBalance})',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() => _selectedAccountId = value);
+                      },
+                    ),
+                  );
+                },
+              ),
 
               // Description
               TextFormField(
