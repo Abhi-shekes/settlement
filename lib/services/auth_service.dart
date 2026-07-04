@@ -195,9 +195,8 @@ class AuthService extends ChangeNotifier {
             .where('fromUserId', isEqualTo: target.uid)
             .where('toUserId', isEqualTo: me.uid)
             .get();
-    bool isPending(QuerySnapshot<Map<String, dynamic>> snap) => snap.docs.any(
-      (d) => d.data()['status'] == FriendRequestStatus.pending,
-    );
+    bool isPending(QuerySnapshot<Map<String, dynamic>> snap) =>
+        snap.docs.any((d) => d.data()['status'] == FriendRequestStatus.pending);
     if (isPending(outgoing) || isPending(incoming)) {
       throw Exception('A friend request is already pending.');
     }
@@ -267,10 +266,9 @@ class AuthService extends ChangeNotifier {
   Future<void> acceptFriendRequest(FriendRequestModel request) async {
     if (currentUser == null) return;
     try {
-      await _firestore
-          .collection('friend_requests')
-          .doc(request.id)
-          .update({'status': FriendRequestStatus.accepted});
+      await _firestore.collection('friend_requests').doc(request.id).update({
+        'status': FriendRequestStatus.accepted,
+      });
 
       // Form the friendship in both directions.
       await _firestore.collection('users').doc(currentUser!.uid).update({
@@ -290,10 +288,9 @@ class AuthService extends ChangeNotifier {
 
   Future<void> declineFriendRequest(FriendRequestModel request) async {
     try {
-      await _firestore
-          .collection('friend_requests')
-          .doc(request.id)
-          .update({'status': FriendRequestStatus.declined});
+      await _firestore.collection('friend_requests').doc(request.id).update({
+        'status': FriendRequestStatus.declined,
+      });
       _incomingFriendRequests.removeWhere((r) => r.id == request.id);
       notifyListeners();
     } catch (e) {
@@ -304,10 +301,7 @@ class AuthService extends ChangeNotifier {
 
   Future<void> cancelFriendRequest(FriendRequestModel request) async {
     try {
-      await _firestore
-          .collection('friend_requests')
-          .doc(request.id)
-          .delete();
+      await _firestore.collection('friend_requests').doc(request.id).delete();
       _outgoingFriendRequests.removeWhere((r) => r.id == request.id);
       notifyListeners();
     } catch (e) {

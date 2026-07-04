@@ -313,7 +313,10 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: 14,
+          ),
         ),
         const SizedBox(height: 4),
         Text(

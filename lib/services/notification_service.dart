@@ -81,8 +81,7 @@ class NotificationService {
 
   // Lets the service fetch the current user id without importing AuthService.
   String? Function()? _currentUidGetter;
-  set currentUidGetter(String? Function() getter) =>
-      _currentUidGetter = getter;
+  set currentUidGetter(String? Function() getter) => _currentUidGetter = getter;
 
   /// Registers this device's token against [uid]. Call once the user is signed
   /// in (a user may have several devices, so tokens are stored as an array).
