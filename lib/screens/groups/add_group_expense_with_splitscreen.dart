@@ -7,7 +7,7 @@ import '../../models/split_model.dart';
 import '../../models/user_model.dart';
 import '../../services/group_service.dart';
 import '../../services/auth_service.dart';
-import '../../services/expense_service.dart';
+import '../../utils/money.dart';
 
 class AddGroupExpenseWithSplitScreen extends StatefulWidget {
   final GroupModel group;
@@ -75,19 +75,18 @@ class _AddGroupExpenseWithSplitScreenState
 
   void _updateCustomAmounts() {
     if (_splitType == SplitType.equal) {
-      final selectedCount =
-          _selectedMembers.values.where((selected) => selected).length;
-      if (selectedCount > 0) {
+      final selectedIds =
+          _selectedMembers.entries
+              .where((e) => e.value)
+              .map((e) => e.key)
+              .toList();
+      if (selectedIds.isNotEmpty) {
         final totalAmount = double.tryParse(_amountController.text) ?? 0.0;
-        final equalAmount = totalAmount / selectedCount;
+        final shares = splitEvenly(totalAmount, selectedIds);
 
         setState(() {
           for (String memberId in _selectedMembers.keys) {
-            if (_selectedMembers[memberId]!) {
-              _customAmounts[memberId] = equalAmount;
-            } else {
-              _customAmounts[memberId] = 0.0;
-            }
+            _customAmounts[memberId] = shares[memberId] ?? 0.0;
           }
         });
       }
@@ -122,7 +121,6 @@ class _AddGroupExpenseWithSplitScreenState
 
     final authService = context.read<AuthService>();
     final groupService = context.read<GroupService>();
-    final expenseService = context.read<ExpenseService>();
 
     if (authService.currentUser == null) return;
 
@@ -238,10 +236,10 @@ class _AddGroupExpenseWithSplitScreenState
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF008080).withOpacity(0.1),
+                          color: const Color(0xFF008080).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFF008080).withOpacity(0.3),
+                            color: const Color(0xFF008080).withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
@@ -250,7 +248,7 @@ class _AddGroupExpenseWithSplitScreenState
                               width: 50,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF008080).withOpacity(0.2),
+                                color: const Color(0xFF008080).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
@@ -479,7 +477,7 @@ class _AddGroupExpenseWithSplitScreenState
                                         _selectedMembers[memberId]!
                                             ? const Color(
                                               0xFF008080,
-                                            ).withOpacity(0.1)
+                                            ).withValues(alpha: 0.1)
                                             : Colors.white,
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
@@ -510,7 +508,7 @@ class _AddGroupExpenseWithSplitScreenState
                                         radius: 16,
                                         backgroundColor: const Color(
                                           0xFF008080,
-                                        ).withOpacity(0.1),
+                                        ).withValues(alpha: 0.1),
                                         backgroundImage:
                                             user?.photoURL != null
                                                 ? NetworkImage(user!.photoURL!)
@@ -591,7 +589,7 @@ class _AddGroupExpenseWithSplitScreenState
                                 decoration: BoxDecoration(
                                   color: const Color(
                                     0xFF008080,
-                                  ).withOpacity(0.1),
+                                  ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(

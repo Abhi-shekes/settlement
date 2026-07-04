@@ -7,6 +7,7 @@ class UserModel {
   final DateTime createdAt;
   final List<String> friends;
   final List<String> groups;
+  final List<String> fcmTokens;
 
   UserModel({
     required this.uid,
@@ -17,6 +18,7 @@ class UserModel {
     required this.createdAt,
     this.friends = const [],
     this.groups = const [],
+    this.fcmTokens = const [],
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
@@ -29,6 +31,7 @@ class UserModel {
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
       friends: List<String>.from(map['friends'] ?? []),
       groups: List<String>.from(map['groups'] ?? []),
+      fcmTokens: List<String>.from(map['fcmTokens'] ?? []),
     );
   }
 
@@ -42,6 +45,7 @@ class UserModel {
       'createdAt': createdAt.millisecondsSinceEpoch,
       'friends': friends,
       'groups': groups,
+      'fcmTokens': fcmTokens,
     };
   }
 
@@ -54,6 +58,7 @@ class UserModel {
     DateTime? createdAt,
     List<String>? friends,
     List<String>? groups,
+    List<String>? fcmTokens,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -64,6 +69,7 @@ class UserModel {
       createdAt: createdAt ?? this.createdAt,
       friends: friends ?? this.friends,
       groups: groups ?? this.groups,
+      fcmTokens: fcmTokens ?? this.fcmTokens,
     );
   }
 }

@@ -13,6 +13,13 @@ class ExpenseService extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  /// Clears cached data (e.g. on sign-out) so the next user never sees the
+  /// previous account's expenses.
+  void reset() {
+    _expenses = [];
+    notifyListeners();
+  }
+
   Future<void> addExpense(ExpenseModel expense) async {
     try {
       _isLoading = true;
@@ -29,7 +36,7 @@ class ExpenseService extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error adding expense: $e');
+      debugPrint('Error adding expense: $e');
       rethrow;
     }
   }
@@ -48,15 +55,22 @@ class ExpenseService extends ChangeNotifier {
               .orderBy('createdAt', descending: true)
               .get();
 
+      // Personal expense tracking excludes group expenses: a group expense is
+      // recorded under the payer's userId, but the payer only owes their share
+      // (tracked via the group split), so counting the full amount here would
+      // double-count it in personal totals and budgets.
       _expenses =
-          query.docs.map((doc) => ExpenseModel.fromMap(doc.data())).toList();
+          query.docs
+              .map((doc) => ExpenseModel.fromMap(doc.data()))
+              .where((e) => e.groupId == null)
+              .toList();
 
       _isLoading = false;
       notifyListeners();
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error loading expenses: $e');
+      debugPrint('Error loading expenses: $e');
     }
   }
 
@@ -73,7 +87,7 @@ class ExpenseService extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error updating expense: $e');
+      debugPrint('Error updating expense: $e');
       rethrow;
     }
   }
@@ -84,7 +98,7 @@ class ExpenseService extends ChangeNotifier {
       _expenses.removeWhere((e) => e.id == expenseId);
       notifyListeners();
     } catch (e) {
-      print('Error deleting expense: $e');
+      debugPrint('Error deleting expense: $e');
       rethrow;
     }
   }
@@ -94,8 +108,13 @@ class ExpenseService extends ChangeNotifier {
   }
 
   List<ExpenseModel> getExpensesByDateRange(DateTime start, DateTime end) {
+    // [start, end): include the exact start instant (e.g. midnight) so an
+    // expense created at 00:00:00.000 is not dropped from its own day.
     return _expenses
-        .where((e) => e.createdAt.isAfter(start) && e.createdAt.isBefore(end))
+        .where(
+          (e) =>
+              !e.createdAt.isBefore(start) && e.createdAt.isBefore(end),
+        )
         .toList();
   }
 

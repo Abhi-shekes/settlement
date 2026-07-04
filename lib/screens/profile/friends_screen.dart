@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
+import '../../models/friend_request_model.dart';
 import '../../services/auth_service.dart';
 
 class FriendsScreen extends StatefulWidget {
@@ -21,8 +22,17 @@ class _FriendsScreenState extends State<FriendsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _loadFriends();
+    _loadRequests();
+  }
+
+  Future<void> _loadRequests() async {
+    final auth = context.read<AuthService>();
+    await Future.wait([
+      auth.loadIncomingFriendRequests(),
+      auth.loadOutgoingFriendRequests(),
+    ]);
   }
 
   @override
@@ -84,7 +94,16 @@ class _FriendsScreenState extends State<FriendsScreen>
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
-          tabs: const [Tab(text: 'Friends'), Tab(text: 'Add Friend')],
+          tabs: [
+            const Tab(text: 'Friends'),
+            Consumer<AuthService>(
+              builder: (context, auth, _) {
+                final n = auth.incomingFriendRequests.length;
+                return Tab(text: n > 0 ? 'Requests ($n)' : 'Requests');
+              },
+            ),
+            const Tab(text: 'Add Friend'),
+          ],
         ),
       ),
       body: TabBarView(
@@ -163,6 +182,9 @@ class _FriendsScreenState extends State<FriendsScreen>
             ],
           ),
 
+          // Requests Tab
+          _buildRequestsTab(),
+
           // Add Friend Tab
           const AddFriendTab(),
         ],
@@ -178,6 +200,136 @@ class _FriendsScreenState extends State<FriendsScreen>
       //             child: const Icon(Icons.person_add),
       //           )
       //           : null,
+    );
+  }
+
+  Widget _buildRequestsTab() {
+    return Consumer<AuthService>(
+      builder: (context, auth, _) {
+        final incoming = auth.incomingFriendRequests;
+        final outgoing = auth.outgoingFriendRequests;
+
+        if (incoming.isEmpty && outgoing.isEmpty) {
+          return RefreshIndicator(
+            onRefresh: _loadRequests,
+            color: const Color(0xFF008080),
+            child: ListView(
+              children: [
+                const SizedBox(height: 120),
+                Icon(
+                  Icons.mark_email_read_outlined,
+                  size: 64,
+                  color: Colors.grey[400],
+                ),
+                const SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    'No friend requests',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: _loadRequests,
+          color: const Color(0xFF008080),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (incoming.isNotEmpty) ...[
+                const Text(
+                  'Received',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF008080),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...incoming.map((r) => _incomingRequestCard(r)),
+                const SizedBox(height: 16),
+              ],
+              if (outgoing.isNotEmpty) ...[
+                const Text(
+                  'Sent',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF008080),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...outgoing.map((r) => _outgoingRequestCard(r)),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _incomingRequestCard(FriendRequestModel r) {
+    final auth = context.read<AuthService>();
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: const Color(0xFF008080).withValues(alpha: 0.1),
+          backgroundImage:
+              (r.fromPhotoURL != null && r.fromPhotoURL!.isNotEmpty)
+                  ? NetworkImage(r.fromPhotoURL!)
+                  : null,
+          child:
+              (r.fromPhotoURL == null || r.fromPhotoURL!.isEmpty)
+                  ? Text(
+                    r.fromName.isNotEmpty ? r.fromName[0].toUpperCase() : '?',
+                    style: const TextStyle(
+                      color: Color(0xFF008080),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                  : null,
+        ),
+        title: Text(r.fromName),
+        subtitle: Text(r.fromEmail),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.check_circle, color: Colors.green),
+              tooltip: 'Accept',
+              onPressed: () async {
+                try {
+                  await auth.acceptFriendRequest(r);
+                  await _loadFriends();
+                } catch (_) {}
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.cancel, color: Colors.red),
+              tooltip: 'Decline',
+              onPressed: () => auth.declineFriendRequest(r),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _outgoingRequestCard(FriendRequestModel r) {
+    final auth = context.read<AuthService>();
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: const CircleAvatar(child: Icon(Icons.hourglass_top)),
+        title: Text(r.toName.isNotEmpty ? r.toName : r.toEmail),
+        subtitle: const Text('Pending'),
+        trailing: TextButton(
+          onPressed: () => auth.cancelFriendRequest(r),
+          child: const Text('Cancel', style: TextStyle(color: Colors.red)),
+        ),
+      ),
     );
   }
 
@@ -237,7 +389,7 @@ class _FriendsScreenState extends State<FriendsScreen>
           children: [
             CircleAvatar(
               radius: 28,
-              backgroundColor: const Color(0xFF008080).withOpacity(0.1),
+              backgroundColor: const Color(0xFF008080).withValues(alpha: 0.1),
               backgroundImage:
                   friend.photoURL != null
                       ? NetworkImage(friend.photoURL!)
@@ -384,12 +536,12 @@ class _AddFriendTabState extends State<AddFriendTab> {
           );
         }
       } else {
-        await authService.addFriend(user.uid);
+        await authService.sendFriendRequest(user);
         if (mounted) {
           _friendCodeController.clear();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${user.displayName} added as friend!'),
+              content: Text('Friend request sent to ${user.displayName}.'),
               backgroundColor: const Color(0xFF008080),
             ),
           );
@@ -441,12 +593,12 @@ class _AddFriendTabState extends State<AddFriendTab> {
           );
         }
       } else {
-        await authService.addFriend(user.uid);
+        await authService.sendFriendRequest(user);
         if (mounted) {
           _emailController.clear();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${user.displayName} added as friend!'),
+              content: Text('Friend request sent to ${user.displayName}.'),
               backgroundColor: const Color(0xFF008080),
             ),
           );
@@ -617,7 +769,7 @@ class _AddFriendTabState extends State<AddFriendTab> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF008080).withOpacity(0.1),
+              color: const Color(0xFF008080).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(

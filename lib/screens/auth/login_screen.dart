@@ -159,7 +159,7 @@ class LoginScreen extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: const Color(0xFF008080).withOpacity(0.1),
+            color: const Color(0xFF008080).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: const Color(0xFF008080), size: 24),

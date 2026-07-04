@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for Firebase / Google Sign-In network access in release builds
+         (the debug/profile manifests declare this separately). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Android 13+ requires runtime permission to post notifications. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="settlement"
         android:name="${applicationName}"
@@ -30,6 +35,11 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Default channel used for FCM notifications received in the
+             background/terminated state. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="settlement_default" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
