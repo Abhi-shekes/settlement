@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../../models/expense_model.dart';
 import '../../services/expense_service.dart';
@@ -17,8 +18,8 @@ class RecordRefundScreen extends StatefulWidget {
 }
 
 class _RecordRefundScreenState extends State<RecordRefundScreen> {
-  static const _teal = Color(0xFF008080);
-  static const _coral = Color(0xFFFF7F50);
+  static const _teal = Color(0xFF0F766E);
+  static const _coral = Color(0xFFF97316);
 
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
@@ -85,8 +86,6 @@ class _RecordRefundScreenState extends State<RecordRefundScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Record Refund'),
-        backgroundColor: _teal,
-        foregroundColor: Colors.white,
       ),
       body: Form(
         key: _formKey,
@@ -191,8 +190,6 @@ class _RecordRefundScreenState extends State<RecordRefundScreen> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _teal,
-                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),
@@ -209,9 +206,9 @@ class _RecordRefundScreenState extends State<RecordRefundScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: context.colors.surfaceSunken,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: context.colors.cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,12 +245,12 @@ class _RecordRefundScreenState extends State<RecordRefundScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[700])),
+          Text(label, style: TextStyle(color: context.colors.muted)),
           Text(
             value,
             style: TextStyle(
               fontWeight: highlight ? FontWeight.bold : FontWeight.w500,
-              color: highlight ? _teal : Colors.black87,
+              color: highlight ? _teal : context.colors.muted,
             ),
           ),
         ],

@@ -4,6 +4,12 @@ import 'package:intl/intl.dart';
 import '../../models/split_model.dart';
 import '../../services/group_service.dart';
 import '../../services/auth_service.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_typography.dart';
+import '../../widgets/app_chip.dart';
+import '../../widgets/empty_state.dart';
+import '../../widgets/loading_skeleton.dart';
 import 'add_split_screen.dart';
 import 'split_detail_screen.dart';
 import '../requests/requests_screen.dart';
@@ -24,8 +30,8 @@ class _SplitsScreenState extends State<SplitsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _refreshSplits();
+    _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshSplits());
   }
 
   @override
@@ -41,75 +47,48 @@ class _SplitsScreenState extends State<SplitsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Scaffold(
+      backgroundColor: c.surface,
       appBar: AppBar(
         title: const Text('Splits'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
           tabs: const [
-            // Tab(text: 'All'),
-            Tab(text: 'You Owe'),
-            Tab(text: 'Owed to You'),
+            Tab(text: 'You owe'),
+            Tab(text: 'Owed to you'),
           ],
         ),
       ),
       body: Column(
         children: [
           _pendingBanner(),
-          // Search Bar
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search splits...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon:
-                    _searchQuery.isNotEmpty
-                        ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            setState(() {
-                              _searchQuery = '';
-                              _searchController.clear();
-                            });
-                          },
-                        )
-                        : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF008080)),
-                ),
-                filled: true,
-                fillColor: Colors.white,
+                hintText: 'Search splits',
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear_rounded),
+                        onPressed: () {
+                          setState(() {
+                            _searchQuery = '';
+                            _searchController.clear();
+                          });
+                        },
+                      )
+                    : null,
               ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
+              onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
-
-          // Tab Content
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                // _buildSplitsList(SplitListType.all),
                 _buildSplitsList(SplitListType.youOwe),
                 _buildSplitsList(SplitListType.owedToYou),
               ],
@@ -117,18 +96,17 @@ class _SplitsScreenState extends State<SplitsScreen>
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'splits_fab',
         onPressed: () async {
           await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddSplitScreen()),
           );
-          // Refresh splits when returning from add screen
           _refreshSplits();
         },
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Split'),
       ),
     );
   }
@@ -136,6 +114,7 @@ class _SplitsScreenState extends State<SplitsScreen>
   Widget _pendingBanner() {
     return Consumer2<GroupService, AuthService>(
       builder: (context, groups, auth, _) {
+        final c = context.colors;
         final me = auth.currentUser?.uid ?? '';
         final approvals = groups.splitsAwaitingApprovalFrom(me).length;
         final confirms = groups.pendingSettlementsToConfirm(me).length;
@@ -143,36 +122,36 @@ class _SplitsScreenState extends State<SplitsScreen>
         if (total == 0) return const SizedBox.shrink();
 
         return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            0,
+          ),
           child: Material(
-            color: const Color(0xFFFF7F50).withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
+            color: c.accentSoft,
+            borderRadius: AppRadii.card,
             child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const RequestsScreen(),
-                  ),
-                );
-              },
+              borderRadius: AppRadii.card,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RequestsScreen()),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 child: Row(
                   children: [
-                    const Icon(Icons.handshake, color: Color(0xFFFF7F50)),
-                    const SizedBox(width: 12),
+                    Icon(Icons.handshake_rounded, color: c.accent),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         '$total item${total == 1 ? '' : 's'} need your confirmation',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFFBF5A38),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: c.accent,
                         ),
                       ),
                     ),
-                    const Icon(Icons.chevron_right, color: Color(0xFFFF7F50)),
+                    Icon(Icons.chevron_right_rounded, color: c.accent),
                   ],
                 ),
               ),
@@ -186,15 +165,11 @@ class _SplitsScreenState extends State<SplitsScreen>
   Widget _buildSplitsList(SplitListType type) {
     return Consumer2<GroupService, AuthService>(
       builder: (context, groupService, authService, child) {
-        if (groupService.isLoading) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFF008080)),
-          );
-        }
+        final c = context.colors;
+        if (groupService.isLoading) return const SkeletonList();
 
         final currentUserId = authService.currentUser?.uid ?? '';
         List<SplitModel> splits;
-
         switch (type) {
           case SplitListType.all:
             splits = groupService.splits;
@@ -207,33 +182,28 @@ class _SplitsScreenState extends State<SplitsScreen>
             break;
         }
 
-        // Apply search filter
         if (_searchQuery.isNotEmpty) {
-          splits =
-              splits.where((split) {
-                return split.title.toLowerCase().contains(
-                      _searchQuery.toLowerCase(),
-                    ) ||
-                    split.description.toLowerCase().contains(
-                      _searchQuery.toLowerCase(),
-                    );
-              }).toList();
+          splits = splits.where((split) {
+            return split.title.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ||
+                split.description.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                );
+          }).toList();
         }
 
-        if (splits.isEmpty) {
-          return _buildEmptyState(type);
-        }
+        if (splits.isEmpty) return _buildEmptyState(type);
 
         return RefreshIndicator(
           onRefresh: _refreshSplits,
-          color: const Color(0xFF008080),
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
+          color: c.brand,
+          child: ListView.separated(
+            padding: const EdgeInsets.all(AppSpacing.md),
             itemCount: splits.length,
-            itemBuilder: (context, index) {
-              final split = splits[index];
-              return _buildSplitCard(split, currentUserId);
-            },
+            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),
+            itemBuilder: (context, index) =>
+                _buildSplitCard(splits[index], currentUserId),
           ),
         );
       },
@@ -241,44 +211,32 @@ class _SplitsScreenState extends State<SplitsScreen>
   }
 
   Widget _buildSplitCard(SplitModel split, String currentUserId) {
+    final theme = Theme.of(context);
+    final c = context.colors;
     final isGroupSplit = split.groupId != null;
     final isPayer = split.paidBy == currentUserId;
 
-    // Calculate amount for current user
-    double amount = 0;
-    String amountText = '';
-    Color amountColor = Colors.black;
+    double amount;
+    String amountText;
+    Color amountColor;
 
     if (isPayer) {
-      // You paid, others owe you
       amount = split.participants
           .where((p) => p != currentUserId)
           .fold(0.0, (sum, p) => sum + split.getRemainingAmount(p));
-
-      if (amount > 0) {
-        amountText = '+₹${amount.toInt()}';
-        amountColor = Colors.green;
-      } else {
-        amountText = '₹${amount.toInt()}';
-        amountColor = Colors.grey;
-      }
+      amountText = amount > 0 ? '+₹${amount.toInt()}' : '₹0';
+      amountColor = amount > 0 ? c.positive : c.faint;
     } else {
-      // Someone else paid, you owe
       amount = split.getRemainingAmount(currentUserId);
-
-      if (amount > 0) {
-        amountText = '-₹${amount.toInt()}';
-        amountColor = const Color(0xFFFF7F50);
-      } else {
-        amountText = '₹${amount.toInt()}';
-        amountColor = Colors.grey;
-      }
+      amountText = amount > 0 ? '-₹${amount.toInt()}' : '₹0';
+      amountColor = amount > 0 ? c.negative : c.faint;
     }
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    final iconColor = isGroupSplit ? c.info : c.accent;
+
+    return Material(
+      color: c.surfaceElevated,
+      borderRadius: AppRadii.card,
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -288,121 +246,77 @@ class _SplitsScreenState extends State<SplitsScreen>
             ),
           ).then((_) => _refreshSplits());
         },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+        borderRadius: AppRadii.card,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: AppRadii.card,
+            border: Border.all(color: c.cardBorder),
+          ),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                ),
+                child: Icon(
+                  isGroupSplit ? Icons.groups_rounded : Icons.person_rounded,
+                  color: iconColor,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      split.title,
+                      style: theme.textTheme.titleSmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      split.description.isEmpty
+                          ? (isPayer ? 'You paid' : 'You owe')
+                          : split.description,
+                      style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Total ${split.formattedTotalAmount}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: c.faint,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // Split Type Icon
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color:
-                          isGroupSplit
-                              ? Colors.purple.withValues(alpha: 0.1)
-                              : const Color(0xFFFF7F50).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      isGroupSplit ? Icons.groups : Icons.person,
-                      color:
-                          isGroupSplit
-                              ? Colors.purple
-                              : const Color(0xFFFF7F50),
-                      size: 24,
-                    ),
+                  Text(
+                    amountText,
+                    style: AppTypography.money(fontSize: 15, color: amountColor),
                   ),
-                  const SizedBox(width: 16),
-
-                  // Title and Description
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          split.title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          split.description.isEmpty
-                              ? (isPayer
-                                  ? 'You paid'
-                                  : 'You owe ${_getPayerName(split, context)}')
-                              : split.description,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Total: ${split.formattedTotalAmount}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 4),
+                  Text(
+                    DateFormat('MMM d').format(split.createdAt),
+                    style: theme.textTheme.labelSmall?.copyWith(color: c.faint),
                   ),
-
-                  // Amount
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        amountText,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: amountColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        DateFormat('MMM d, y').format(split.createdAt),
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              split.isFullySettled
-                                  ? Colors.green.withValues(alpha: 0.1)
-                                  : Colors.orange.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          split.isFullySettled ? 'Settled' : 'Pending',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color:
-                                split.isFullySettled
-                                    ? Colors.green
-                                    : Colors.orange,
-                          ),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 6),
+                  AppChip(
+                    label: split.isFullySettled ? 'Settled' : 'Pending',
+                    color: split.isFullySettled ? c.positive : c.warning,
+                    dense: true,
                   ),
                 ],
               ),
@@ -413,90 +327,48 @@ class _SplitsScreenState extends State<SplitsScreen>
     );
   }
 
-  String _getPayerName(SplitModel split, BuildContext context) {
-    // In a real app, you would fetch the user's name from the database
-    // For now, we'll just return a placeholder
-    return 'Someone';
-  }
-
   Widget _buildEmptyState(SplitListType type) {
+    String title;
     String message;
-    String subMessage;
     IconData icon;
 
     switch (type) {
       case SplitListType.all:
-        message = 'No splits found';
-        subMessage =
-            _searchQuery.isNotEmpty
-                ? 'Try changing your search query'
-                : 'Start by splitting a bill with friends';
-        icon = Icons.call_split;
+        title = 'No splits yet';
+        message = _searchQuery.isNotEmpty
+            ? 'Try a different search.'
+            : 'Split a bill with friends to get started.';
+        icon = Icons.call_split_rounded;
         break;
       case SplitListType.youOwe:
-        message = 'You don\'t owe anyone';
-        subMessage =
-            _searchQuery.isNotEmpty
-                ? 'Try changing your search query'
-                : 'All your debts are settled';
-        icon = Icons.check_circle;
+        title = "You're all clear";
+        message = _searchQuery.isNotEmpty
+            ? 'Try a different search.'
+            : "You don't owe anyone right now.";
+        icon = Icons.check_circle_rounded;
         break;
       case SplitListType.owedToYou:
-        message = 'No one owes you';
-        subMessage =
-            _searchQuery.isNotEmpty
-                ? 'Try changing your search query'
-                : 'All your friends have settled up';
-        icon = Icons.account_balance_wallet;
+        title = 'Nothing owed to you';
+        message = _searchQuery.isNotEmpty
+            ? 'Try a different search.'
+            : 'Everyone has settled up with you.';
+        icon = Icons.account_balance_wallet_rounded;
         break;
     }
 
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 80, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subMessage,
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 24),
-          if (_searchQuery.isEmpty && type == SplitListType.all)
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddSplitScreen(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Split a Bill'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF008080),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-        ],
-      ),
+    return EmptyState(
+      icon: icon,
+      title: title,
+      message: message,
+      actionLabel: (_searchQuery.isEmpty && type == SplitListType.all)
+          ? 'Split a bill'
+          : null,
+      onAction: (_searchQuery.isEmpty && type == SplitListType.all)
+          ? () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AddSplitScreen()),
+              )
+          : null,
     );
   }
 }
