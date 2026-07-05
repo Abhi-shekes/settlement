@@ -477,7 +477,11 @@ class GroupService extends ChangeNotifier {
               s.participants.any(
                 (p) =>
                     p != userId &&
-                    s.hasAcceptedShare(p) &&
+                    // Include shares still awaiting approval so a split the
+                    // payer just created is visible right away (shown as
+                    // pending). Declined shares are excluded. Balance totals
+                    // still only count accepted shares (see getTotalAmountOwing).
+                    s.statusFor(p) != ParticipantStatus.declined &&
                     s.getRemainingAmount(p) > 0,
               ),
         )

@@ -397,7 +397,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionHeader('Quick actions'),
-        const SizedBox(height: AppSpacing.sm),
+        // The action tiles have their own top padding, so a smaller spacer here
+        // keeps the visual gap under the heading in line with the other
+        // sections (whose list tiles inset far less before their content).
+        const SizedBox(height: AppSpacing.xs),
         GridView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
