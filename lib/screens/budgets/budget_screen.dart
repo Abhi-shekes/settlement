@@ -54,7 +54,14 @@ class _BudgetScreenState extends State<BudgetScreen> {
     }
   }
 
-  Future<void> _saveBudget(ExpenseCategory category, String value) async {
+  /// Saves a single category budget. Set [showFeedback] to false when saving
+  /// many at once (the "Save All" flow shows a single summary snackbar instead
+  /// of one per category).
+  Future<void> _saveBudget(
+    ExpenseCategory category,
+    String value, {
+    bool showFeedback = true,
+  }) async {
     if (value.isEmpty) return;
 
     final amount = double.tryParse(value);
@@ -63,6 +70,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await context.read<BudgetService>().setBudget(category, amount);
+      if (!showFeedback) return;
       messenger.showSnackBar(
         SnackBar(
           content: Text(
@@ -72,6 +80,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
         ),
       );
     } catch (e) {
+      if (!showFeedback) rethrow;
       messenger.showSnackBar(
         SnackBar(
           content: Text('Error updating budget: $e'),
@@ -236,20 +245,33 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     child: ElevatedButton(
                       onPressed: () async {
                         final messenger = ScaffoldMessenger.of(context);
-                        // Save all budgets
-                        for (final entry in _controllers.entries) {
-                          final value = entry.value.text.trim();
-                          if (value.isNotEmpty) {
-                            await _saveBudget(entry.key, value);
+                        // Save all budgets without a per-category snackbar, then
+                        // show a single summary message.
+                        try {
+                          for (final entry in _controllers.entries) {
+                            final value = entry.value.text.trim();
+                            if (value.isNotEmpty) {
+                              await _saveBudget(
+                                entry.key,
+                                value,
+                                showFeedback: false,
+                              );
+                            }
                           }
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('All budgets updated successfully'),
+                              backgroundColor: Color(0xFF0F766E),
+                            ),
+                          );
+                        } catch (e) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text('Error updating budgets: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
                         }
-
-                        messenger.showSnackBar(
-                          const SnackBar(
-                            content: Text('All budgets updated successfully'),
-                            backgroundColor: Color(0xFF0F766E),
-                          ),
-                        );
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
