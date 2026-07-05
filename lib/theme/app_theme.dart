@@ -39,10 +39,7 @@ abstract final class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: c.surface,
       canvasColor: c.surface,
-      textTheme: textTheme.apply(
-        bodyColor: onSurface,
-        displayColor: onSurface,
-      ),
+      textTheme: textTheme.apply(bodyColor: onSurface, displayColor: onSurface),
       splashFactory: InkSparkle.splashFactory,
       visualDensity: VisualDensity.adaptivePlatformDensity,
       extensions: [c],
@@ -76,8 +73,7 @@ abstract final class AppTheme {
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
-            color:
-                states.contains(WidgetState.selected) ? c.brand : c.faint,
+            color: states.contains(WidgetState.selected) ? c.brand : c.faint,
             size: 24,
           ),
         ),
@@ -182,7 +178,9 @@ abstract final class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: c.surfaceElevated,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.xl)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+        ),
         titleTextStyle: textTheme.titleLarge?.copyWith(color: onSurface),
         contentTextStyle: textTheme.bodyMedium?.copyWith(color: c.muted),
       ),
@@ -196,9 +194,10 @@ abstract final class AppTheme {
 
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: brightness == Brightness.dark
-            ? c.surfaceSunken
-            : const Color(0xFF1F2733),
+        backgroundColor:
+            brightness == Brightness.dark
+                ? c.surfaceSunken
+                : const Color(0xFF1F2733),
         contentTextStyle: textTheme.bodyMedium?.copyWith(color: Colors.white),
         actionTextColor: c.brand,
         insetPadding: const EdgeInsets.all(AppSpacing.md),
@@ -236,9 +235,8 @@ abstract final class AppTheme {
           (s) => s.contains(WidgetState.selected) ? c.brand : c.faint,
         ),
         trackColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected)
-              ? c.brandSoft
-              : c.surfaceSunken,
+          (s) =>
+              s.contains(WidgetState.selected) ? c.brandSoft : c.surfaceSunken,
         ),
         trackOutlineColor: WidgetStateProperty.all(c.cardBorder),
       ),

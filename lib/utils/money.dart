@@ -29,7 +29,8 @@ String formatCurrency(
   String body;
   if (compact && abs >= 100000) {
     if (abs >= 10000000) {
-      body = '₹${(abs / 10000000).toStringAsFixed(abs % 10000000 == 0 ? 0 : 1)}Cr';
+      body =
+          '₹${(abs / 10000000).toStringAsFixed(abs % 10000000 == 0 ? 0 : 1)}Cr';
     } else {
       body = '₹${(abs / 100000).toStringAsFixed(abs % 100000 == 0 ? 0 : 1)}L';
     }

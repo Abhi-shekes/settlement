@@ -199,14 +199,10 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
     final isPayer = widget.split.paidBy == currentUserId;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Split Details'),
-      ),
+      appBar: AppBar(title: const Text('Split Details')),
       body:
           _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(),
-              )
+              ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(

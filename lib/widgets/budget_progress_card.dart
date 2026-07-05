@@ -31,13 +31,15 @@ class BudgetProgressCard extends StatelessWidget {
     }
 
     final exceeded = budgetAmount > 0 && currentSpending > budgetAmount;
-    final nearLimit = budgetAmount > 0 &&
+    final nearLimit =
+        budgetAmount > 0 &&
         currentSpending >= budgetAmount * 0.8 &&
         currentSpending <= budgetAmount;
 
-    final Color progressColor = exceeded
-        ? c.negative
-        : nearLimit
+    final Color progressColor =
+        exceeded
+            ? c.negative
+            : nearLimit
             ? c.warning
             : c.brand;
 
@@ -66,7 +68,11 @@ class BudgetProgressCard extends StatelessWidget {
                         color: category.color.withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(AppRadii.sm),
                       ),
-                      child: Icon(category.icon, color: category.color, size: 20),
+                      child: Icon(
+                        category.icon,
+                        color: category.color,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
@@ -78,7 +84,11 @@ class BudgetProgressCard extends StatelessWidget {
                     if (exceeded)
                       AppChip(label: 'Exceeded', color: c.negative, dense: true)
                     else if (nearLimit)
-                      AppChip(label: 'Near limit', color: c.warning, dense: true),
+                      AppChip(
+                        label: 'Near limit',
+                        color: c.warning,
+                        dense: true,
+                      ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),

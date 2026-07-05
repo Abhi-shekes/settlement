@@ -208,14 +208,10 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Split a Bill'),
-      ),
+      appBar: AppBar(title: const Text('Split a Bill')),
       body:
           _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(),
-              )
+              ? const Center(child: CircularProgressIndicator())
               : Form(
                 key: _formKey,
                 child: SingleChildScrollView(
@@ -599,7 +595,8 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                   : context.colors.surfaceElevated,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? context.colors.brand : context.colors.cardBorder,
+            color:
+                isSelected ? context.colors.brand : context.colors.cardBorder,
             width: isSelected ? 2 : 1,
           ),
         ),

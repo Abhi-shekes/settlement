@@ -30,23 +30,23 @@ class LoginScreen extends StatelessWidget {
               Column(
                 children: [
                   Container(
-                    width: 104,
-                    height: 104,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [c.heroGradientStart, c.heroGradientEnd],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: AppShadows.glow(c.brand),
-                    ),
-                    padding: const EdgeInsets.all(18),
-                    child: Image.asset(
-                      'assets/images/handshake-color.png',
-                      fit: BoxFit.contain,
-                    ),
-                  )
+                        width: 104,
+                        height: 104,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [c.heroGradientStart, c.heroGradientEnd],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: AppShadows.glow(c.brand),
+                        ),
+                        padding: const EdgeInsets.all(18),
+                        child: Image.asset(
+                          'assets/images/handshake-color.png',
+                          fit: BoxFit.contain,
+                        ),
+                      )
                       .animate()
                       .scale(
                         duration: 500.ms,
@@ -86,7 +86,8 @@ class LoginScreen extends StatelessWidget {
                     FeatureRow(
                       icon: Icons.receipt_long_rounded,
                       title: 'Track personal expenses',
-                      description: 'Categorize daily spending and stay on budget',
+                      description:
+                          'Categorize daily spending and stay on budget',
                     ),
                     SizedBox(height: AppSpacing.md),
                     FeatureRow(
@@ -112,34 +113,36 @@ class LoginScreen extends StatelessWidget {
                   return SizedBox(
                     height: 54,
                     child: ElevatedButton.icon(
-                      onPressed: authService.isLoading
-                          ? null
-                          : () async {
-                              try {
-                                await authService.signInWithGoogle();
-                              } catch (e) {
-                                if (context.mounted) {
-                                  AppSnackbar.error(
-                                    context,
-                                    'Sign in failed. Please try again.',
-                                  );
+                      onPressed:
+                          authService.isLoading
+                              ? null
+                              : () async {
+                                try {
+                                  await authService.signInWithGoogle();
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    AppSnackbar.error(
+                                      context,
+                                      'Sign in failed. Please try again.',
+                                    );
+                                  }
                                 }
-                              }
-                            },
-                      icon: authService.isLoading
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: c.onBrand,
+                              },
+                      icon:
+                          authService.isLoading
+                              ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: c.onBrand,
+                                ),
+                              )
+                              : Image.asset(
+                                'assets/images/google_logo.png',
+                                width: 20,
+                                height: 20,
                               ),
-                            )
-                          : Image.asset(
-                              'assets/images/google_logo.png',
-                              width: 20,
-                              height: 20,
-                            ),
                       label: Text(
                         authService.isLoading
                             ? 'Signing in…'
