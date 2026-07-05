@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/expense_model.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../utils/category_style.dart';
+import 'app_chip.dart';
+import 'money_text.dart';
 
 class BudgetProgressCard extends StatelessWidget {
   final ExpenseCategory category;
@@ -17,233 +22,139 @@ class BudgetProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate usage percentage
-    double usagePercentage = 0;
+    final theme = Theme.of(context);
+    final c = context.colors;
+
+    double usage = 0;
     if (budgetAmount > 0) {
-      usagePercentage = (currentSpending / budgetAmount) * 100;
-      if (usagePercentage > 100) usagePercentage = 100;
+      usage = (currentSpending / budgetAmount).clamp(0, 1);
     }
 
-    // Determine progress color based on usage
-    Color progressColor;
-    if (budgetAmount > 0 && currentSpending > budgetAmount) {
-      progressColor = Colors.red;
-    } else if (budgetAmount > 0 && currentSpending >= budgetAmount * 0.8) {
-      progressColor = Colors.orange;
-    } else {
-      progressColor = const Color(0xFF008080);
-    }
+    final exceeded = budgetAmount > 0 && currentSpending > budgetAmount;
+    final nearLimit = budgetAmount > 0 &&
+        currentSpending >= budgetAmount * 0.8 &&
+        currentSpending <= budgetAmount;
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Category Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _getCategoryColor(category).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      _getCategoryIcon(category),
-                      color: _getCategoryColor(category),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    category.toString().split('.').last.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (budgetAmount > 0 && currentSpending > budgetAmount)
+    final Color progressColor = exceeded
+        ? c.negative
+        : nearLimit
+            ? c.warning
+            : c.brand;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: c.surfaceElevated,
+        borderRadius: AppRadii.card,
+        border: Border.all(color: c.cardBorder),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppRadii.card,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        color: category.color.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
                       ),
-                      child: const Text(
-                        'EXCEEDED',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                      child: Icon(category.icon, color: category.color, size: 20),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        category.categoryDisplayName,
+                        style: theme.textTheme.titleSmall,
                       ),
                     ),
-                  if (budgetAmount > 0 &&
-                      currentSpending >= budgetAmount * 0.8 &&
-                      currentSpending <= budgetAmount)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'NEAR LIMIT',
-                        style: TextStyle(
-                          color: Colors.orange,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Budget Info
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Budget',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '₹${budgetAmount.toInt()}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text(
-                        'Spent',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '₹${currentSpending.toInt()}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: progressColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Progress Bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: usagePercentage / 100,
-                  backgroundColor: Colors.grey.shade200,
-                  color: progressColor,
-                  minHeight: 8,
+                    if (exceeded)
+                      AppChip(label: 'Exceeded', color: c.negative, dense: true)
+                    else if (nearLimit)
+                      AppChip(label: 'Near limit', color: c.warning, dense: true),
+                  ],
                 ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // Usage Percentage
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${usagePercentage.toInt()}% used',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: progressColor,
-                      fontWeight: FontWeight.w500,
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _stat(context, 'Spent', currentSpending, progressColor),
+                    _stat(
+                      context,
+                      'Budget',
+                      budgetAmount,
+                      theme.colorScheme.onSurface,
+                      alignEnd: true,
                     ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: usage,
+                    backgroundColor: c.surfaceSunken,
+                    color: progressColor,
+                    minHeight: 8,
                   ),
-                  if (budgetAmount > 0)
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
                     Text(
-                      budgetAmount > currentSpending
-                          ? 'Remaining: ₹${(budgetAmount - currentSpending).toInt()}'
-                          : 'Exceeded: ₹${(currentSpending - budgetAmount).toInt()}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color:
-                            budgetAmount > currentSpending
-                                ? Colors.green
-                                : Colors.red,
-                        fontWeight: FontWeight.w500,
+                      '${(usage * 100).toInt()}% used',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: progressColor,
                       ),
                     ),
-                ],
-              ),
-            ],
+                    if (budgetAmount > 0)
+                      Text(
+                        exceeded
+                            ? 'Over by ₹${(currentSpending - budgetAmount).toInt()}'
+                            : '₹${(budgetAmount - currentSpending).toInt()} left',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: exceeded ? c.negative : c.positive,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  IconData _getCategoryIcon(ExpenseCategory category) {
-    switch (category) {
-      case ExpenseCategory.food:
-        return Icons.restaurant;
-      case ExpenseCategory.travel:
-        return Icons.directions_car;
-      case ExpenseCategory.shopping:
-        return Icons.shopping_bag;
-      case ExpenseCategory.entertainment:
-        return Icons.movie;
-      case ExpenseCategory.utilities:
-        return Icons.lightbulb;
-      case ExpenseCategory.healthcare:
-        return Icons.medical_services;
-      case ExpenseCategory.education:
-        return Icons.school;
-      case ExpenseCategory.other:
-        return Icons.category;
-    }
-  }
-
-  Color _getCategoryColor(ExpenseCategory category) {
-    switch (category) {
-      case ExpenseCategory.food:
-        return Colors.orange;
-      case ExpenseCategory.travel:
-        return Colors.blue;
-      case ExpenseCategory.shopping:
-        return Colors.purple;
-      case ExpenseCategory.entertainment:
-        return Colors.red;
-      case ExpenseCategory.utilities:
-        return Colors.amber;
-      case ExpenseCategory.healthcare:
-        return Colors.green;
-      case ExpenseCategory.education:
-        return Colors.indigo;
-      case ExpenseCategory.other:
-        return Colors.grey;
-    }
+  Widget _stat(
+    BuildContext context,
+    String label,
+    double amount,
+    Color color, {
+    bool alignEnd = false,
+  }) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment:
+          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: context.colors.muted,
+          ),
+        ),
+        const SizedBox(height: 2),
+        MoneyText(amount, size: 16, color: color),
+      ],
+    );
   }
 }

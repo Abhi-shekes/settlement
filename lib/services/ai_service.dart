@@ -189,6 +189,74 @@ class AiService extends ChangeNotifier {
     }
   }
 
+  /// Builds a Gemini model with a one-off [systemInstruction]. Used for the
+  /// advice and free-form Q&A features that each want their own persona.
+  GenerativeModel _textModel(String systemInstruction) =>
+      FirebaseAI.googleAI().generativeModel(
+        model: _modelName,
+        systemInstruction: Content.text(systemInstruction),
+      );
+
+  /// Saving or investment tips grounded in a pre-built spending [summary].
+  Future<String> generateTips(
+    String summary, {
+    required bool investment,
+  }) async {
+    _setBusy(true);
+    try {
+      final model = _textModel(
+        investment
+            ? 'You are a cautious financial-education assistant for an Indian '
+                  'user. Amounts are in INR (₹). From their spending/savings '
+                  'summary, suggest general, beginner-friendly ways to put any '
+                  'surplus to work — e.g. an emergency fund, SIPs into index or '
+                  'mutual funds, PPF, fixed deposits, or NPS — and briefly say '
+                  'why each fits. This is general education, not personalised '
+                  'financial advice: end with a one-line disclaimer. Use short '
+                  'bullet points. Do not invent numbers beyond the summary.'
+            : 'You are a friendly personal-finance assistant for an Indian '
+                  'user. Amounts are in INR (₹). From their spending summary, '
+                  'give 4-6 concrete, practical ways to save money that '
+                  'reference their actual spending categories. Use short bullet '
+                  'points. Do not invent numbers beyond the summary.',
+      );
+      final response = await model.generateContent([Content.text(summary)]);
+      return response.text?.trim() ??
+          'No tips available right now. Please try again.';
+    } catch (e) {
+      debugPrint('AI generateTips error: $e');
+      rethrow;
+    } finally {
+      _setBusy(false);
+    }
+  }
+
+  /// Answers a free-form [question] using only the provided financial
+  /// [context] (recent transactions, budgets, account balances).
+  Future<String> answerQuery(String question, String context) async {
+    _setBusy(true);
+    try {
+      final model = _textModel(
+        'You are a helpful personal-finance assistant for an Indian user. '
+        'Amounts are in INR (₹). Answer the question using ONLY the provided '
+        'financial context (their transactions, budgets and accounts). If the '
+        "answer isn't in the context, say you don't have that data rather than "
+        'guessing. Be concise — use short paragraphs or bullet points, and '
+        'show relevant totals. Do not invent numbers.',
+      );
+      final response = await model.generateContent([
+        Content.text('Financial context:\n$context\n\nQuestion: $question'),
+      ]);
+      return response.text?.trim() ??
+          "I couldn't work that out. Please try rephrasing.";
+    } catch (e) {
+      debugPrint('AI answerQuery error: $e');
+      rethrow;
+    } finally {
+      _setBusy(false);
+    }
+  }
+
   Map<String, dynamic>? _decode(String? text) {
     if (text == null || text.trim().isEmpty) return null;
     try {

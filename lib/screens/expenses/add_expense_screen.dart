@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../models/expense_model.dart';
@@ -72,7 +73,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         messenger.showSnackBar(
           SnackBar(
             content: Text('Suggested: ${suggestion.categoryDisplayName}'),
-            backgroundColor: const Color(0xFF008080),
+            backgroundColor: const Color(0xFF0F766E),
           ),
         );
       }
@@ -87,7 +88,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 ? 'Enable "Firebase AI Logic" in the Firebase console.'
                 : 'AI error: $e',
           ),
-          backgroundColor: const Color(0xFFFF7F50),
+          backgroundColor: const Color(0xFFF97316),
         ),
       );
     } finally {
@@ -173,7 +174,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Expense added successfully!'),
-              backgroundColor: Color(0xFF008080),
+              backgroundColor: Color(0xFF0F766E),
             ),
           );
         }
@@ -183,7 +184,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error adding expense: $e'),
-            backgroundColor: const Color(0xFFFF7F50),
+            backgroundColor: const Color(0xFFF97316),
           ),
         );
       }
@@ -195,8 +196,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Expense'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
       ),
       body: Form(
         key: _formKey,
@@ -286,7 +285,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     _suggesting ? 'Suggesting…' : 'Suggest category with AI',
                   ),
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF008080),
+                    foregroundColor: const Color(0xFF0F766E),
                   ),
                 ),
               ),
@@ -375,9 +374,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       margin: const EdgeInsets.only(top: 16, bottom: 16),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.grey[50],
+                        color: context.colors.surfaceSunken,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey[300]!),
+                        border: Border.all(color: context.colors.cardBorder),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,13 +447,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                   usagePercentage > 100
                                       ? 1.0
                                       : usagePercentage / 100,
-                              backgroundColor: Colors.grey[200],
+                              backgroundColor: context.colors.surfaceSunken,
                               color:
                                   usagePercentage > 100
                                       ? Colors.red
                                       : usagePercentage >= 80
                                       ? Colors.orange
-                                      : const Color(0xFF008080),
+                                      : const Color(0xFF0F766E),
                               minHeight: 8,
                             ),
                           ),
@@ -467,7 +466,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                 : 'affect'} your budget.',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: context.colors.muted,
                               fontStyle: FontStyle.italic,
                             ),
                           ),
@@ -487,8 +486,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 child: ElevatedButton(
                   onPressed: _saveExpense,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF008080),
-                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: const Text(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../../models/account_model.dart';
 import '../../services/account_service.dart';
@@ -13,7 +14,7 @@ class AccountsScreen extends StatefulWidget {
 }
 
 class _AccountsScreenState extends State<AccountsScreen> {
-  static const _teal = Color(0xFF008080);
+  static const _teal = Color(0xFF0F766E);
 
   @override
   void initState() {
@@ -28,8 +29,6 @@ class _AccountsScreenState extends State<AccountsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Accounts'),
-        backgroundColor: _teal,
-        foregroundColor: Colors.white,
         actions: [
           Consumer<AccountService>(
             builder: (context, service, _) {
@@ -51,8 +50,6 @@ class _AccountsScreenState extends State<AccountsScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: _teal,
-        foregroundColor: Colors.white,
         onPressed: () {
           Navigator.push(
             context,
@@ -99,7 +96,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
             Icon(
               Icons.account_balance_wallet_outlined,
               size: 72,
-              color: Colors.grey[400],
+              color: context.colors.faint,
             ),
             const SizedBox(height: 16),
             const Text(
@@ -111,7 +108,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
               'Add cash, bank, credit card, or wallet accounts to track balances '
               'and attribute expenses to a payment source.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: context.colors.muted),
             ),
           ],
         ),
@@ -127,7 +124,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [_teal, Color(0xFF20B2AA)],
+          colors: [_teal, Color(0xFF14B8A6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -183,7 +180,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: negative ? const Color(0xFFFF7F50) : _teal,
+            color: negative ? const Color(0xFFF97316) : _teal,
           ),
         ),
         onTap: () {

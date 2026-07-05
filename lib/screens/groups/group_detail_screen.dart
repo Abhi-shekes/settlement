@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:settlement/screens/groups/add_group_expense_with_splitscreen.dart';
@@ -108,7 +109,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundColor: const Color(
-                              0xFF008080,
+                              0xFF0F766E,
                             ).withValues(alpha: 0.1),
                             backgroundImage:
                                 friend.photoURL != null
@@ -121,7 +122,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                                           ? friend.displayName[0].toUpperCase()
                                           : '?',
                                       style: const TextStyle(
-                                        color: Color(0xFF008080),
+                                        color: Color(0xFF0F766E),
                                         fontWeight: FontWeight.bold,
                                       ),
                                     )
@@ -165,7 +166,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Member added successfully!'),
-            backgroundColor: Color(0xFF008080),
+            backgroundColor: Color(0xFF0F766E),
           ),
         );
       }
@@ -195,8 +196,6 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(group.name),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
         actions: [
           if (isAdmin)
             IconButton(
@@ -240,9 +239,6 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
           tabs: const [
             Tab(text: 'Overview'),
             Tab(text: 'Members'),
@@ -253,7 +249,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
       body:
           _isLoading
               ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF008080)),
+                child: CircularProgressIndicator(),
               )
               : TabBarView(
                 controller: _tabController,
@@ -407,7 +403,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF008080),
+              color: Color(0xFF0F766E),
             ),
           ),
           const SizedBox(height: 16),
@@ -415,7 +411,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: userBalance >= 0 ? Colors.green : const Color(0xFFFF7F50),
+              color: userBalance >= 0 ? Colors.green : const Color(0xFFF97316),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -450,7 +446,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF008080),
+              color: Color(0xFF0F766E),
             ),
           ),
           const SizedBox(height: 16),
@@ -500,7 +496,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                 child: _buildActionButton(
                   'View Expenses',
                   Icons.receipt_long,
-                  const Color(0xFF008080),
+                  const Color(0xFF0F766E),
                   () {
                     _tabController.animateTo(2);
                   },
@@ -541,7 +537,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF008080),
+                  color: Color(0xFF0F766E),
                 ),
               ),
               if (isAdmin)
@@ -550,8 +546,6 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                   icon: const Icon(Icons.person_add, size: 16),
                   label: const Text('Add'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF008080),
-                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -578,7 +572,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(color: Color(0xFF008080)),
+            child: CircularProgressIndicator(),
           );
         }
 
@@ -597,7 +591,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF008080),
+                      color: Color(0xFF0F766E),
                     ),
                   ),
                   ElevatedButton.icon(
@@ -614,8 +608,6 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                     icon: const Icon(Icons.add, size: 16),
                     label: const Text('Add'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF008080),
-                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -630,7 +622,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                   width: double.infinity,
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: context.colors.surfaceSunken,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -638,7 +630,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       Icon(
                         Icons.receipt_long,
                         size: 64,
-                        color: Colors.grey[400],
+                        color: context.colors.faint,
                       ),
                       const SizedBox(height: 16),
                       const Text(
@@ -652,7 +644,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       Text(
                         'Start adding expenses to track group spending',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey[600]),
+                        style: TextStyle(color: context.colors.muted),
                       ),
                     ],
                   ),
@@ -722,7 +714,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                 CircleAvatar(
                   radius: 24,
                   backgroundColor: const Color(
-                    0xFF008080,
+                    0xFF0F766E,
                   ).withValues(alpha: 0.1),
                   backgroundImage:
                       user?.photoURL != null
@@ -731,7 +723,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                   child: Text(
                     initials,
                     style: const TextStyle(
-                      color: Color(0xFF008080),
+                      color: Color(0xFF0F766E),
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
@@ -760,7 +752,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                               ),
                               decoration: BoxDecoration(
                                 color: const Color(
-                                  0xFF008080,
+                                  0xFF0F766E,
                                 ).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -769,7 +761,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF008080),
+                                  color: Color(0xFF0F766E),
                                 ),
                               ),
                             ),
@@ -782,7 +774,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                           color:
                               userBalance >= 0
                                   ? Colors.green
-                                  : const Color(0xFFFF7F50),
+                                  : const Color(0xFFF97316),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -799,7 +791,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                     color:
                         userBalance >= 0
                             ? Colors.green
-                            : const Color(0xFFFF7F50),
+                            : const Color(0xFFF97316),
                   ),
                 ),
               ],
@@ -827,12 +819,12 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF008080).withValues(alpha: 0.1),
+                    color: const Color(0xFF0F766E).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     _getCategoryIcon(expense.category),
-                    color: const Color(0xFF008080),
+                    color: const Color(0xFF0F766E),
                     size: 20,
                   ),
                 ),
@@ -850,7 +842,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       ),
                       Text(
                         expense.categoryDisplayName,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        style: TextStyle(color: context.colors.muted, fontSize: 12),
                       ),
                     ],
                   ),
@@ -860,7 +852,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    color: Color(0xFF008080),
+                    color: Color(0xFF0F766E),
                   ),
                 ),
               ],
@@ -870,12 +862,12 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
               children: [
                 Text(
                   isPayer ? 'You paid' : 'Paid by member',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  style: TextStyle(color: context.colors.muted, fontSize: 14),
                 ),
                 const Spacer(),
                 Text(
                   DateFormat('MMM d, y').format(expense.createdAt),
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  style: TextStyle(color: context.colors.muted, fontSize: 14),
                 ),
               ],
             ),
@@ -883,7 +875,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
               const SizedBox(height: 8),
               Text(
                 expense.description,
-                style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                style: TextStyle(color: context.colors.muted, fontSize: 14),
               ),
             ],
           ],
@@ -940,7 +932,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                     messenger.showSnackBar(
                       const SnackBar(
                         content: Text('Group deleted successfully!'),
-                        backgroundColor: Color(0xFF008080),
+                        backgroundColor: Color(0xFF0F766E),
                       ),
                     );
                   } catch (e) {
@@ -993,7 +985,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       messenger.showSnackBar(
                         const SnackBar(
                           content: Text('Left group successfully!'),
-                          backgroundColor: Color(0xFF008080),
+                          backgroundColor: Color(0xFF0F766E),
                         ),
                       );
                     } catch (e) {

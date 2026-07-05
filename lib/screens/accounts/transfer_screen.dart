@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../../models/account_model.dart';
 import '../../services/account_service.dart';
@@ -13,8 +14,8 @@ class TransferScreen extends StatefulWidget {
 }
 
 class _TransferScreenState extends State<TransferScreen> {
-  static const _teal = Color(0xFF008080);
-  static const _coral = Color(0xFFFF7F50);
+  static const _teal = Color(0xFF0F766E);
+  static const _coral = Color(0xFFF97316);
 
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
@@ -78,8 +79,6 @@ class _TransferScreenState extends State<TransferScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Transfer'),
-        backgroundColor: _teal,
-        foregroundColor: Colors.white,
       ),
       body: Form(
         key: _formKey,
@@ -96,7 +95,7 @@ class _TransferScreenState extends State<TransferScreen> {
               ),
               const SizedBox(height: 16),
               Center(
-                child: Icon(Icons.arrow_downward, color: Colors.grey[500]),
+                child: Icon(Icons.arrow_downward, color: context.colors.faint),
               ),
               const SizedBox(height: 16),
               _buildAccountDropdown(
@@ -159,8 +158,6 @@ class _TransferScreenState extends State<TransferScreen> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _teal,
-                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),

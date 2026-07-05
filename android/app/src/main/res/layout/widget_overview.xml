@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Finance Overview widget (compact / small sizes): net worth + monthly spend
+    side by side on the brand gradient. The wider responsive variant is
+    widget_overview_expanded.xml.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_vertical"
+    android:background="@drawable/widget_bg_teal"
+    android:padding="@dimen/widget_padding">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:baselineAligned="false">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Net worth"
+                android:textColor="@color/widget_on_brand_muted"
+                android:textSize="11sp"
+                android:letterSpacing="0.04"
+                android:textAllCaps="true" />
+            <TextView
+                android:id="@+id/net_worth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="₹0"
+                android:textColor="@color/widget_on_brand"
+                android:textSize="22sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Spent"
+                android:textColor="@color/widget_on_brand_muted"
+                android:textSize="11sp"
+                android:letterSpacing="0.04"
+                android:textAllCaps="true" />
+            <TextView
+                android:id="@+id/month_spend"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="₹0"
+                android:textColor="@color/widget_on_brand"
+                android:textSize="22sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/updated"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text=""
+        android:textColor="@color/widget_on_brand_faint"
+        android:textSize="11sp" />
+</LinearLayout>

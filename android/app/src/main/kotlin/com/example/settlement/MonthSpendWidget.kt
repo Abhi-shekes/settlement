@@ -3,11 +3,11 @@ package com.example.settlement
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.SharedPreferences
+import android.view.View
 import android.widget.RemoteViews
-import es.antonborri.home_widget.HomeWidgetLaunchIntent
 import es.antonborri.home_widget.HomeWidgetProvider
 
-/** Home-screen widget: total spent in the current month + top category. */
+/** Home-screen widget: total spent this month, trend vs last month, top category. */
 class MonthSpendWidget : HomeWidgetProvider() {
     override fun onUpdate(
         context: Context,
@@ -19,21 +19,24 @@ class MonthSpendWidget : HomeWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget_month_spend).apply {
                 setTextViewText(
                     R.id.month_label,
-                    widgetData.getString("month_label", "This month") ?: "This month",
+                    WidgetCommon.str(widgetData, "month_label", "This month"),
                 )
                 setTextViewText(
                     R.id.month_spend,
-                    widgetData.getString("month_spend", "₹0") ?: "₹0",
+                    WidgetCommon.str(widgetData, "month_spend", "₹0"),
+                )
+                val delta = WidgetCommon.str(widgetData, "month_delta", "")
+                setTextViewText(R.id.month_delta, delta)
+                setViewVisibility(
+                    R.id.month_delta,
+                    if (delta.isEmpty()) View.GONE else View.VISIBLE,
                 )
                 setTextViewText(
                     R.id.month_top,
-                    widgetData.getString("month_top", "No spending yet") ?: "No spending yet",
+                    WidgetCommon.str(widgetData, "month_top", "No spending yet"),
                 )
-                setTextViewText(R.id.updated, widgetData.getString("updated", "") ?: "")
-                setOnClickPendingIntent(
-                    R.id.widget_root,
-                    HomeWidgetLaunchIntent.getActivity(context, MainActivity::class.java),
-                )
+                setTextViewText(R.id.updated, WidgetCommon.str(widgetData, "updated", ""))
+                WidgetCommon.openApp(context, this, R.id.widget_root)
             }
             appWidgetManager.updateAppWidget(widgetId, views)
         }

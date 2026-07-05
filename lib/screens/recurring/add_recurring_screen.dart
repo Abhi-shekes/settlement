@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -20,8 +21,8 @@ class AddRecurringScreen extends StatefulWidget {
 }
 
 class _AddRecurringScreenState extends State<AddRecurringScreen> {
-  static const _teal = Color(0xFF008080);
-  static const _coral = Color(0xFFFF7F50);
+  static const _teal = Color(0xFF0F766E);
+  static const _coral = Color(0xFFF97316);
 
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
@@ -186,8 +187,6 @@ class _AddRecurringScreenState extends State<AddRecurringScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Recurring' : 'New Recurring'),
-        backgroundColor: _teal,
-        foregroundColor: Colors.white,
         actions: [
           if (_isEditing)
             IconButton(
@@ -326,7 +325,7 @@ class _AddRecurringScreenState extends State<AddRecurringScreen> {
                         selectedColor: _teal,
                         backgroundColor: _teal.withValues(alpha: 0.10),
                         labelStyle: TextStyle(
-                          color: selected ? Colors.white : Colors.black87,
+                          color: selected ? Colors.white : context.colors.muted,
                           fontWeight: FontWeight.w600,
                         ),
                       );
@@ -364,8 +363,6 @@ class _AddRecurringScreenState extends State<AddRecurringScreen> {
                 child: ElevatedButton(
                   onPressed: _save,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _teal,
-                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: Text(
