@@ -41,7 +41,9 @@ abstract final class AppTypography {
         fontWeight: FontWeight.w700,
         letterSpacing: -0.3,
       ),
-      headlineSmall: display.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+      headlineSmall: display.headlineSmall?.copyWith(
+        fontWeight: FontWeight.w600,
+      ),
       titleLarge: display.titleLarge?.copyWith(
         fontWeight: FontWeight.w700,
         letterSpacing: -0.2,

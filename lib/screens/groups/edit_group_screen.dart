@@ -81,14 +81,10 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Group'),
-      ),
+      appBar: AppBar(title: const Text('Edit Group')),
       body:
           _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(),
-              )
+              ? const Center(child: CircularProgressIndicator())
               : Form(
                 key: _formKey,
                 child: SingleChildScrollView(

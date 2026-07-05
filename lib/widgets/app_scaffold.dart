@@ -66,10 +66,9 @@ class AppScaffold extends StatelessWidget {
         bottom: bottom,
         foregroundColor: c.onBrand,
         iconTheme: IconThemeData(color: c.onBrand),
-        titleTextStyle: Theme.of(context)
-            .textTheme
-            .titleLarge
-            ?.copyWith(color: c.onBrand),
+        titleTextStyle: Theme.of(
+          context,
+        ).textTheme.titleLarge?.copyWith(color: c.onBrand),
         flexibleSpace: DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(

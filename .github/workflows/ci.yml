@@ -1,10 +1,9 @@
 name: CI
 
-# Quality gate for every PR and push to main: formatting, static analysis, tests.
-# Keeps main releasable at all times.
+# Quality gate that runs only after code lands on main (i.e. once a branch is
+# merged). Other branches and PRs do not trigger it. Keeps main releasable.
 
 on:
-  pull_request:
   push:
     branches: [main]
 

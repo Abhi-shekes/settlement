@@ -138,21 +138,22 @@ class _NavPill extends StatelessWidget {
               child: AnimatedSize(
                 duration: AppDurations.medium,
                 curve: Curves.easeOutCubic,
-                child: selected
-                    ? Padding(
-                        padding: const EdgeInsets.only(left: 8),
-                        child: Text(
-                          item.label,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.clip,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: c.brand,
-                            fontWeight: FontWeight.w700,
+                child:
+                    selected
+                        ? Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Text(
+                            item.label,
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.clip,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: c.brand,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
+                        )
+                        : const SizedBox.shrink(),
               ),
             ),
           ],

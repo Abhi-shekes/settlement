@@ -215,14 +215,10 @@ class _AddGroupExpenseWithSplitScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Add & Split - ${widget.group.name}'),
-      ),
+      appBar: AppBar(title: Text('Add & Split - ${widget.group.name}')),
       body:
           _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(),
-              )
+              ? const Center(child: CircularProgressIndicator())
               : Form(
                 key: _formKey,
                 child: SingleChildScrollView(

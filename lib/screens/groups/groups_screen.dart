@@ -44,10 +44,15 @@ class _GroupsScreenState extends State<GroupsScreen> {
     List<GroupModel> filteredGroups = List.from(groupService.groups);
 
     if (_searchQuery.isNotEmpty) {
-      filteredGroups = filteredGroups.where((group) {
-        return group.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            group.description.toLowerCase().contains(_searchQuery.toLowerCase());
-      }).toList();
+      filteredGroups =
+          filteredGroups.where((group) {
+            return group.name.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ||
+                group.description.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                );
+          }).toList();
     }
 
     filteredGroups.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -72,38 +77,41 @@ class _GroupsScreenState extends State<GroupsScreen> {
               decoration: InputDecoration(
                 hintText: 'Search groups',
                 prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear_rounded),
-                        onPressed: () {
-                          setState(() {
-                            _searchQuery = '';
-                            _searchController.clear();
-                          });
-                        },
-                      )
-                    : null,
+                suffixIcon:
+                    _searchQuery.isNotEmpty
+                        ? IconButton(
+                          icon: const Icon(Icons.clear_rounded),
+                          onPressed: () {
+                            setState(() {
+                              _searchQuery = '';
+                              _searchController.clear();
+                            });
+                          },
+                        )
+                        : null,
               ),
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
           Expanded(
-            child: groupService.isLoading
-                ? const SkeletonList()
-                : filteredGroups.isEmpty
-                ? _buildEmptyState()
-                : RefreshIndicator(
-                    onRefresh: _refreshGroups,
-                    color: c.brand,
-                    child: ListView.separated(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      itemCount: filteredGroups.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: AppSpacing.xs),
-                      itemBuilder: (context, index) =>
-                          _buildGroupCard(filteredGroups[index]),
+            child:
+                groupService.isLoading
+                    ? const SkeletonList()
+                    : filteredGroups.isEmpty
+                    ? _buildEmptyState()
+                    : RefreshIndicator(
+                      onRefresh: _refreshGroups,
+                      color: c.brand,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        itemCount: filteredGroups.length,
+                        separatorBuilder:
+                            (_, __) => const SizedBox(height: AppSpacing.xs),
+                        itemBuilder:
+                            (context, index) =>
+                                _buildGroupCard(filteredGroups[index]),
+                      ),
                     ),
-                  ),
           ),
         ],
       ),
@@ -126,16 +134,18 @@ class _GroupsScreenState extends State<GroupsScreen> {
     return EmptyState(
       icon: Icons.groups_rounded,
       title: _searchQuery.isNotEmpty ? 'No groups found' : 'No groups yet',
-      message: _searchQuery.isNotEmpty
-          ? 'Try a different search.'
-          : 'Create a group to split expenses with friends and roommates.',
+      message:
+          _searchQuery.isNotEmpty
+              ? 'Try a different search.'
+              : 'Create a group to split expenses with friends and roommates.',
       actionLabel: _searchQuery.isEmpty ? 'Create group' : null,
-      onAction: _searchQuery.isEmpty
-          ? () => Navigator.push(
+      onAction:
+          _searchQuery.isEmpty
+              ? () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
               )
-          : null,
+              : null,
     );
   }
 
@@ -175,17 +185,22 @@ class _GroupsScreenState extends State<GroupsScreen> {
                   color: c.info.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
-                child: group.imageUrl != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadii.md),
-                        child: Image.network(
-                          group.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Icon(Icons.groups_rounded, color: c.info, size: 28),
-                        ),
-                      )
-                    : Icon(Icons.groups_rounded, color: c.info, size: 28),
+                child:
+                    group.imageUrl != null
+                        ? ClipRRect(
+                          borderRadius: BorderRadius.circular(AppRadii.md),
+                          child: Image.network(
+                            group.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (context, error, stackTrace) => Icon(
+                                  Icons.groups_rounded,
+                                  color: c.info,
+                                  size: 28,
+                                ),
+                          ),
+                        )
+                        : Icon(Icons.groups_rounded, color: c.info, size: 28),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -202,8 +217,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (isAdmin)
-                          AppChip(label: 'Admin', dense: true),
+                        if (isAdmin) AppChip(label: 'Admin', dense: true),
                       ],
                     ),
                     if (group.description.isNotEmpty) ...[
@@ -220,7 +234,11 @@ class _GroupsScreenState extends State<GroupsScreen> {
                     const SizedBox(height: AppSpacing.xs),
                     Row(
                       children: [
-                        Icon(Icons.people_alt_rounded, size: 15, color: c.faint),
+                        Icon(
+                          Icons.people_alt_rounded,
+                          size: 15,
+                          color: c.faint,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '$memberCount member${memberCount != 1 ? 's' : ''}',
