@@ -9,6 +9,11 @@ import '../../services/expense_service.dart';
 import '../../services/account_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/budget_service.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../widgets/app_chip.dart';
+import '../../widgets/app_snackbar.dart';
+import '../../widgets/markdown_text.dart';
 
 class AiAssistantScreen extends StatefulWidget {
   /// When true (e.g. opened from the "Voice add" home-screen widget), starts
@@ -22,16 +27,30 @@ class AiAssistantScreen extends StatefulWidget {
 }
 
 class _AiAssistantScreenState extends State<AiAssistantScreen> {
-  static const _teal = Color(0xFF008080);
-  static const _coral = Color(0xFFFF7F50);
-
   final _nlController = TextEditingController();
+  final _askController = TextEditingController();
   final stt.SpeechToText _speech = stt.SpeechToText();
+
+  String? _answer;
   String? _insights;
+  String? _savingTips;
+  String? _investmentTips;
+
+  bool _loadingAnswer = false;
   bool _loadingInsights = false;
+  bool _loadingSaving = false;
+  bool _loadingInvestment = false;
   bool _parsing = false;
   bool _speechAvailable = false;
   bool _listening = false;
+
+  static const _suggestedPrompts = [
+    'What did I spend last week?',
+    'My biggest expenses this month',
+    'Where can I cut back?',
+    'How much did I spend on food?',
+    'Am I over any budgets?',
+  ];
 
   @override
   void initState() {
@@ -47,12 +66,14 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
   @override
   void dispose() {
     _nlController.dispose();
+    _askController.dispose();
     _speech.cancel();
     super.dispose();
   }
 
+  // ── Voice ──────────────────────────────────────────────────────────────────
+
   Future<void> _toggleListen() async {
-    final messenger = ScaffoldMessenger.of(context);
     if (_listening) {
       await _speech.stop();
       if (mounted) setState(() => _listening = false);
@@ -72,12 +93,9 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
       );
     }
     if (!_speechAvailable) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Microphone/speech not available on this device.'),
-          backgroundColor: _coral,
-        ),
-      );
+      if (mounted) {
+        AppSnackbar.error(context, 'Microphone or speech not available.');
+      }
       return;
     }
 
@@ -86,7 +104,6 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
       onResult: (result) {
         if (!mounted) return;
         setState(() => _nlController.text = result.recognizedWords);
-        // Once the recogniser finalises the phrase, parse it automatically.
         if (result.finalResult) {
           setState(() => _listening = false);
           if (result.recognizedWords.trim().isNotEmpty) _parseAndReview();
@@ -101,33 +118,24 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
     );
   }
 
+  // ── Natural-language expense entry ──────────────────────────────────────────
+
   Future<void> _parseAndReview() async {
     final text = _nlController.text.trim();
     if (text.isEmpty) return;
 
     final ai = context.read<AiService>();
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _parsing = true);
     try {
       final draft = await ai.parseNaturalLanguage(text);
       if (!mounted) return;
       if (draft == null) {
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text("Couldn't find an expense in that sentence."),
-            backgroundColor: _coral,
-          ),
-        );
+        AppSnackbar.info(context, "Couldn't find an expense in that sentence.");
         return;
       }
       await _showReviewSheet(draft);
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('AI error: ${_friendlyError(e)}'),
-          backgroundColor: _coral,
-        ),
-      );
+      if (mounted) AppSnackbar.error(context, 'AI error: ${_friendlyError(e)}');
     } finally {
       if (mounted) setState(() => _parsing = false);
     }
@@ -143,26 +151,23 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
     var category = draft.category;
     var date = draft.date;
     final accountService = context.read<AccountService>();
-    String? accountId =
-        accountService.accounts.isNotEmpty
-            ? accountService.accounts.first.id
-            : null;
+    String? accountId = accountService.accounts.isNotEmpty
+        ? accountService.accounts.first.id
+        : null;
 
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (context) {
+        final c = context.colors;
         return StatefulBuilder(
           builder: (context, setSheet) {
             return Padding(
               padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                left: AppSpacing.md,
+                right: AppSpacing.md,
+                top: AppSpacing.md,
+                bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.md,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -170,63 +175,47 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.auto_awesome, color: _teal),
-                      const SizedBox(width: 8),
-                      const Text(
+                      Icon(Icons.auto_awesome_rounded, color: c.brand),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
                         'Review expense',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.md),
                   TextField(
                     controller: titleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Title',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Title'),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.sm),
                   TextField(
                     controller: amountController,
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    decoration: const InputDecoration(
-                      labelText: 'Amount (₹)',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Amount (₹)'),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.sm),
                   DropdownButtonFormField<ExpenseCategory>(
                     initialValue: category,
-                    decoration: const InputDecoration(
-                      labelText: 'Category',
-                      border: OutlineInputBorder(),
-                    ),
-                    items:
-                        ExpenseCategory.values
-                            .map(
-                              (c) => DropdownMenuItem(
-                                value: c,
-                                child: Text(c.categoryDisplayName),
-                              ),
-                            )
-                            .toList(),
+                    decoration: const InputDecoration(labelText: 'Category'),
+                    items: ExpenseCategory.values
+                        .map(
+                          (c) => DropdownMenuItem(
+                            value: c,
+                            child: Text(c.categoryDisplayName),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (v) => setSheet(() => category = v ?? category),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.sm),
                   if (accountService.accounts.isNotEmpty)
                     DropdownButtonFormField<String?>(
                       initialValue: accountId,
                       isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Paid from',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: const InputDecoration(labelText: 'Paid from'),
                       items: [
                         const DropdownMenuItem<String?>(
                           value: null,
@@ -241,7 +230,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                       ],
                       onChanged: (v) => setSheet(() => accountId = v),
                     ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.sm),
                   InkWell(
                     onTap: () async {
                       final picked = await showDatePicker(
@@ -253,43 +242,32 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                       if (picked != null) setSheet(() => date = picked);
                     },
                     child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Date',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: const InputDecoration(labelText: 'Date'),
                       child: Text(DateFormat('MMM d, y').format(date)),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.lg),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.check),
-                      label: const Text('Save Expense'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _teal,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.check_rounded),
+                      label: const Text('Save expense'),
                       onPressed: () async {
                         final amount = double.tryParse(
                           amountController.text.trim(),
                         );
                         if (amount == null || amount <= 0) return;
-                        final uid =
-                            context.read<AuthService>().currentUser?.uid;
+                        final uid = context.read<AuthService>().currentUser?.uid;
                         if (uid == null) return;
                         final expenseService = context.read<ExpenseService>();
                         final navigator = Navigator.of(context);
-                        final rootMessenger = ScaffoldMessenger.of(context);
                         await expenseService.addExpense(
                           ExpenseModel(
                             id: const Uuid().v4(),
                             userId: uid,
-                            title:
-                                titleController.text.trim().isEmpty
-                                    ? 'Expense'
-                                    : titleController.text.trim(),
+                            title: titleController.text.trim().isEmpty
+                                ? 'Expense'
+                                : titleController.text.trim(),
                             description: 'Added via AI',
                             amount: amount,
                             category: category,
@@ -299,12 +277,9 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                         );
                         navigator.pop();
                         _nlController.clear();
-                        rootMessenger.showSnackBar(
-                          const SnackBar(
-                            content: Text('Expense added!'),
-                            backgroundColor: _teal,
-                          ),
-                        );
+                        if (mounted) {
+                          AppSnackbar.success(this.context, 'Expense added');
+                        }
                       },
                     ),
                   ),
@@ -320,36 +295,87 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
     amountController.dispose();
   }
 
+  // ── Free-form Q&A + advisors ────────────────────────────────────────────────
+
+  Future<void> _ask([String? preset]) async {
+    if (preset != null) _askController.text = preset;
+    final question = _askController.text.trim();
+    if (question.isEmpty) return;
+    FocusScope.of(context).unfocus();
+
+    final ai = context.read<AiService>();
+    final ctx = _buildDetailedContext();
+    setState(() => _loadingAnswer = true);
+    try {
+      final answer = await ai.answerQuery(question, ctx);
+      if (mounted) setState(() => _answer = answer);
+    } catch (e) {
+      if (mounted) AppSnackbar.error(context, 'AI error: ${_friendlyError(e)}');
+    } finally {
+      if (mounted) setState(() => _loadingAnswer = false);
+    }
+  }
+
   Future<void> _generateInsights() async {
     final expenseService = context.read<ExpenseService>();
-    final budgetService = context.read<BudgetService>();
-    final ai = context.read<AiService>();
-    final messenger = ScaffoldMessenger.of(context);
-
     if (expenseService.expenses.isEmpty) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Add some expenses first to get insights.'),
-        ),
-      );
+      AppSnackbar.info(context, 'Add some expenses first to get insights.');
       return;
     }
-
+    final ai = context.read<AiService>();
+    final summary = _buildSummary(
+      expenseService,
+      context.read<BudgetService>(),
+    );
     setState(() => _loadingInsights = true);
     try {
-      final summary = _buildSummary(expenseService, budgetService);
       final result = await ai.generateInsights(summary);
-      if (!mounted) return;
-      setState(() => _insights = result);
+      if (mounted) setState(() => _insights = result);
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('AI error: ${_friendlyError(e)}'),
-          backgroundColor: _coral,
-        ),
-      );
+      if (mounted) AppSnackbar.error(context, 'AI error: ${_friendlyError(e)}');
     } finally {
       if (mounted) setState(() => _loadingInsights = false);
+    }
+  }
+
+  Future<void> _generateTips({required bool investment}) async {
+    final expenseService = context.read<ExpenseService>();
+    if (expenseService.expenses.isEmpty) {
+      AppSnackbar.info(context, 'Add some expenses first to get tips.');
+      return;
+    }
+    final ai = context.read<AiService>();
+    final summary = _buildSummary(
+      expenseService,
+      context.read<BudgetService>(),
+    );
+    setState(() {
+      if (investment) {
+        _loadingInvestment = true;
+      } else {
+        _loadingSaving = true;
+      }
+    });
+    try {
+      final result = await ai.generateTips(summary, investment: investment);
+      if (mounted) {
+        setState(() {
+          if (investment) {
+            _investmentTips = result;
+          } else {
+            _savingTips = result;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) AppSnackbar.error(context, 'AI error: ${_friendlyError(e)}');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingInvestment = false;
+          _loadingSaving = false;
+        });
+      }
     }
   }
 
@@ -360,16 +386,14 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
     buffer.writeln('Total spent: ₹${expenses.getTotalExpenseAmount().toInt()}');
 
     buffer.writeln('\nBy category:');
-    final byCategory = expenses.getCategoryWiseExpenses();
-    byCategory.forEach((category, amount) {
+    expenses.getCategoryWiseExpenses().forEach((category, amount) {
       if (amount > 0) {
         final budget = budgets.getBudgetForCategory(category);
-        final budgetNote =
-            (budget != null && budget.amount > 0)
-                ? ' (budget ₹${budget.amount.toInt()})'
-                : '';
+        final note = (budget != null && budget.amount > 0)
+            ? ' (budget ₹${budget.amount.toInt()})'
+            : '';
         buffer.writeln(
-          '- ${category.categoryDisplayName}: ₹${amount.toInt()}$budgetNote',
+          '- ${category.categoryDisplayName}: ₹${amount.toInt()}$note',
         );
       }
     });
@@ -386,6 +410,43 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
     return buffer.toString();
   }
 
+  /// Richer context for free-form questions — recent dated transactions plus
+  /// account balances, so questions like "last week" can be answered.
+  String _buildDetailedContext() {
+    final expenses = context.read<ExpenseService>();
+    final accounts = context.read<AccountService>();
+    final budgets = context.read<BudgetService>();
+    final now = DateTime.now();
+    final b = StringBuffer();
+
+    b.writeln('Today: ${DateFormat('EEEE, yyyy-MM-dd').format(now)}');
+
+    if (accounts.accounts.isNotEmpty) {
+      b.writeln('\nAccounts and balances:');
+      for (final a in accounts.accounts) {
+        b.writeln('- ${a.name}: ${a.formattedBalance}');
+      }
+    }
+
+    b.writeln('\n${_buildSummary(expenses, budgets)}');
+
+    final cutoff = now.subtract(const Duration(days: 90));
+    final recent =
+        expenses.expenses.where((e) => e.createdAt.isAfter(cutoff)).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (recent.isNotEmpty) {
+      b.writeln('\nRecent transactions (newest first):');
+      for (final e in recent.take(120)) {
+        final tag = e.isRefund ? ' [refund]' : '';
+        b.writeln(
+          '- ${DateFormat('yyyy-MM-dd').format(e.createdAt)}: ${e.title} — '
+          '₹${e.amount.toInt()} (${e.categoryDisplayName})$tag',
+        );
+      }
+    }
+    return b.toString();
+  }
+
   String _friendlyError(Object e) {
     final msg = e.toString();
     if (msg.contains('403') ||
@@ -397,181 +458,292 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
     return msg.replaceFirst('Exception: ', '');
   }
 
+  // ── UI ──────────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('AI Assistant'),
-        backgroundColor: _teal,
-        foregroundColor: Colors.white,
-      ),
+      backgroundColor: c.surface,
+      appBar: AppBar(title: const Text('AI Assistant')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         children: [
+          _buildAskCard(),
+          const SizedBox(height: AppSpacing.md),
+          _buildAdvisor(
+            icon: Icons.insights_rounded,
+            accent: c.brand,
+            title: 'Spending insights',
+            subtitle: 'Patterns and where your money goes',
+            buttonLabel: 'Analyze my spending',
+            refreshLabel: 'Refresh insights',
+            output: _insights,
+            loading: _loadingInsights,
+            onGenerate: _generateInsights,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _buildAdvisor(
+            icon: Icons.savings_rounded,
+            accent: c.positive,
+            title: 'Saving tips',
+            subtitle: 'Practical ways to cut back',
+            buttonLabel: 'Get saving tips',
+            refreshLabel: 'Refresh tips',
+            output: _savingTips,
+            loading: _loadingSaving,
+            onGenerate: () => _generateTips(investment: false),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _buildAdvisor(
+            icon: Icons.trending_up_rounded,
+            accent: c.info,
+            title: 'Investment tips',
+            subtitle: 'Ideas to grow any surplus',
+            buttonLabel: 'Get investment ideas',
+            refreshLabel: 'Refresh ideas',
+            output: _investmentTips,
+            loading: _loadingInvestment,
+            onGenerate: () => _generateTips(investment: true),
+          ),
+          const SizedBox(height: AppSpacing.md),
           _buildNaturalLanguageCard(),
-          const SizedBox(height: 20),
-          _buildInsightsCard(),
         ],
       ),
     );
   }
 
-  Widget _buildNaturalLanguageCard() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: const [
-                Icon(Icons.auto_awesome, color: _teal),
-                SizedBox(width: 8),
-                Text(
-                  'Add expense by typing',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Type or speak it naturally and Gemini fills in the details.',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _nlController,
-              minLines: 1,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'e.g. Spent ₹450 on groceries today',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  tooltip: _listening ? 'Stop' : 'Speak',
-                  icon: Icon(
-                    _listening ? Icons.mic : Icons.mic_none,
-                    color: _listening ? _coral : _teal,
-                  ),
-                  onPressed: _toggleListen,
+  Widget _card({required Widget child}) {
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: c.surfaceElevated,
+        borderRadius: AppRadii.card,
+        border: Border.all(color: c.cardBorder),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _cardHeader(IconData icon, Color accent, String title, String sub) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(AppRadii.md),
+          ),
+          child: Icon(icon, color: accent, size: 22),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: theme.textTheme.titleSmall),
+              Text(
+                sub,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: context.colors.muted,
                 ),
               ),
-            ),
-            if (_listening)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Row(
-                  children: [
-                    const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: _coral,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Listening… speak now',
-                      style: TextStyle(color: Colors.grey[700], fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _parsing ? null : _parseAndReview,
-                icon:
-                    _parsing
-                        ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                        : const Icon(Icons.auto_fix_high),
-                label: Text(_parsing ? 'Thinking…' : 'Parse with AI'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _teal,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAskCard() {
+    final c = context.colors;
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _cardHeader(
+            Icons.auto_awesome_rounded,
+            c.brand,
+            'Ask your finances',
+            'Question your transactions in plain English',
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: _askController,
+            minLines: 1,
+            maxLines: 3,
+            textInputAction: TextInputAction.send,
+            onSubmitted: (_) => _ask(),
+            decoration: InputDecoration(
+              hintText: 'e.g. What did I spend last week?',
+              suffixIcon: IconButton(
+                tooltip: 'Ask',
+                icon: Icon(Icons.send_rounded, color: c.brand),
+                onPressed: _loadingAnswer ? null : () => _ask(),
               ),
             ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              for (final p in _suggestedPrompts)
+                AppChip(
+                  label: p,
+                  icon: Icons.bolt_rounded,
+                  onTap: _loadingAnswer ? null : () => _ask(p),
+                ),
+            ],
+          ),
+          if (_loadingAnswer) ...[
+            const SizedBox(height: AppSpacing.md),
+            _thinking('Thinking…'),
           ],
+          if (_answer != null && !_loadingAnswer) ...[
+            const SizedBox(height: AppSpacing.md),
+            _outputBox(_answer!, c.brand),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdvisor({
+    required IconData icon,
+    required Color accent,
+    required String title,
+    required String subtitle,
+    required String buttonLabel,
+    required String refreshLabel,
+    required String? output,
+    required bool loading,
+    required VoidCallback onGenerate,
+  }) {
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _cardHeader(icon, accent, title, subtitle),
+          if (output != null && !loading) ...[
+            const SizedBox(height: AppSpacing.md),
+            _outputBox(output, accent),
+          ],
+          if (loading) ...[
+            const SizedBox(height: AppSpacing.md),
+            _thinking('Analyzing…'),
+          ],
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: loading ? null : onGenerate,
+              icon: Icon(output == null ? Icons.auto_awesome_rounded
+                  : Icons.refresh_rounded),
+              label: Text(output == null ? buttonLabel : refreshLabel),
+              style: OutlinedButton.styleFrom(foregroundColor: accent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _thinking(String label) {
+    final c = context.colors;
+    return Row(
+      children: [
+        SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(strokeWidth: 2, color: c.brand),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: c.muted,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _outputBox(String markdown, Color accent) {
+    final c = context.colors;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.sm + 2),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.06),
+        borderRadius: AppRadii.card,
+        border: Border.all(color: accent.withValues(alpha: 0.2)),
+      ),
+      child: MarkdownText(
+        markdown,
+        baseStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          height: 1.45,
+          color: c.muted,
         ),
       ),
     );
   }
 
-  Widget _buildInsightsCard() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: const [
-                Icon(Icons.insights, color: _teal),
-                SizedBox(width: 8),
-                Text(
-                  'Spending insights',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+  Widget _buildNaturalLanguageCard() {
+    final c = context.colors;
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _cardHeader(
+            Icons.mic_none_rounded,
+            c.accent,
+            'Add expense by voice or text',
+            'Say it naturally and Gemini fills the details',
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: _nlController,
+            minLines: 1,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'e.g. Spent ₹450 on groceries today',
+              suffixIcon: IconButton(
+                tooltip: _listening ? 'Stop' : 'Speak',
+                icon: Icon(
+                  _listening ? Icons.mic_rounded : Icons.mic_none_rounded,
+                  color: _listening ? c.negative : c.accent,
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Let Gemini analyze your spending and suggest ways to save.',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 12),
-            if (_insights != null)
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: _teal.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _teal.withValues(alpha: 0.2)),
-                ),
-                child: Text(_insights!, style: const TextStyle(height: 1.4)),
-              ),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _loadingInsights ? null : _generateInsights,
-                icon:
-                    _loadingInsights
-                        ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                        : const Icon(Icons.analytics_outlined),
-                label: Text(
-                  _loadingInsights
-                      ? 'Analyzing…'
-                      : _insights == null
-                      ? 'Analyze my spending'
-                      : 'Refresh insights',
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: _teal,
-                  side: const BorderSide(color: _teal),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
+                onPressed: _toggleListen,
               ),
             ),
+          ),
+          if (_listening) ...[
+            const SizedBox(height: AppSpacing.xs),
+            _thinking('Listening… speak now'),
           ],
-        ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _parsing ? null : _parseAndReview,
+              icon: _parsing
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: c.onBrand,
+                      ),
+                    )
+                  : const Icon(Icons.auto_fix_high_rounded),
+              label: Text(_parsing ? 'Thinking…' : 'Parse with AI'),
+            ),
+          ),
+        ],
       ),
     );
   }

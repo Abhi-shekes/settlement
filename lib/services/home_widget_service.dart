@@ -18,6 +18,7 @@ class HomeWidgetService {
     'NetWorthWidget',
     'BudgetWidget',
     'QuickAddWidget',
+    'OverviewWidget',
   ];
 
   static final NumberFormat _inr = NumberFormat.decimalPattern('en_IN');
@@ -77,44 +78,74 @@ class HomeWidgetService {
         }
       }
 
-      // Net worth across accounts.
+      // Month-over-month trend: compare this month's spend with last month's.
+      final prevStart = DateTime(now.year, now.month - 1, 1);
+      final prevTotal = expenses
+          .getExpensesByDateRange(prevStart, start)
+          .fold<double>(0, (sum, e) => sum + e.amount);
+      String monthDelta = '';
+      if (prevTotal > 0) {
+        final change = ((monthTotal - prevTotal) / prevTotal * 100).round();
+        if (change != 0) {
+          final arrow = change > 0 ? '▲' : '▼';
+          monthDelta = '$arrow ${change.abs()}% vs last month';
+        }
+      }
+
+      // Net worth across accounts, plus the single largest-balance account.
       final netWorth = accounts.getTotalBalance();
       final count = accounts.accounts.length;
       final accountsSub =
           count == 0
               ? 'No accounts yet'
               : 'Across $count account${count == 1 ? '' : 's'}';
+      String accountTop = '';
+      if (accounts.accounts.isNotEmpty) {
+        final top = accounts.accounts.reduce(
+          (a, b) => a.balance >= b.balance ? a : b,
+        );
+        accountTop = 'Top: ${top.name} · ${_rupees(top.balance)}';
+      }
 
-      // Budget progress (up to 3 category budgets, month-to-date).
-      final budgetLines = <String>[];
-      for (final b in budgets.budgets) {
-        if (b.amount <= 0) continue;
+      // Budget progress — structured, month-to-date. Each row carries a label,
+      // "spent / limit", a percentage (for the native progress bar) and a state
+      // (ok / warn / over) that colors the bar. `budget_body` is kept as a
+      // legacy fallback for any old widget instance still bound to it.
+      final validBudgets = budgets.budgets.where((b) => b.amount > 0).toList();
+      final legacyLines = <String>[];
+      final data = <String, String>{
+        'month_label': DateFormat('MMMM y').format(now),
+        'month_spend': _rupees(monthTotal),
+        'month_delta': monthDelta,
+        'month_top': topLine,
+        'net_worth': _rupees(netWorth),
+        'accounts_sub': accountsSub,
+        'account_top': accountTop,
+        'budget_count': validBudgets.length.toString(),
+        'updated': 'Updated ${DateFormat('h:mm a').format(now)}',
+      };
+      for (var i = 0; i < validBudgets.length && i < 4; i++) {
+        final b = validBudgets[i];
         final spent = byCategory[b.category] ?? 0;
         final pct = ((spent / b.amount) * 100).clamp(0, 999).round();
-        budgetLines.add(
+        final state = pct >= 100 ? 'over' : (pct >= 80 ? 'warn' : 'ok');
+        data['budget_${i}_label'] = b.category.categoryDisplayName;
+        data['budget_${i}_amount'] = '${_rupees(spent)} / ${_rupees(b.amount)}';
+        data['budget_${i}_pct'] = pct.toString();
+        data['budget_${i}_state'] = state;
+        legacyLines.add(
           '${b.category.categoryDisplayName}  '
           '${_rupees(spent)} / ${_rupees(b.amount)}  ($pct%)',
         );
-        if (budgetLines.length == 3) break;
       }
-      final budgetBody =
-          budgetLines.isEmpty ? 'No budgets set' : budgetLines.join('\n');
+      data['budget_body'] =
+          legacyLines.isEmpty ? 'No budgets set' : legacyLines.join('\n');
 
-      await Future.wait([
-        HomeWidget.saveWidgetData<String>(
-          'month_label',
-          DateFormat('MMMM y').format(now),
+      await Future.wait(
+        data.entries.map(
+          (e) => HomeWidget.saveWidgetData<String>(e.key, e.value),
         ),
-        HomeWidget.saveWidgetData<String>('month_spend', _rupees(monthTotal)),
-        HomeWidget.saveWidgetData<String>('month_top', topLine),
-        HomeWidget.saveWidgetData<String>('net_worth', _rupees(netWorth)),
-        HomeWidget.saveWidgetData<String>('accounts_sub', accountsSub),
-        HomeWidget.saveWidgetData<String>('budget_body', budgetBody),
-        HomeWidget.saveWidgetData<String>(
-          'updated',
-          'Updated ${DateFormat('h:mm a').format(now)}',
-        ),
-      ]);
+      );
 
       for (final provider in _providers) {
         await HomeWidget.updateWidget(qualifiedAndroidName: '$_pkg.$provider');

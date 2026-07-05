@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:settlement/services/invitation_service.dart';
 import '../../models/group_model.dart';
@@ -58,7 +59,7 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Invitation sent successfully!'),
-            backgroundColor: Color(0xFF008080),
+            backgroundColor: Color(0xFF0F766E),
           ),
         );
       }
@@ -83,13 +84,11 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Invite to Group'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
       ),
       body:
           _isLoading
               ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF008080)),
+                child: CircularProgressIndicator(),
               )
               : SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -103,7 +102,7 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF008080).withValues(alpha: 0.1),
+                          color: const Color(0xFF0F766E).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -113,7 +112,7 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
                               'Inviting to:',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Color(0xFF008080),
+                                color: Color(0xFF0F766E),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -123,7 +122,7 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF008080),
+                                color: Color(0xFF0F766E),
                               ),
                             ),
                             if (widget.group.description.isNotEmpty) ...[
@@ -132,7 +131,7 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
                                 widget.group.description,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.grey[600],
+                                  color: context.colors.muted,
                                 ),
                               ),
                             ],
@@ -148,7 +147,7 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF008080),
+                          color: Color(0xFF0F766E),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -181,7 +180,7 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF008080),
+                          color: Color(0xFF0F766E),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -203,7 +202,7 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF008080),
+                          color: Color(0xFF0F766E),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -249,7 +248,7 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
                               '• Once accepted, they\'ll be added to the group\n'
                               '• Invitations expire after 7 days',
                               style: TextStyle(
-                                color: Colors.grey[700],
+                                color: context.colors.muted,
                                 fontSize: 14,
                               ),
                             ),
@@ -265,8 +264,6 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
                         child: ElevatedButton(
                           onPressed: _sendInvitation,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF008080),
-                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
