@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/expense_service.dart';
@@ -6,11 +7,20 @@ import '../../services/group_service.dart';
 import '../../services/budget_service.dart';
 import '../../services/invitation_service.dart';
 
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_typography.dart';
+import '../../utils/money.dart';
+import '../../widgets/section_header.dart';
+import '../../widgets/action_card.dart';
+import '../../widgets/app_badge.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/budget_progress_card.dart';
 import '../expenses/add_expense_screen.dart';
 import '../splits/add_split_screen.dart';
 import '../groups/create_group_screen.dart';
 import '../budgets/budget_screen.dart';
+import '../analytics/analytics_screen.dart';
 import '../requests/requests_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -24,7 +34,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _refreshData();
+    // Defer the initial load so services don't notifyListeners mid-build.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshData());
   }
 
   Future<void> _refreshData() async {
@@ -40,609 +51,451 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          'Dashboard',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          Consumer3<AuthService, GroupService, InvitationService>(
-            builder: (context, auth, groups, invites, _) {
-              final count = pendingRequestCount(auth, groups, invites);
-              return IconButton(
-                tooltip: 'Requests',
-                icon: RequestBadge(
-                  count: count,
-                  child: const Icon(Icons.notifications_none),
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RequestsScreen(),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _refreshData),
-        ],
-      ),
+      backgroundColor: c.surface,
       body: RefreshIndicator(
         onRefresh: _refreshData,
-        color: const Color(0xFF008080),
-        child: SingleChildScrollView(
+        color: c.brand,
+        child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome Section
-              _buildWelcomeSection(),
-              const SizedBox(height: 24),
+          slivers: [
+            _buildHeader(),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.xxl,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _buildBudgetAlerts(),
+                  _buildQuickActions(),
+                  const SizedBox(height: AppSpacing.xl),
+                  _buildRecentActivity(),
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-              // Financial Overview Cards
-              _buildFinancialOverview(),
-              const SizedBox(height: 24),
+  // ── Hero header: greeting + net-position summary ──────────────────────────
 
-              // Budget Alerts
-              _buildBudgetAlerts(),
-              const SizedBox(height: 24),
-
-              // Quick Actions
-              _buildQuickActions(),
-              const SizedBox(height: 24),
-
-              // Recent Activity
-              _buildRecentActivity(),
-            ],
+  SliverToBoxAdapter _buildHeader() {
+    final c = context.colors;
+    return SliverToBoxAdapter(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [c.heroGradientStart, c.heroGradientEnd],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(AppRadii.xl),
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              AppSpacing.xl,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTopBar(),
+                const SizedBox(height: AppSpacing.lg),
+                _buildNetPosition(),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildWelcomeSection() {
+  Widget _buildTopBar() {
+    final c = context.colors;
     return Consumer<AuthService>(
-      builder: (context, authService, child) {
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF008080), Color(0xFF20B2AA)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Welcome back,',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                authService.currentUser?.displayName?.split(' ').first ??
-                    'User',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Here\'s your financial overview',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildFinancialOverview() {
-    return Consumer2<ExpenseService, GroupService>(
-      builder: (context, expenseService, groupService, child) {
-        final currentUserId =
-            context.read<AuthService>().currentUser?.uid ?? '';
-
-        // Calculate totals
-        final totalExpenses = expenseService.getTotalExpenseAmount();
-        final totalOwed = groupService.getTotalAmountOwed(currentUserId);
-        final totalOwing = groupService.getTotalAmountOwing(currentUserId);
-        final netBalance = totalOwing - totalOwed;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (context, auth, _) {
+        final name = auth.currentUser?.displayName?.split(' ').first ?? 'there';
+        return Row(
           children: [
-            const Text(
-              'Financial Overview',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF008080),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome back',
+                    style: TextStyle(
+                      color: c.onBrand.withValues(alpha: 0.85),
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    name,
+                    style: AppTypography.money(
+                      fontSize: 24,
+                      color: c.onBrand,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Main Balance Cards
-            Row(
-              children: [
-                Expanded(
-                  child: _buildBalanceCard(
-                    'Total Expenses',
-                    '₹${totalExpenses.toInt()}',
-                    Icons.receipt_long,
-                    const Color(0xFF008080),
-                    Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildBalanceCard(
-                    'Net Balance',
-                    netBalance >= 0
-                        ? '+₹${netBalance.toInt()}'
-                        : '-₹${(-netBalance).toInt()}',
-                    netBalance >= 0 ? Icons.trending_up : Icons.trending_down,
-                    netBalance >= 0 ? Colors.green : const Color(0xFFFF7F50),
-                    Colors.white,
-                  ),
-                ),
-              ],
+            _headerAction(
+              icon: Icons.insights_rounded,
+              tooltip: 'Analytics',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
+              ),
             ),
-
-            const SizedBox(height: 12),
-
-            // Owe Cards
-            Row(
-              children: [
-                Expanded(
-                  child: _buildBalanceCard(
-                    'You Owe',
-                    '₹${totalOwed.toInt()}',
-                    Icons.arrow_upward,
-                    const Color(0xFFFF7F50),
-                    Colors.white,
+            const SizedBox(width: AppSpacing.xs),
+            Consumer3<AuthService, GroupService, InvitationService>(
+              builder: (context, auth, groups, invites, _) {
+                final count = pendingRequestCount(auth, groups, invites);
+                return _headerAction(
+                  icon: Icons.notifications_none_rounded,
+                  tooltip: 'Requests',
+                  badgeCount: count,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const RequestsScreen()),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildBalanceCard(
-                    'Owed to You',
-                    '₹${totalOwing.toInt()}',
-                    Icons.arrow_downward,
-                    Colors.green,
-                    Colors.white,
-                  ),
-                ),
-              ],
+                );
+              },
             ),
           ],
         );
       },
     );
   }
+
+  Widget _headerAction({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+    int badgeCount = 0,
+  }) {
+    final c = context.colors;
+    return Material(
+      color: c.onBrand.withValues(alpha: 0.16),
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Padding(
+          padding: const EdgeInsets.all(9),
+          child: Tooltip(
+            message: tooltip,
+            child: CountBadge(
+              count: badgeCount,
+              child: Icon(icon, color: c.onBrand, size: 22),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNetPosition() {
+    return Consumer2<ExpenseService, GroupService>(
+      builder: (context, expenseService, groupService, _) {
+        final c = context.colors;
+        final uid = context.read<AuthService>().currentUser?.uid ?? '';
+        final totalOwed = groupService.getTotalAmountOwed(uid); // you owe
+        final totalOwing = groupService.getTotalAmountOwing(uid); // owed to you
+        final net = totalOwing - totalOwed;
+        final settled = net.abs() < 0.5;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              settled
+                  ? "You're all settled up"
+                  : net > 0
+                  ? 'You are owed overall'
+                  : 'You owe overall',
+              style: TextStyle(
+                color: c.onBrand.withValues(alpha: 0.85),
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              settled ? '₹0' : formatCurrency(net.abs()),
+              style: AppTypography.money(fontSize: 40, color: c.onBrand),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Expanded(
+                  child: _pillStat(
+                    'Owed to you',
+                    totalOwing,
+                    Icons.south_west_rounded,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _pillStat(
+                    'You owe',
+                    totalOwed,
+                    Icons.north_east_rounded,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
+      },
+    );
+  }
+
+  Widget _pillStat(String label, double amount, IconData icon) {
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: c.onBrand.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: c.onBrand, size: 18),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: c.onBrand.withValues(alpha: 0.8),
+                    fontSize: 11,
+                  ),
+                ),
+                Text(
+                  formatCurrency(amount, compact: true),
+                  style: AppTypography.money(fontSize: 16, color: c.onBrand),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Budget alerts ─────────────────────────────────────────────────────────
 
   Widget _buildBudgetAlerts() {
     return Consumer2<BudgetService, ExpenseService>(
-      builder: (context, budgetService, expenseService, child) {
-        // Get categories with budgets
-        final categoriesWithBudgets = budgetService.getCategoriesWithBudgets();
+      builder: (context, budgetService, expenseService, _) {
+        final c = context.colors;
+        final alertCategories = budgetService.getCategoriesWithBudgets().where((
+          category,
+        ) {
+          final spending = expenseService.getTotalExpenseAmountByCategory(
+            category,
+          );
+          final budget = budgetService.getBudgetForCategory(category);
+          if (budget == null || budget.amount <= 0) return false;
+          return spending >= budget.amount * 0.8;
+        }).toList();
 
-        // Filter to only show categories that are near limit or exceeded
-        final alertCategories =
-            categoriesWithBudgets.where((category) {
-              final currentSpending = expenseService
-                  .getTotalExpenseAmountByCategory(category);
-              final budget = budgetService.getBudgetForCategory(category);
-
-              if (budget == null || budget.amount <= 0) return false;
-
-              return currentSpending >=
-                  budget.amount * 0.8; // 80% or more of budget
-            }).toList();
-
-        if (alertCategories.isEmpty) {
-          return const SizedBox.shrink(); // No alerts to show
-        }
+        if (alertCategories.isEmpty) return const SizedBox.shrink();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Icon(Icons.warning_amber, color: Colors.orange),
-                const SizedBox(width: 8),
-                const Text(
-                  'Budget Alerts',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const BudgetScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text('Manage Budgets'),
-                ),
-              ],
+            SectionHeader(
+              'Budget alerts',
+              icon: Icons.warning_amber_rounded,
+              iconColor: c.warning,
+              actionLabel: 'Manage',
+              onAction: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const BudgetScreen()),
+              ),
             ),
-            const SizedBox(height: 12),
-
-            // Alert Cards
+            const SizedBox(height: AppSpacing.sm),
             ...alertCategories.map((category) {
-              final currentSpending = expenseService
-                  .getTotalExpenseAmountByCategory(category);
+              final spending = expenseService.getTotalExpenseAmountByCategory(
+                category,
+              );
               final budget = budgetService.getBudgetForCategory(category);
-
               if (budget == null) return const SizedBox.shrink();
-
               return BudgetProgressCard(
                 category: category,
                 budgetAmount: budget.amount,
-                currentSpending: currentSpending,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const BudgetScreen(),
-                    ),
-                  );
-                },
+                currentSpending: spending,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BudgetScreen()),
+                ),
               );
             }),
+            const SizedBox(height: AppSpacing.xl),
           ],
         );
       },
     );
   }
 
-  Widget _buildBalanceCard(
-    String title,
-    String amount,
-    IconData icon,
-    Color color,
-    Color textColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(icon, color: textColor, size: 24),
-              if (title == 'Net Balance')
-                Icon(
-                  amount.startsWith('+')
-                      ? Icons.sentiment_satisfied
-                      : Icons.sentiment_dissatisfied,
-                  color: textColor,
-                  size: 20,
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(
-              color: textColor.withValues(alpha: 0.8),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            amount,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // ── Quick actions ─────────────────────────────────────────────────────────
 
   Widget _buildQuickActions() {
+    final c = context.colors;
+    final actions = [
+      (
+        'Add expense',
+        'Track spending',
+        Icons.add_card_rounded,
+        c.brand,
+        () => _push(const AddExpenseScreen()),
+      ),
+      (
+        'Split bill',
+        'Share with friends',
+        Icons.call_split_rounded,
+        c.accent,
+        () => _push(const AddSplitScreen()),
+      ),
+      (
+        'Create group',
+        'Group expenses',
+        Icons.group_add_rounded,
+        c.info,
+        () => _push(const CreateGroupScreen()),
+      ),
+      (
+        'Set budgets',
+        'Category limits',
+        Icons.savings_rounded,
+        c.positive,
+        () => _push(const BudgetScreen()),
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Quick Actions',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF008080),
+        const SectionHeader('Quick actions'),
+        const SizedBox(height: AppSpacing.sm),
+        GridView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: AppSpacing.sm,
+            mainAxisSpacing: AppSpacing.sm,
+            mainAxisExtent: 116,
           ),
-        ),
-        const SizedBox(height: 16),
-        Row(
           children: [
-            Expanded(
-              child: _buildActionCard(
-                'Add Expense',
-                'Track personal spending',
-                Icons.add_circle,
-                const Color(0xFF008080),
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddExpenseScreen(),
-                  ),
-                ),
+            for (final a in actions)
+              ActionCard(
+                title: a.$1,
+                subtitle: a.$2,
+                icon: a.$3,
+                accent: a.$4,
+                onTap: a.$5,
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                'Split Bill',
-                'Share expenses with friends',
-                Icons.call_split,
-                const Color(0xFFFF7F50),
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddSplitScreen(),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                'Create Group',
-                'Manage group expenses',
-                Icons.group_add,
-                Colors.purple,
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CreateGroupScreen(),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                'Set Budgets',
-                'Manage category budgets',
-                Icons.account_balance_wallet,
-                Colors.green,
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const BudgetScreen()),
-                ),
-              ),
-            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildActionCard(
-    String title,
-    String subtitle,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF008080),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  void _push(Widget screen) => Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => screen),
+  );
+
+  // ── Recent activity ───────────────────────────────────────────────────────
 
   Widget _buildRecentActivity() {
     return Consumer2<ExpenseService, GroupService>(
-      builder: (context, expenseService, groupService, child) {
-        // Combine recent expenses and splits
-        final recentExpenses = expenseService.expenses.take(3).toList();
-        final recentSplits = groupService.splits.take(3).toList();
-
-        // Create a combined list with timestamps for sorting
+      builder: (context, expenseService, groupService, _) {
+        final c = context.colors;
+        final uid = context.read<AuthService>().currentUser?.uid ?? '';
         final List<ActivityItem> activities = [];
 
-        for (final expense in recentExpenses) {
+        for (final expense in expenseService.expenses.take(4)) {
           activities.add(
             ActivityItem(
               type: ActivityType.personalExpense,
               title: expense.title,
               amount: expense.amount,
               date: expense.createdAt,
-              icon: Icons.receipt,
-              color: const Color(0xFF008080),
+              icon: Icons.receipt_long_rounded,
+              color: c.brand,
               subtitle: expense.categoryDisplayName,
             ),
           );
         }
-
-        for (final split in recentSplits) {
-          final currentUserId =
-              context.read<AuthService>().currentUser?.uid ?? '';
-          final isGroupSplit = split.groupId != null;
-
+        for (final split in groupService.splits.take(4)) {
+          final isGroup = split.groupId != null;
           activities.add(
             ActivityItem(
-              type:
-                  isGroupSplit
-                      ? ActivityType.groupSplit
-                      : ActivityType.individualSplit,
+              type: isGroup
+                  ? ActivityType.groupSplit
+                  : ActivityType.individualSplit,
               title: split.title,
               amount: split.totalAmount,
               date: split.createdAt,
-              icon: isGroupSplit ? Icons.groups : Icons.person,
-              color: isGroupSplit ? Colors.purple : const Color(0xFFFF7F50),
-              subtitle:
-                  split.paidBy == currentUserId ? 'You paid' : 'Split expense',
+              icon: isGroup ? Icons.groups_rounded : Icons.call_split_rounded,
+              color: isGroup ? c.info : c.accent,
+              subtitle: split.paidBy == uid ? 'You paid' : 'Split expense',
             ),
           );
         }
-
-        // Sort by date (most recent first)
         activities.sort((a, b) => b.date.compareTo(a.date));
-        final displayActivities = activities.take(5).toList();
+        final display = activities.take(5).toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Recent Activity',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF008080),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            if (displayActivities.isEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    Icon(Icons.history, size: 48, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No recent activity',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Start by adding an expense or splitting a bill',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+            const SectionHeader('Recent activity'),
+            const SizedBox(height: AppSpacing.sm),
+            if (display.isEmpty)
+              EmptyState(
+                icon: Icons.history_rounded,
+                title: 'No activity yet',
+                message: 'Add an expense or split a bill to see it here.',
+                actionLabel: 'Add expense',
+                onAction: () => _push(const AddExpenseScreen()),
+                compact: true,
               )
             else
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
+                  color: c.surfaceElevated,
+                  borderRadius: AppRadii.card,
+                  border: Border.all(color: c.cardBorder),
+                ),
+                child: Column(
+                  children: [
+                    for (int i = 0; i < display.length; i++) ...[
+                      if (i > 0) Divider(height: 1, color: c.cardBorder),
+                      _buildActivityItem(display[i]),
+                    ],
                   ],
                 ),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: displayActivities.length,
-                  separatorBuilder:
-                      (context, index) =>
-                          Divider(height: 1, color: Colors.grey[200]),
-                  itemBuilder: (context, index) {
-                    final activity = displayActivities[index];
-                    return _buildActivityItem(activity);
-                  },
-                ),
-              ),
+              ).animate().fadeIn(duration: 300.ms),
           ],
         );
       },
@@ -650,95 +503,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildActivityItem(ActivityItem activity) {
+    final theme = Theme.of(context);
+    final c = context.colors;
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xxs,
+      ),
       leading: Container(
-        width: 48,
-        height: 48,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
-          color: activity.color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
+          color: activity.color.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(AppRadii.md),
         ),
-        child: Icon(activity.icon, color: activity.color, size: 24),
+        child: Icon(activity.icon, color: activity.color, size: 22),
       ),
       title: Text(
         activity.title,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+        style: theme.textTheme.titleSmall,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 4),
-          Text(
-            activity.subtitle,
-            style: TextStyle(color: Colors.grey[600], fontSize: 14),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            _formatDate(activity.date),
-            style: TextStyle(color: Colors.grey[500], fontSize: 12),
-          ),
-        ],
+      subtitle: Text(
+        '${activity.subtitle} · ${_formatDate(activity.date)}',
+        style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            '₹${activity.amount.toInt()}',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: activity.color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: activity.color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              _getActivityTypeLabel(activity.type),
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: activity.color,
-              ),
-            ),
-          ),
-        ],
+      trailing: Text(
+        formatCurrency(activity.amount),
+        style: AppTypography.money(fontSize: 15, color: activity.color),
       ),
     );
   }
 
   String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays == 0) {
-      return 'Today';
-    } else if (difference.inDays == 1) {
-      return 'Yesterday';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
-    } else {
-      return '${date.day}/${date.month}/${date.year}';
-    }
-  }
-
-  String _getActivityTypeLabel(ActivityType type) {
-    switch (type) {
-      case ActivityType.personalExpense:
-        return 'PERSONAL';
-      case ActivityType.individualSplit:
-        return 'SPLIT';
-      case ActivityType.groupSplit:
-        return 'GROUP';
-    }
+    final diff = DateTime.now().difference(date);
+    if (diff.inDays == 0) return 'Today';
+    if (diff.inDays == 1) return 'Yesterday';
+    if (diff.inDays < 7) return '${diff.inDays} days ago';
+    return '${date.day}/${date.month}/${date.year}';
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../../models/account_model.dart';
 import '../../services/account_service.dart';
@@ -15,8 +16,8 @@ class AddAccountScreen extends StatefulWidget {
 }
 
 class _AddAccountScreenState extends State<AddAccountScreen> {
-  static const _teal = Color(0xFF008080);
-  static const _coral = Color(0xFFFF7F50);
+  static const _teal = Color(0xFF0F766E);
+  static const _coral = Color(0xFFF97316);
 
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
@@ -127,8 +128,6 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Account' : 'Add Account'),
-        backgroundColor: _teal,
-        foregroundColor: Colors.white,
         actions: [
           if (_isEditing)
             IconButton(
@@ -185,7 +184,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                         ),
                         label: Text(type.displayName),
                         labelStyle: TextStyle(
-                          color: selected ? Colors.white : Colors.black87,
+                          color: selected ? Colors.white : context.colors.muted,
                           fontWeight: FontWeight.w600,
                         ),
                         selectedColor: type.color,
@@ -228,8 +227,6 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                 child: ElevatedButton(
                   onPressed: _save,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _teal,
-                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: Text(

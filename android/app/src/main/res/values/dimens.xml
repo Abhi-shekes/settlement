@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Widget dimensions. On Android 12+ (values-v31) the outer/inner corner radii
+    switch to the system-recommended app-widget radii so widgets match the
+    launcher's other widgets exactly.
+-->
+<resources>
+    <dimen name="widget_corner_radius">20dp</dimen>
+    <dimen name="widget_inner_radius">14dp</dimen>
+    <dimen name="widget_padding">16dp</dimen>
+    <dimen name="widget_btn_radius">14dp</dimen>
+</resources>

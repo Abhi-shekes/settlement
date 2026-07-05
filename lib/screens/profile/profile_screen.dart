@@ -10,6 +10,11 @@ import '../../services/group_service.dart';
 import '../../services/budget_service.dart';
 import '../../services/invitation_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/theme_service.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../widgets/app_snackbar.dart';
+import '../../widgets/section_header.dart';
 import 'friends_screen.dart';
 import '../accounts/accounts_screen.dart';
 import '../recurring/recurring_screen.dart';
@@ -81,14 +86,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     await authService.signOut();
                   } catch (e) {
                     messenger.showSnackBar(
-                      SnackBar(
-                        content: Text('Error signing out: $e'),
-                        backgroundColor: Colors.red,
+                      const SnackBar(
+                        content: Text('Could not sign out. Please try again.'),
                       ),
                     );
                   }
                 },
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                style: TextButton.styleFrom(
+                  foregroundColor: context.colors.negative,
+                ),
                 child: const Text('Sign Out'),
               ),
             ],
@@ -98,28 +104,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
-      ),
+      backgroundColor: c.surface,
+      appBar: AppBar(title: const Text('Profile')),
       body:
           _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF008080)),
-              )
+              ? const Center(child: CircularProgressIndicator())
               : RefreshIndicator(
                 onRefresh: _loadUserData,
-                color: const Color(0xFF008080),
+                color: c.brand,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Profile Header
                       _buildProfileHeader(),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: AppSpacing.xl),
+
+                      const SectionHeader('Manage'),
+                      const SizedBox(height: AppSpacing.sm),
 
                       // Menu Items
                       _buildMenuItem(
@@ -192,6 +198,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         },
                       ),
 
+                      const SizedBox(height: AppSpacing.lg),
+                      const SectionHeader('Appearance'),
+                      const SizedBox(height: AppSpacing.sm),
+                      _buildThemeSelector(),
+
                       // _buildMenuItem(
                       //   icon: Icons.notifications,
                       //   title: 'Notifications',
@@ -250,27 +261,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       //     );
                       //   },
                       // ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: AppSpacing.xl),
 
                       // Sign Out Button
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           onPressed: _signOut,
-                          icon: const Icon(Icons.logout),
-                          label: const Text('Sign Out'),
+                          icon: const Icon(Icons.logout_rounded),
+                          label: const Text('Sign out'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            side: const BorderSide(color: Colors.red),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            foregroundColor: c.negative,
+                            side: BorderSide(
+                              color: c.negative.withValues(alpha: 0.4),
                             ),
                           ),
                         ),
                       ),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: AppSpacing.xl),
                     ],
                   ),
                 ),
@@ -279,116 +288,160 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileHeader() {
+    final c = context.colors;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF008080), Color(0xFF20B2AA)],
+        gradient: LinearGradient(
+          colors: [c.heroGradientStart, c.heroGradientEnd],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        boxShadow: AppShadows.glow(c.brand),
       ),
       child: Column(
         children: [
-          // Profile Picture
           Container(
-            width: 100,
-            height: 100,
+            width: 92,
+            height: 92,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(25),
+              color: c.onBrand.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: c.onBrand.withValues(alpha: 0.3)),
             ),
             child:
                 _currentUser?.photoURL != null
                     ? ClipRRect(
-                      borderRadius: BorderRadius.circular(25),
+                      borderRadius: BorderRadius.circular(24),
                       child: Image.network(
                         _currentUser!.photoURL!,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Icon(
                             Icons.person,
-                            size: 50,
-                            color: Colors.white.withValues(alpha: 0.8),
+                            size: 46,
+                            color: c.onBrand.withValues(alpha: 0.85),
                           );
                         },
                       ),
                     )
                     : Icon(
                       Icons.person,
-                      size: 50,
-                      color: Colors.white.withValues(alpha: 0.8),
+                      size: 46,
+                      color: c.onBrand.withValues(alpha: 0.85),
                     ),
           ),
-          const SizedBox(height: 16),
-
-          // Name
+          const SizedBox(height: AppSpacing.md),
           Text(
             _currentUser?.displayName ?? 'User',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: c.onBrand,
             ),
           ),
-          const SizedBox(height: 8),
-
-          // Email
+          const SizedBox(height: 2),
           Text(
             _currentUser?.email ?? '',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 16,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: c.onBrand.withValues(alpha: 0.9),
             ),
           ),
-          const SizedBox(height: 16),
-
-          // Friend Code
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20),
+          const SizedBox(height: AppSpacing.md),
+          InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: _copyFriendCode,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
+              ),
+              decoration: BoxDecoration(
+                color: c.onBrand.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.qr_code_rounded, color: c.onBrand, size: 18),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'Friend code · ${_currentUser?.friendCode ?? '—'}',
+                    style: TextStyle(
+                      color: c.onBrand,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Icon(Icons.copy_rounded, color: c.onBrand, size: 15),
+                ],
+              ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.qr_code, color: Colors.white, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Friend Code: ${_currentUser?.friendCode ?? ''}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _copyFriendCode() async {
+    final friendCode = _currentUser?.friendCode ?? '';
+    if (friendCode.isNotEmpty) {
+      await Clipboard.setData(ClipboardData(text: friendCode));
+      if (mounted) AppSnackbar.success(context, 'Friend code copied');
+    } else if (mounted) {
+      AppSnackbar.info(context, 'No friend code yet');
+    }
+  }
+
+  Widget _buildThemeSelector() {
+    final c = context.colors;
+    final theme = context.watch<ThemeService>();
+    final options = [
+      (ThemeMode.system, 'System', Icons.brightness_auto_rounded),
+      (ThemeMode.light, 'Light', Icons.light_mode_rounded),
+      (ThemeMode.dark, 'Dark', Icons.dark_mode_rounded),
+    ];
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: c.surfaceElevated,
+        borderRadius: AppRadii.card,
+        border: Border.all(color: c.cardBorder),
+      ),
+      child: Row(
+        children: [
+          for (final o in options)
+            Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppRadii.md),
+                onTap: () => context.read<ThemeService>().setMode(o.$1),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: theme.mode == o.$1
+                        ? c.brandSoft
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppRadii.md),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        o.$3,
+                        size: 22,
+                        color: theme.mode == o.$1 ? c.brand : c.muted,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        o.$2,
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: theme.mode == o.$1 ? c.brand : c.muted,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () async {
-                    final friendCode = _currentUser?.friendCode ?? '';
-                    final messenger = ScaffoldMessenger.of(context);
-                    if (friendCode.isNotEmpty) {
-                      await Clipboard.setData(ClipboardData(text: friendCode));
-                      messenger.showSnackBar(
-                        const SnackBar(
-                          content: Text('Friend code copied to clipboard!'),
-                        ),
-                      );
-                    } else {
-                      messenger.showSnackBar(
-                        const SnackBar(
-                          content: Text('No friend code to copy!'),
-                        ),
-                      );
-                    }
-                  },
-                  child: const Icon(Icons.copy, color: Colors.white, size: 16),
-                ),
-              ],
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -400,32 +453,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    final c = context.colors;
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: c.surfaceElevated,
+        borderRadius: AppRadii.card,
+        border: Border.all(color: c.cardBorder),
+      ),
       child: ListTile(
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.card),
         leading: Container(
-          width: 48,
-          height: 48,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
-            color: const Color(0xFF008080).withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            color: c.brandSoft,
+            borderRadius: BorderRadius.circular(AppRadii.md),
           ),
-          child: Icon(icon, color: const Color(0xFF008080), size: 24),
+          child: Icon(icon, color: c.brand, size: 22),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(color: Colors.grey[600], fontSize: 14),
-        ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: Colors.grey,
-        ),
+        title: Text(title, style: Theme.of(context).textTheme.titleSmall),
+        subtitle: Text(subtitle),
+        trailing: Icon(Icons.chevron_right_rounded, color: c.faint),
         onTap: onTap,
       ),
     );

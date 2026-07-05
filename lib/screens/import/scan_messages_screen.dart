@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -8,6 +9,7 @@ import '../../services/account_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/sms_import_service.dart';
 import '../../utils/transaction_parser.dart';
+import '../../widgets/app_snackbar.dart';
 
 /// Editable, user-reviewable draft of a parsed transaction.
 class _Candidate {
@@ -43,8 +45,7 @@ class ScanMessagesScreen extends StatefulWidget {
 }
 
 class _ScanMessagesScreenState extends State<ScanMessagesScreen> {
-  static const _teal = Color(0xFF008080);
-  static const _coral = Color(0xFFFF7F50);
+  static const _teal = Color(0xFF0F766E);
 
   final _smsImport = SmsImportService();
   final _pasteController = TextEditingController();
@@ -57,11 +58,15 @@ class _ScanMessagesScreenState extends State<ScanMessagesScreen> {
   @override
   void initState() {
     super.initState();
-    final accountService = context.read<AccountService>();
-    accountService.loadUserAccounts();
-    if (accountService.accounts.isNotEmpty) {
-      _accountId = accountService.accounts.first.id;
-    }
+    // Defer the load so the service doesn't notifyListeners mid-build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final accountService = context.read<AccountService>();
+      accountService.loadUserAccounts();
+      if (accountService.accounts.isNotEmpty) {
+        setState(() => _accountId = accountService.accounts.first.id);
+      }
+    });
   }
 
   @override
@@ -90,7 +95,6 @@ class _ScanMessagesScreenState extends State<ScanMessagesScreen> {
       _scanning = true;
       _scannedEmpty = false;
     });
-    final messenger = ScaffoldMessenger.of(context);
     try {
       final parsed = await _smsImport.scanInbox();
       if (!mounted) return;
@@ -101,33 +105,77 @@ class _ScanMessagesScreenState extends State<ScanMessagesScreen> {
         _scannedEmpty = parsed.isEmpty;
       });
     } on SmsPermissionDeniedException {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('SMS permission is needed to scan messages.'),
-          backgroundColor: _coral,
-        ),
-      );
+      if (mounted) _showPermissionSheet();
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Scan failed: $e'), backgroundColor: _coral),
-      );
+      debugPrint('SMS scan error: $e');
+      if (mounted) {
+        AppSnackbar.error(
+          context,
+          "Couldn't read your messages. You can paste a bank SMS below instead.",
+        );
+      }
     } finally {
       if (mounted) setState(() => _scanning = false);
     }
+  }
+
+  /// Shown when SMS permission is denied. Because Android stops prompting after
+  /// a couple of declines, this explains how to grant it from system settings
+  /// and points to the paste fallback.
+  void _showPermissionSheet() {
+    final c = context.colors;
+    showModalBottomSheet(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.sms_failed_outlined, color: c.warning),
+                  const SizedBox(width: 8),
+                  Text(
+                    'SMS access needed',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Settlement reads only bank and card transaction texts to '
+                'create expenses — nothing is uploaded. If no prompt appeared, '
+                'SMS permission may be blocked. Enable it under '
+                'Settings › Apps › Settlement › Permissions › SMS, then try '
+                'again. You can also paste a message below without granting '
+                'access.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: c.muted,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(sheetContext),
+                  child: const Text('Got it'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _parsePasted() {
     final text = _pasteController.text.trim();
     if (text.isEmpty) return;
     final parsed = TransactionParser.parse(text);
-    final messenger = ScaffoldMessenger.of(context);
     if (!parsed.isTransaction) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text("Couldn't find a transaction in that message."),
-          backgroundColor: _coral,
-        ),
-      );
+      AppSnackbar.info(context, "Couldn't find a transaction in that message.");
       return;
     }
     setState(() {
@@ -142,7 +190,6 @@ class _ScanMessagesScreenState extends State<ScanMessagesScreen> {
 
     final expenseService = context.read<ExpenseService>();
     final uid = context.read<AuthService>().currentUser?.uid;
-    final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     if (uid == null) return;
 
@@ -170,11 +217,9 @@ class _ScanMessagesScreenState extends State<ScanMessagesScreen> {
 
     if (!mounted) return;
     navigator.pop();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text('$added expense${added == 1 ? '' : 's'} imported!'),
-        backgroundColor: _teal,
-      ),
+    AppSnackbar.success(
+      context,
+      '$added expense${added == 1 ? '' : 's'} imported',
     );
   }
 
@@ -184,8 +229,6 @@ class _ScanMessagesScreenState extends State<ScanMessagesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Import from Messages'),
-        backgroundColor: _teal,
-        foregroundColor: Colors.white,
       ),
       body: Column(
         children: [
@@ -235,8 +278,6 @@ class _ScanMessagesScreenState extends State<ScanMessagesScreen> {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _teal,
-                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
@@ -338,16 +379,16 @@ class _ScanMessagesScreenState extends State<ScanMessagesScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: context.colors.surfaceSunken,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: context.colors.cardBorder),
       ),
       child: Column(
         children: [
           Icon(
             Icons.mark_email_read_outlined,
             size: 48,
-            color: Colors.grey[400],
+            color: context.colors.faint,
           ),
           const SizedBox(height: 8),
           Text(
@@ -359,7 +400,7 @@ class _ScanMessagesScreenState extends State<ScanMessagesScreen> {
                 : 'Paste a bank/card SMS or email to auto-create an expense. '
                     '(SMS scanning is available on Android.)',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[600]),
+            style: TextStyle(color: context.colors.muted),
           ),
         ],
       ),
@@ -451,7 +492,7 @@ class _ScanMessagesScreenState extends State<ScanMessagesScreen> {
               alignment: Alignment.centerLeft,
               child: Text(
                 DateFormat('MMM d, y').format(c.date),
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                style: TextStyle(color: context.colors.muted, fontSize: 12),
               ),
             ),
           ],

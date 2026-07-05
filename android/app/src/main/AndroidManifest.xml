@@ -5,8 +5,11 @@
     <!-- Android 13+ requires runtime permission to post notifications. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- Read bank/card transaction SMS to auto-create expenses (opt-in; the
-         user is prompted at runtime and can decline). -->
+         user is prompted at runtime and can decline). another_telephony
+         requests both READ_SMS and RECEIVE_SMS, so both must be declared or the
+         runtime prompt is suppressed and the request resolves as denied. -->
     <uses-permission android:name="android.permission.READ_SMS"/>
+    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
     <!-- Voice entry: dictate an expense (prompted at runtime). -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
@@ -50,6 +53,7 @@
              updates to these even though they're not exported. -->
         <receiver
             android:name=".MonthSpendWidget"
+            android:label="@string/widget_month_spend_name"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -60,6 +64,7 @@
         </receiver>
         <receiver
             android:name=".NetWorthWidget"
+            android:label="@string/widget_net_worth_name"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -70,6 +75,7 @@
         </receiver>
         <receiver
             android:name=".BudgetWidget"
+            android:label="@string/widget_budget_name"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -80,6 +86,7 @@
         </receiver>
         <receiver
             android:name=".QuickAddWidget"
+            android:label="@string/widget_quick_add_name"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -87,6 +94,17 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_quick_add_info" />
+        </receiver>
+        <receiver
+            android:name=".OverviewWidget"
+            android:label="@string/widget_overview_name"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_overview_info" />
         </receiver>
     </application>
     <!-- Required to query activities that can process text, see:

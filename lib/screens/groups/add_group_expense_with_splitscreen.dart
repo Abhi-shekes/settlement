@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../models/expense_model.dart';
@@ -191,7 +192,7 @@ class _AddGroupExpenseWithSplitScreenState
                   ? 'Group expense with split added successfully!'
                   : 'Group expense added successfully!',
             ),
-            backgroundColor: const Color(0xFF008080),
+            backgroundColor: const Color(0xFF0F766E),
           ),
         );
       }
@@ -216,13 +217,11 @@ class _AddGroupExpenseWithSplitScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text('Add & Split - ${widget.group.name}'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
       ),
       body:
           _isLoading
               ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF008080)),
+                child: CircularProgressIndicator(),
               )
               : Form(
                 key: _formKey,
@@ -236,11 +235,11 @@ class _AddGroupExpenseWithSplitScreenState
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF008080).withValues(alpha: 0.1),
+                          color: const Color(0xFF0F766E).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: const Color(
-                              0xFF008080,
+                              0xFF0F766E,
                             ).withValues(alpha: 0.3),
                           ),
                         ),
@@ -251,13 +250,13 @@ class _AddGroupExpenseWithSplitScreenState
                               height: 50,
                               decoration: BoxDecoration(
                                 color: const Color(
-                                  0xFF008080,
+                                  0xFF0F766E,
                                 ).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
                                 Icons.group,
-                                color: Color(0xFF008080),
+                                color: Color(0xFF0F766E),
                                 size: 24,
                               ),
                             ),
@@ -276,7 +275,7 @@ class _AddGroupExpenseWithSplitScreenState
                                   Text(
                                     '${widget.group.allMemberIds.length} members',
                                     style: TextStyle(
-                                      color: Colors.grey[600],
+                                      color: context.colors.muted,
                                       fontSize: 14,
                                     ),
                                   ),
@@ -371,9 +370,9 @@ class _AddGroupExpenseWithSplitScreenState
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.grey[50],
+                          color: context.colors.surfaceSunken,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey[300]!),
+                          border: Border.all(color: context.colors.cardBorder),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +381,7 @@ class _AddGroupExpenseWithSplitScreenState
                               children: [
                                 Icon(
                                   Icons.call_split,
-                                  color: const Color(0xFF008080),
+                                  color: const Color(0xFF0F766E),
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
@@ -405,7 +404,7 @@ class _AddGroupExpenseWithSplitScreenState
                                       }
                                     });
                                   },
-                                  activeThumbColor: const Color(0xFF008080),
+                                  activeThumbColor: const Color(0xFF0F766E),
                                 ),
                               ],
                             ),
@@ -429,7 +428,7 @@ class _AddGroupExpenseWithSplitScreenState
                                       child: RadioListTile<SplitType>(
                                         title: const Text('Equal Split'),
                                         value: SplitType.equal,
-                                        activeColor: const Color(0xFF008080),
+                                        activeColor: const Color(0xFF0F766E),
                                         contentPadding: EdgeInsets.zero,
                                       ),
                                     ),
@@ -437,7 +436,7 @@ class _AddGroupExpenseWithSplitScreenState
                                       child: RadioListTile<SplitType>(
                                         title: const Text('Custom'),
                                         value: SplitType.unequal,
-                                        activeColor: const Color(0xFF008080),
+                                        activeColor: const Color(0xFF0F766E),
                                         contentPadding: EdgeInsets.zero,
                                       ),
                                     ),
@@ -478,15 +477,15 @@ class _AddGroupExpenseWithSplitScreenState
                                     color:
                                         _selectedMembers[memberId]!
                                             ? const Color(
-                                              0xFF008080,
+                                              0xFF0F766E,
                                             ).withValues(alpha: 0.1)
                                             : Colors.white,
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
                                       color:
                                           _selectedMembers[memberId]!
-                                              ? const Color(0xFF008080)
-                                              : Colors.grey[300]!,
+                                              ? const Color(0xFF0F766E)
+                                              : context.colors.cardBorder,
                                     ),
                                   ),
                                   child: Row(
@@ -504,12 +503,12 @@ class _AddGroupExpenseWithSplitScreenState
                                             }
                                           });
                                         },
-                                        activeColor: const Color(0xFF008080),
+                                        activeColor: const Color(0xFF0F766E),
                                       ),
                                       CircleAvatar(
                                         radius: 16,
                                         backgroundColor: const Color(
-                                          0xFF008080,
+                                          0xFF0F766E,
                                         ).withValues(alpha: 0.1),
                                         backgroundImage:
                                             user?.photoURL != null
@@ -528,7 +527,7 @@ class _AddGroupExpenseWithSplitScreenState
                                                               .toUpperCase()
                                                           : 'U'),
                                                   style: const TextStyle(
-                                                    color: Color(0xFF008080),
+                                                    color: Color(0xFF0F766E),
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 12,
                                                   ),
@@ -590,7 +589,7 @@ class _AddGroupExpenseWithSplitScreenState
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
                                   color: const Color(
-                                    0xFF008080,
+                                    0xFF0F766E,
                                   ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -608,7 +607,7 @@ class _AddGroupExpenseWithSplitScreenState
                                       '₹${_customAmounts.values.fold(0.0, (sum, amount) => sum + amount).toStringAsFixed(2)}',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF008080),
+                                        color: Color(0xFF0F766E),
                                       ),
                                     ),
                                   ],
@@ -627,8 +626,6 @@ class _AddGroupExpenseWithSplitScreenState
                         child: ElevatedButton(
                           onPressed: _saveExpenseWithSplit,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF008080),
-                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),

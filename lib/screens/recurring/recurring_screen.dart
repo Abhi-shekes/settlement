@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../models/recurring_transaction_model.dart';
@@ -13,7 +14,7 @@ class RecurringScreen extends StatefulWidget {
 }
 
 class _RecurringScreenState extends State<RecurringScreen> {
-  static const _teal = Color(0xFF008080);
+  static const _teal = Color(0xFF0F766E);
 
   @override
   void initState() {
@@ -28,12 +29,8 @@ class _RecurringScreenState extends State<RecurringScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Recurring'),
-        backgroundColor: _teal,
-        foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: _teal,
-        foregroundColor: Colors.white,
         onPressed: () {
           Navigator.push(
             context,
@@ -75,7 +72,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.autorenew, size: 72, color: Colors.grey[400]),
+            Icon(Icons.autorenew, size: 72, color: context.colors.faint),
             const SizedBox(height: 16),
             const Text(
               'No recurring transactions',
@@ -86,7 +83,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
               'Set up salary, rent, subscriptions, EMIs, or bills once and the '
               'app records them automatically on schedule.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: context.colors.muted),
             ),
           ],
         ),
@@ -121,7 +118,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
           active
               ? '${rule.frequency.displayName} • Next ${DateFormat('MMM d, y').format(rule.nextDueDate)}'
               : '${rule.frequency.displayName} • Paused',
-          style: TextStyle(color: Colors.grey[600]),
+          style: TextStyle(color: context.colors.muted),
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,

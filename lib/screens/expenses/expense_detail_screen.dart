@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../models/expense_model.dart';
@@ -17,8 +18,6 @@ class ExpenseDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Expense Details'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
         actions: [
           // Refunds are stored as negative-amount records; editing them through
           // the normal form (which requires a positive amount) doesn't apply.
@@ -58,8 +57,8 @@ class ExpenseDetailScreen extends StatelessWidget {
                   gradient: LinearGradient(
                     colors:
                         expense.isRefund
-                            ? const [Color(0xFFFF7F50), Color(0xFFFFA07A)]
-                            : const [Color(0xFF008080), Color(0xFF20B2AA)],
+                            ? const [Color(0xFFF97316), Color(0xFFFB923C)]
+                            : const [Color(0xFF0F766E), Color(0xFF14B8A6)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -114,29 +113,29 @@ class ExpenseDetailScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF008080),
+                color: Color(0xFF0F766E),
               ),
             ),
             const SizedBox(height: 16),
-            _buildDetailCard([
-              _buildDetailRow('Title', expense.title),
-              _buildDetailRow(
+            _buildDetailCard(context, [
+              _buildDetailRow(context, 'Title', expense.title),
+              _buildDetailRow(context, 
                 'Date',
                 DateFormat('EEEE, MMMM d, y').format(expense.createdAt),
               ),
-              _buildDetailRow(
+              _buildDetailRow(context, 
                 'Time',
                 DateFormat('h:mm a').format(expense.createdAt),
               ),
               if (expense.description.isNotEmpty)
-                _buildDetailRow('Description', expense.description),
+                _buildDetailRow(context, 'Description', expense.description),
               Consumer<AccountService>(
                 builder: (context, accountService, _) {
                   final account = accountService.getAccountById(
                     expense.accountId,
                   );
                   if (account == null) return const SizedBox.shrink();
-                  return _buildDetailRow(
+                  return _buildDetailRow(context, 
                     expense.isRefund ? 'Credited to' : 'Paid from',
                     '${account.name} (${account.type.displayName})',
                   );
@@ -163,16 +162,16 @@ class ExpenseDetailScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF008080),
+                            color: Color(0xFF0F766E),
                           ),
                         ),
                         const SizedBox(height: 12),
-                        _buildDetailCard([
-                          _buildDetailRow(
+                        _buildDetailCard(context, [
+                          _buildDetailRow(context, 
                             'Total refunded',
                             '₹${refunded.toInt()}',
                           ),
-                          _buildDetailRow(
+                          _buildDetailRow(context, 
                             'Net spent',
                             '₹${(expense.amount - refunded).toInt()}',
                           ),
@@ -203,8 +202,8 @@ class ExpenseDetailScreen extends StatelessWidget {
                                 : 'Record Refund / Reversal',
                           ),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF008080),
-                            side: const BorderSide(color: Color(0xFF008080)),
+                            foregroundColor: const Color(0xFF0F766E),
+                            side: const BorderSide(color: Color(0xFF0F766E)),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -241,12 +240,12 @@ class ExpenseDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailCard(List<Widget> children) {
+  Widget _buildDetailCard(BuildContext context, List<Widget> children) {
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey[200]!),
+        side: BorderSide(color: context.colors.cardBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -255,7 +254,7 @@ class ExpenseDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -265,7 +264,7 @@ class ExpenseDetailScreen extends StatelessWidget {
             width: 100,
             child: Text(
               label,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 14, color: context.colors.muted),
             ),
           ),
           Expanded(
@@ -306,7 +305,7 @@ class ExpenseDetailScreen extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Expense deleted successfully'),
-                          backgroundColor: Color(0xFF008080),
+                          backgroundColor: Color(0xFF0F766E),
                         ),
                       );
                     }

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Home-screen widget labels and descriptions. The label (android:label on the
+    <receiver>) is the name shown in the widget picker; the description
+    (android:description on the appwidget-provider, Android 12+) is the sentence
+    shown beneath it.
+-->
+<resources>
+    <string name="widget_month_spend_name">Monthly Spending</string>
+    <string name="widget_month_spend_desc">This month\'s total spend, top category and trend versus last month.</string>
+
+    <string name="widget_net_worth_name">Net Worth</string>
+    <string name="widget_net_worth_desc">Your combined balance across every account, at a glance.</string>
+
+    <string name="widget_budget_name">Budgets</string>
+    <string name="widget_budget_desc">Month-to-date progress bars for your category budgets.</string>
+
+    <string name="widget_quick_add_name">Quick Actions</string>
+    <string name="widget_quick_add_desc">One-tap add expense, voice entry and AI assistant.</string>
+
+    <string name="widget_overview_name">Finance Overview</string>
+    <string name="widget_overview_desc">Net worth, monthly spend, budgets and quick actions — resize to show more.</string>
+
+    <!-- Static button captions. -->
+    <string name="widget_action_add">Add</string>
+    <string name="widget_action_voice">Voice</string>
+    <string name="widget_action_assistant">Assistant</string>
+</resources>

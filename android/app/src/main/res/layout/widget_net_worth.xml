@@ -1,29 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Net Worth widget: combined balance across accounts, on the brand gradient. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:gravity="center_vertical"
     android:background="@drawable/widget_bg_teal"
-    android:padding="16dp">
+    android:padding="@dimen/widget_padding">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Net worth"
-        android:textColor="#CCFFFFFF"
+        android:textColor="@color/widget_on_brand_muted"
         android:textSize="12sp"
         android:letterSpacing="0.05"
         android:textAllCaps="true" />
 
     <TextView
         android:id="@+id/net_worth"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:text="₹0"
-        android:textColor="#FFFFFFFF"
+        android:textColor="@color/widget_on_brand"
         android:textSize="28sp"
+        android:maxLines="1"
+        android:ellipsize="end"
         android:textStyle="bold" />
 
     <TextView
@@ -34,8 +38,19 @@
         android:maxLines="1"
         android:ellipsize="end"
         android:text="No accounts yet"
-        android:textColor="#E6FFFFFF"
+        android:textColor="@color/widget_on_brand_muted"
         android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/account_top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:text=""
+        android:textColor="@color/widget_on_brand_faint"
+        android:textSize="12sp" />
 
     <TextView
         android:id="@+id/updated"
@@ -43,6 +58,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text=""
-        android:textColor="#99FFFFFF"
+        android:textColor="@color/widget_on_brand_faint"
         android:textSize="11sp" />
 </LinearLayout>

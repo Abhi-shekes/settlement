@@ -13,6 +13,8 @@ import 'services/recurring_service.dart';
 import 'services/ai_service.dart';
 import 'services/group_service.dart';
 import 'services/notification_service.dart';
+import 'services/theme_service.dart';
+import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
 
@@ -27,16 +29,24 @@ void main() async {
   NotificationService.instance.currentUidGetter =
       () => FirebaseAuth.instance.currentUser?.uid;
 
-  runApp(const MyApp());
+  // Restore the saved light/dark preference before the first frame so there's
+  // no theme flash on launch.
+  final themeService = ThemeService();
+  await themeService.load();
+
+  runApp(MyApp(themeService: themeService));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.themeService});
+
+  final ThemeService themeService;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: themeService),
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => AccountService()),
         // ExpenseService depends on AccountService to keep account balances in
@@ -66,20 +76,24 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => InvitationService()),
         ChangeNotifierProvider(create: (_) => AiService()),
       ],
-      child: MaterialApp(
-        title: 'Settlement App',
-        theme: ThemeData(
-          primarySwatch: Colors.teal,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-        ),
-        home: Consumer<AuthService>(
-          builder: (context, authService, _) {
-            return authService.currentUser != null
-                ? const HomeScreen()
-                : const LoginScreen();
-          },
-        ),
-        routes: {'/invitations': (context) => const InvitationsScreen()},
+      child: Consumer<ThemeService>(
+        builder: (context, theme, _) {
+          return MaterialApp(
+            title: 'Settlement',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: theme.mode,
+            home: Consumer<AuthService>(
+              builder: (context, authService, _) {
+                return authService.currentUser != null
+                    ? const HomeScreen()
+                    : const LoginScreen();
+              },
+            ),
+            routes: {'/invitations': (context) => const InvitationsScreen()},
+          );
+        },
       ),
     );
   }

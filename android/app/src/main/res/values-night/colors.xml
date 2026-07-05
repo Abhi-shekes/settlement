@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home-screen widget color tokens (dark). Mirrors AppColors.dark. -->
+<resources>
+    <color name="widget_bg_gradient_start">#FF0D9488</color>
+    <color name="widget_bg_gradient_end">#FF115E59</color>
+
+    <color name="widget_surface">#FF141C2B</color>
+    <color name="widget_border">#FF1F293B</color>
+
+    <color name="widget_on_brand">#FFFFFFFF</color>
+    <color name="widget_on_brand_muted">#E6FFFFFF</color>
+    <color name="widget_on_brand_faint">#99FFFFFF</color>
+
+    <color name="widget_brand">#FF2DD4BF</color>
+
+    <color name="widget_text_primary">#FFE7ECF3</color>
+    <color name="widget_text_muted">#FF9AA6B8</color>
+    <color name="widget_text_faint">#FF63708A</color>
+
+    <color name="widget_track">#FF1F293B</color>
+    <color name="widget_btn_bg">#33FFFFFF</color>
+    <color name="widget_btn_ripple">#40FFFFFF</color>
+
+    <color name="widget_progress_ok">#FF4ADE80</color>
+    <color name="widget_progress_warn">#FFFBBF24</color>
+    <color name="widget_progress_over">#FFFB7185</color>
+</resources>

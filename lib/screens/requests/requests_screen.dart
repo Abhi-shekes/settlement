@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../../models/friend_request_model.dart';
 import '../../models/group_invitation_model.dart';
@@ -7,7 +8,7 @@ import '../../services/auth_service.dart';
 import '../../services/group_service.dart';
 import '../../services/invitation_service.dart';
 
-const _teal = Color(0xFF008080);
+const _teal = Color(0xFF0F766E);
 
 /// One place to review and respond to every pending two-party handshake:
 /// friend requests, group invitations, split-share approvals and settlement
@@ -63,11 +64,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Requests'),
-        backgroundColor: _teal,
-        foregroundColor: Colors.white,
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
         ],
@@ -128,38 +126,53 @@ class _RequestsScreenState extends State<RequestsScreen> {
 
   Widget _emptyState() {
     return LayoutBuilder(
-      builder:
-          (context, constraints) => SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 120),
-                  Icon(
-                    Icons.check_circle_outline,
-                    size: 72,
-                    color: Colors.grey[400],
+                  Container(
+                    width: 76,
+                    height: 76,
+                    decoration: BoxDecoration(
+                      color: context.colors.positive.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check_circle_rounded,
+                      size: 36,
+                      color: context.colors.positive,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'You\'re all caught up',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[700],
+                    "You're all caught up",
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'No pending requests to confirm',
-                    style: TextStyle(color: Colors.grey[500]),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: context.colors.muted,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
+        ),
+      ),
     );
   }
 
@@ -223,7 +236,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                        style: TextStyle(color: context.colors.muted, fontSize: 13),
                       ),
                     ],
                   ),
@@ -248,8 +261,6 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   child: ElevatedButton(
                     onPressed: onAccept,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _teal,
-                      foregroundColor: Colors.white,
                     ),
                     child: Text(acceptLabel),
                   ),
@@ -317,7 +328,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
     final groups = context.read<GroupService>();
     final share = s.getAmountOwedBy(me);
     return _card(
-      avatar: _circleAvatar(_nameFor(s.paidBy), color: const Color(0xFFFF7F50)),
+      avatar: _circleAvatar(_nameFor(s.paidBy), color: const Color(0xFFF97316)),
       title: s.title,
       subtitle:
           '${_nameFor(s.paidBy)} split this — your share is ₹${share.toInt()}',
@@ -402,7 +413,7 @@ class RequestBadge extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(4),
             decoration: const BoxDecoration(
-              color: Color(0xFFFF7F50),
+              color: Color(0xFFF97316),
               shape: BoxShape.circle,
             ),
             constraints: const BoxConstraints(minWidth: 18, minHeight: 18),

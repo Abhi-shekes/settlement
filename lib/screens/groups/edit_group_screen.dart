@@ -58,7 +58,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Group updated successfully!'),
-            backgroundColor: Color(0xFF008080),
+            backgroundColor: Color(0xFF0F766E),
           ),
         );
       }
@@ -83,13 +83,11 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Group'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
       ),
       body:
           _isLoading
               ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF008080)),
+                child: CircularProgressIndicator(),
               )
               : Form(
                 key: _formKey,
@@ -105,12 +103,12 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                           height: 120,
                           decoration: BoxDecoration(
                             color: const Color(
-                              0xFF008080,
+                              0xFF0F766E,
                             ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: const Color(
-                                0xFF008080,
+                                0xFF0F766E,
                               ).withValues(alpha: 0.3),
                               width: 2,
                             ),
@@ -129,7 +127,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                                       ) {
                                         return const Icon(
                                           Icons.group,
-                                          color: Color(0xFF008080),
+                                          color: Color(0xFF0F766E),
                                           size: 60,
                                         );
                                       },
@@ -137,7 +135,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                                   )
                                   : const Icon(
                                     Icons.group,
-                                    color: Color(0xFF008080),
+                                    color: Color(0xFF0F766E),
                                     size: 60,
                                   ),
                         ),
@@ -179,8 +177,6 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                         child: ElevatedButton(
                           onPressed: _updateGroup,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF008080),
-                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
