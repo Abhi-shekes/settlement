@@ -7,6 +7,14 @@ is generated automatically from [Conventional Commits](https://www.conventionalc
 by [release-please](https://github.com/googleapis/release-please). **Do not edit
 entries below by hand** — write good commit messages instead.
 
+## [1.1.4](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.1.3...settlement-v1.1.4) (2026-07-05)
+
+
+### Bug Fixes
+
+* firebase rule added ui gap reduced ([bc87248](https://github.com/Abhi-shekes/settlement/commit/bc87248919466fb127b1ee56fad550998b1c8fc8))
+* firebase rule added ui gap reduced ([4db4386](https://github.com/Abhi-shekes/settlement/commit/4db4386e139e041c555d97760dac8d715d472143))
+
 ## [1.1.3](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.1.2...settlement-v1.1.3) (2026-07-05)
 
 
