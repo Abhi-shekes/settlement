@@ -77,9 +77,7 @@ class _TransferScreenState extends State<TransferScreen> {
     final accounts = context.watch<AccountService>().accounts;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Transfer'),
-      ),
+      appBar: AppBar(title: const Text('Transfer')),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(

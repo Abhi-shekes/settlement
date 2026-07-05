@@ -66,8 +66,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                     );
                     break;
                   case 'This Month':
-                    _selectedDate =
-                        DateTime(DateTime.now().year, DateTime.now().month, 1);
+                    _selectedDate = DateTime(
+                      DateTime.now().year,
+                      DateTime.now().month,
+                      1,
+                    );
                     break;
                   case 'This Year':
                     _selectedDate = DateTime(DateTime.now().year, 1, 1);
@@ -75,11 +78,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                 }
               });
             },
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'This Week', child: Text('This Week')),
-              PopupMenuItem(value: 'This Month', child: Text('This Month')),
-              PopupMenuItem(value: 'This Year', child: Text('This Year')),
-            ],
+            itemBuilder:
+                (context) => const [
+                  PopupMenuItem(value: 'This Week', child: Text('This Week')),
+                  PopupMenuItem(value: 'This Month', child: Text('This Month')),
+                  PopupMenuItem(value: 'This Year', child: Text('This Year')),
+                ],
           ),
         ],
         bottom: TabBar(
@@ -168,18 +172,22 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       gridData: FlGridData(
                         show: true,
                         drawVerticalLine: false,
-                        getDrawingHorizontalLine: (_) =>
-                            FlLine(color: c.cardBorder, strokeWidth: 1),
+                        getDrawingHorizontalLine:
+                            (_) => FlLine(color: c.cardBorder, strokeWidth: 1),
                       ),
                       titlesData: FlTitlesData(
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
                             reservedSize: 44,
-                            getTitlesWidget: (value, meta) => Text(
-                              formatCurrency(value, compact: true),
-                              style: TextStyle(fontSize: 10, color: c.faint),
-                            ),
+                            getTitlesWidget:
+                                (value, meta) => Text(
+                                  formatCurrency(value, compact: true),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: c.faint,
+                                  ),
+                                ),
                           ),
                         ),
                         bottomTitles: AxisTitles(
@@ -240,18 +248,22 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       gridData: FlGridData(
                         show: true,
                         drawVerticalLine: false,
-                        getDrawingHorizontalLine: (_) =>
-                            FlLine(color: c.cardBorder, strokeWidth: 1),
+                        getDrawingHorizontalLine:
+                            (_) => FlLine(color: c.cardBorder, strokeWidth: 1),
                       ),
                       titlesData: FlTitlesData(
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
                             reservedSize: 44,
-                            getTitlesWidget: (value, meta) => Text(
-                              formatCurrency(value, compact: true),
-                              style: TextStyle(fontSize: 10, color: c.faint),
-                            ),
+                            getTitlesWidget:
+                                (value, meta) => Text(
+                                  formatCurrency(value, compact: true),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: c.faint,
+                                  ),
+                                ),
                           ),
                         ),
                         bottomTitles: AxisTitles(
@@ -354,9 +366,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                         label: 'Settlement rate',
                         icon: Icons.percent_rounded,
                         accent: c.info,
-                        valueText: totalSplits > 0
-                            ? '${((settledSplits / totalSplits) * 100).toInt()}%'
-                            : '0%',
+                        valueText:
+                            totalSplits > 0
+                                ? '${((settledSplits / totalSplits) * 100).toInt()}%'
+                                : '0%',
                       ),
                     ),
                   ],
@@ -415,10 +428,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     for (int i = 1; i <= 12; i++) {
       final month = DateTime(year.year, i, 1);
       final nextMonth = DateTime(year.year, i + 1, 1);
-      final monthlyExpenses =
-          expenseService.getExpensesByDateRange(month, nextMonth);
-      monthlyData[DateFormat('MMM').format(month)] =
-          monthlyExpenses.fold(0.0, (sum, e) => sum + e.amount);
+      final monthlyExpenses = expenseService.getExpensesByDateRange(
+        month,
+        nextMonth,
+      );
+      monthlyData[DateFormat('MMM').format(month)] = monthlyExpenses.fold(
+        0.0,
+        (sum, e) => sum + e.amount,
+      );
     }
     return monthlyData;
   }

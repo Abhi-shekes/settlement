@@ -336,9 +336,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: AppSpacing.md),
           Text(
             _currentUser?.displayName ?? 'User',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: c.onBrand,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: c.onBrand),
           ),
           const SizedBox(height: 2),
           Text(
@@ -418,9 +418,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                   decoration: BoxDecoration(
-                    color: theme.mode == o.$1
-                        ? c.brandSoft
-                        : Colors.transparent,
+                    color:
+                        theme.mode == o.$1 ? c.brandSoft : Colors.transparent,
                     borderRadius: BorderRadius.circular(AppRadii.md),
                   ),
                   child: Column(
@@ -433,7 +432,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 4),
                       Text(
                         o.$2,
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelMedium?.copyWith(
                           color: theme.mode == o.$1 ? c.brand : c.muted,
                         ),
                       ),

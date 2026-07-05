@@ -60,9 +60,7 @@ class _InvitationsScreenState extends State<InvitationsScreen>
         final receivedInvitations = invitationService.receivedInvitations;
 
         if (invitationService.isLoading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (receivedInvitations.isEmpty) {
@@ -185,7 +183,10 @@ class _InvitationsScreenState extends State<InvitationsScreen>
                       ),
                       Text(
                         'Invited by ${invitation.invitedByName}',
-                        style: TextStyle(color: context.colors.muted, fontSize: 14),
+                        style: TextStyle(
+                          color: context.colors.muted,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -296,7 +297,10 @@ class _InvitationsScreenState extends State<InvitationsScreen>
                       ),
                       Text(
                         'Sent to ${invitation.inviteeEmail}',
-                        style: TextStyle(color: context.colors.muted, fontSize: 14),
+                        style: TextStyle(
+                          color: context.colors.muted,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),

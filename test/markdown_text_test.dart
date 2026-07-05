@@ -10,7 +10,8 @@ void main() {
   testWidgets('MarkdownText strips markers and renders clean text', (
     tester,
   ) async {
-    const sample = '## Summary\n'
+    const sample =
+        '## Summary\n'
         'You spent **a lot** on *food*.\n'
         '- First point\n'
         '- Second point\n'

@@ -126,47 +126,48 @@ class _ScanMessagesScreenState extends State<ScanMessagesScreen> {
     final c = context.colors;
     showModalBottomSheet(
       context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+      builder:
+          (sheetContext) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.sms_failed_outlined, color: c.warning),
-                  const SizedBox(width: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.sms_failed_outlined, color: c.warning),
+                      const SizedBox(width: 8),
+                      Text(
+                        'SMS access needed',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   Text(
-                    'SMS access needed',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    'Settlement reads only bank and card transaction texts to '
+                    'create expenses — nothing is uploaded. If no prompt appeared, '
+                    'SMS permission may be blocked. Enable it under '
+                    'Settings › Apps › Settlement › Permissions › SMS, then try '
+                    'again. You can also paste a message below without granting '
+                    'access.',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: c.muted),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      child: const Text('Got it'),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Settlement reads only bank and card transaction texts to '
-                'create expenses — nothing is uploaded. If no prompt appeared, '
-                'SMS permission may be blocked. Enable it under '
-                'Settings › Apps › Settlement › Permissions › SMS, then try '
-                'again. You can also paste a message below without granting '
-                'access.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: c.muted,
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => Navigator.pop(sheetContext),
-                  child: const Text('Got it'),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -227,9 +228,7 @@ class _ScanMessagesScreenState extends State<ScanMessagesScreen> {
   Widget build(BuildContext context) {
     final selectedCount = _candidates.where((c) => c.selected).length;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Import from Messages'),
-      ),
+      appBar: AppBar(title: const Text('Import from Messages')),
       body: Column(
         children: [
           Expanded(

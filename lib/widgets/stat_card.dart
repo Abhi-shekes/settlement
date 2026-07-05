@@ -74,12 +74,7 @@ class StatCard extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           if (amount != null)
-            MoneyText(
-              amount!,
-              size: 20,
-              color: accent,
-              compact: compactMoney,
-            )
+            MoneyText(amount!, size: 20, color: accent, compact: compactMoney)
           else
             Text(
               valueText ?? '',
@@ -92,10 +87,6 @@ class StatCard extends StatelessWidget {
     );
 
     if (onTap == null) return content;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: AppRadii.card,
-      child: content,
-    );
+    return InkWell(onTap: onTap, borderRadius: AppRadii.card, child: content);
   }
 }

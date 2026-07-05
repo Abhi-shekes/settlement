@@ -84,9 +84,7 @@ class _RecordRefundScreenState extends State<RecordRefundScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Record Refund'),
-      ),
+      appBar: AppBar(title: const Text('Record Refund')),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
