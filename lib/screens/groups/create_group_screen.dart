@@ -127,14 +127,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Group'),
-      ),
+      appBar: AppBar(title: const Text('Create Group')),
       body:
           _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(),
-              )
+              ? const Center(child: CircularProgressIndicator())
               : Form(
                 key: _formKey,
                 child: SingleChildScrollView(
@@ -205,7 +201,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'Select friends to add to this group',
-                        style: TextStyle(fontSize: 14, color: context.colors.muted),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: context.colors.muted,
+                        ),
                       ),
                       const SizedBox(height: 16),
 

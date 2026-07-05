@@ -54,10 +54,7 @@ class _SplitsScreenState extends State<SplitsScreen>
         title: const Text('Splits'),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'You owe'),
-            Tab(text: 'Owed to you'),
-          ],
+          tabs: const [Tab(text: 'You owe'), Tab(text: 'Owed to you')],
         ),
       ),
       body: Column(
@@ -70,17 +67,18 @@ class _SplitsScreenState extends State<SplitsScreen>
               decoration: InputDecoration(
                 hintText: 'Search splits',
                 prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear_rounded),
-                        onPressed: () {
-                          setState(() {
-                            _searchQuery = '';
-                            _searchController.clear();
-                          });
-                        },
-                      )
-                    : null,
+                suffixIcon:
+                    _searchQuery.isNotEmpty
+                        ? IconButton(
+                          icon: const Icon(Icons.clear_rounded),
+                          onPressed: () {
+                            setState(() {
+                              _searchQuery = '';
+                              _searchController.clear();
+                            });
+                          },
+                        )
+                        : null,
               ),
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
@@ -133,10 +131,11 @@ class _SplitsScreenState extends State<SplitsScreen>
             borderRadius: AppRadii.card,
             child: InkWell(
               borderRadius: AppRadii.card,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const RequestsScreen()),
-              ),
+              onTap:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const RequestsScreen()),
+                  ),
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: Row(
@@ -146,9 +145,9 @@ class _SplitsScreenState extends State<SplitsScreen>
                     Expanded(
                       child: Text(
                         '$total item${total == 1 ? '' : 's'} need your confirmation',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: c.accent,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleSmall?.copyWith(color: c.accent),
                       ),
                     ),
                     Icon(Icons.chevron_right_rounded, color: c.accent),
@@ -183,14 +182,15 @@ class _SplitsScreenState extends State<SplitsScreen>
         }
 
         if (_searchQuery.isNotEmpty) {
-          splits = splits.where((split) {
-            return split.title.toLowerCase().contains(
-                  _searchQuery.toLowerCase(),
-                ) ||
-                split.description.toLowerCase().contains(
-                  _searchQuery.toLowerCase(),
-                );
-          }).toList();
+          splits =
+              splits.where((split) {
+                return split.title.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ||
+                    split.description.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    );
+              }).toList();
         }
 
         if (splits.isEmpty) return _buildEmptyState(type);
@@ -202,8 +202,9 @@ class _SplitsScreenState extends State<SplitsScreen>
             padding: const EdgeInsets.all(AppSpacing.md),
             itemCount: splits.length,
             separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),
-            itemBuilder: (context, index) =>
-                _buildSplitCard(splits[index], currentUserId),
+            itemBuilder:
+                (context, index) =>
+                    _buildSplitCard(splits[index], currentUserId),
           ),
         );
       },
@@ -285,7 +286,9 @@ class _SplitsScreenState extends State<SplitsScreen>
                       split.description.isEmpty
                           ? (isPayer ? 'You paid' : 'You owe')
                           : split.description,
-                      style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: c.muted,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -305,7 +308,10 @@ class _SplitsScreenState extends State<SplitsScreen>
                 children: [
                   Text(
                     amountText,
-                    style: AppTypography.money(fontSize: 15, color: amountColor),
+                    style: AppTypography.money(
+                      fontSize: 15,
+                      color: amountColor,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -335,23 +341,26 @@ class _SplitsScreenState extends State<SplitsScreen>
     switch (type) {
       case SplitListType.all:
         title = 'No splits yet';
-        message = _searchQuery.isNotEmpty
-            ? 'Try a different search.'
-            : 'Split a bill with friends to get started.';
+        message =
+            _searchQuery.isNotEmpty
+                ? 'Try a different search.'
+                : 'Split a bill with friends to get started.';
         icon = Icons.call_split_rounded;
         break;
       case SplitListType.youOwe:
         title = "You're all clear";
-        message = _searchQuery.isNotEmpty
-            ? 'Try a different search.'
-            : "You don't owe anyone right now.";
+        message =
+            _searchQuery.isNotEmpty
+                ? 'Try a different search.'
+                : "You don't owe anyone right now.";
         icon = Icons.check_circle_rounded;
         break;
       case SplitListType.owedToYou:
         title = 'Nothing owed to you';
-        message = _searchQuery.isNotEmpty
-            ? 'Try a different search.'
-            : 'Everyone has settled up with you.';
+        message =
+            _searchQuery.isNotEmpty
+                ? 'Try a different search.'
+                : 'Everyone has settled up with you.';
         icon = Icons.account_balance_wallet_rounded;
         break;
     }
@@ -360,15 +369,17 @@ class _SplitsScreenState extends State<SplitsScreen>
       icon: icon,
       title: title,
       message: message,
-      actionLabel: (_searchQuery.isEmpty && type == SplitListType.all)
-          ? 'Split a bill'
-          : null,
-      onAction: (_searchQuery.isEmpty && type == SplitListType.all)
-          ? () => Navigator.push(
+      actionLabel:
+          (_searchQuery.isEmpty && type == SplitListType.all)
+              ? 'Split a bill'
+              : null,
+      onAction:
+          (_searchQuery.isEmpty && type == SplitListType.all)
+              ? () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const AddSplitScreen()),
               )
-          : null,
+              : null,
     );
   }
 }

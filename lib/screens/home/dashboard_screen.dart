@@ -143,10 +143,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 2),
                   Text(
                     name,
-                    style: AppTypography.money(
-                      fontSize: 24,
-                      color: c.onBrand,
-                    ),
+                    style: AppTypography.money(fontSize: 24, color: c.onBrand),
                   ),
                 ],
               ),
@@ -154,10 +151,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _headerAction(
               icon: Icons.insights_rounded,
               tooltip: 'Analytics',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
-              ),
+              onTap:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
+                  ),
             ),
             const SizedBox(width: AppSpacing.xs),
             Consumer3<AuthService, GroupService, InvitationService>(
@@ -167,10 +165,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: Icons.notifications_none_rounded,
                   tooltip: 'Requests',
                   badgeCount: count,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RequestsScreen()),
-                  ),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RequestsScreen(),
+                        ),
+                      ),
                 );
               },
             ),
@@ -306,16 +307,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Consumer2<BudgetService, ExpenseService>(
       builder: (context, budgetService, expenseService, _) {
         final c = context.colors;
-        final alertCategories = budgetService.getCategoriesWithBudgets().where((
-          category,
-        ) {
-          final spending = expenseService.getTotalExpenseAmountByCategory(
-            category,
-          );
-          final budget = budgetService.getBudgetForCategory(category);
-          if (budget == null || budget.amount <= 0) return false;
-          return spending >= budget.amount * 0.8;
-        }).toList();
+        final alertCategories =
+            budgetService.getCategoriesWithBudgets().where((category) {
+              final spending = expenseService.getTotalExpenseAmountByCategory(
+                category,
+              );
+              final budget = budgetService.getBudgetForCategory(category);
+              if (budget == null || budget.amount <= 0) return false;
+              return spending >= budget.amount * 0.8;
+            }).toList();
 
         if (alertCategories.isEmpty) return const SizedBox.shrink();
 
@@ -327,10 +327,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               icon: Icons.warning_amber_rounded,
               iconColor: c.warning,
               actionLabel: 'Manage',
-              onAction: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const BudgetScreen()),
-              ),
+              onAction:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const BudgetScreen()),
+                  ),
             ),
             const SizedBox(height: AppSpacing.sm),
             ...alertCategories.map((category) {
@@ -343,10 +344,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 category: category,
                 budgetAmount: budget.amount,
                 currentSpending: spending,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BudgetScreen()),
-                ),
+                onTap:
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const BudgetScreen()),
+                    ),
               );
             }),
             const SizedBox(height: AppSpacing.xl),
@@ -420,10 +422,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _push(Widget screen) => Navigator.push(
-    context,
-    MaterialPageRoute(builder: (_) => screen),
-  );
+  void _push(Widget screen) =>
+      Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
 
   // ── Recent activity ───────────────────────────────────────────────────────
 
@@ -451,9 +451,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final isGroup = split.groupId != null;
           activities.add(
             ActivityItem(
-              type: isGroup
-                  ? ActivityType.groupSplit
-                  : ActivityType.individualSplit,
+              type:
+                  isGroup
+                      ? ActivityType.groupSplit
+                      : ActivityType.individualSplit,
               title: split.title,
               amount: split.totalAmount,
               date: split.createdAt,

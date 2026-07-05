@@ -6,7 +6,11 @@ import 'package:settlement/widgets/app_bottom_nav.dart';
 import 'package:settlement/widgets/action_card.dart';
 
 const _items = [
-  AppNavItem(icon: Icons.home_outlined, selectedIcon: Icons.home, label: 'Home'),
+  AppNavItem(
+    icon: Icons.home_outlined,
+    selectedIcon: Icons.home,
+    label: 'Home',
+  ),
   AppNavItem(
     icon: Icons.receipt_long_outlined,
     selectedIcon: Icons.receipt_long,

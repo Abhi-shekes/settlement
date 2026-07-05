@@ -84,15 +84,11 @@ class _BudgetScreenState extends State<BudgetScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Budget Management'),
-      ),
+      appBar: AppBar(title: const Text('Budget Management')),
       body: Consumer2<BudgetService, ExpenseService>(
         builder: (context, budgetService, expenseService, child) {
           if (budgetService.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           // Get current month for display

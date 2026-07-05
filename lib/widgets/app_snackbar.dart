@@ -6,8 +6,12 @@ import '../theme/app_spacing.dart';
 /// calls that each set their own color. Errors state what happened; success
 /// confirms the action in the same words the button used.
 abstract final class AppSnackbar {
-  static void success(BuildContext context, String message) =>
-      _show(context, message, Icons.check_circle_rounded, context.colors.positive);
+  static void success(BuildContext context, String message) => _show(
+    context,
+    message,
+    Icons.check_circle_rounded,
+    context.colors.positive,
+  );
 
   static void error(BuildContext context, String message) =>
       _show(context, message, Icons.error_rounded, context.colors.negative);

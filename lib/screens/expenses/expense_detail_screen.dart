@@ -119,11 +119,13 @@ class ExpenseDetailScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _buildDetailCard(context, [
               _buildDetailRow(context, 'Title', expense.title),
-              _buildDetailRow(context, 
+              _buildDetailRow(
+                context,
                 'Date',
                 DateFormat('EEEE, MMMM d, y').format(expense.createdAt),
               ),
-              _buildDetailRow(context, 
+              _buildDetailRow(
+                context,
                 'Time',
                 DateFormat('h:mm a').format(expense.createdAt),
               ),
@@ -135,7 +137,8 @@ class ExpenseDetailScreen extends StatelessWidget {
                     expense.accountId,
                   );
                   if (account == null) return const SizedBox.shrink();
-                  return _buildDetailRow(context, 
+                  return _buildDetailRow(
+                    context,
                     expense.isRefund ? 'Credited to' : 'Paid from',
                     '${account.name} (${account.type.displayName})',
                   );
@@ -167,11 +170,13 @@ class ExpenseDetailScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         _buildDetailCard(context, [
-                          _buildDetailRow(context, 
+                          _buildDetailRow(
+                            context,
                             'Total refunded',
                             '₹${refunded.toInt()}',
                           ),
-                          _buildDetailRow(context, 
+                          _buildDetailRow(
+                            context,
                             'Net spent',
                             '₹${(expense.amount - refunded).toInt()}',
                           ),

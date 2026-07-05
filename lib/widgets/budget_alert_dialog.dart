@@ -69,9 +69,17 @@ class BudgetAlertDialog extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Budget Details
-            _buildDetailRow(context, 'Budget Amount:', '₹${budgetAmount.toInt()}'),
+            _buildDetailRow(
+              context,
+              'Budget Amount:',
+              '₹${budgetAmount.toInt()}',
+            ),
             const SizedBox(height: 8),
-            _buildDetailRow(context, 'Current Spending:', '₹${newSpending.toInt()}'),
+            _buildDetailRow(
+              context,
+              'Current Spending:',
+              '₹${newSpending.toInt()}',
+            ),
             const SizedBox(height: 8),
             _buildDetailRow(
               context,
@@ -152,11 +160,19 @@ class BudgetAlertDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(BuildContext context, String label, String value, [Color? valueColor]) {
+  Widget _buildDetailRow(
+    BuildContext context,
+    String label,
+    String value, [
+    Color? valueColor,
+  ]) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontSize: 14, color: context.colors.muted)),
+        Text(
+          label,
+          style: TextStyle(fontSize: 14, color: context.colors.muted),
+        ),
         Text(
           value,
           style: TextStyle(

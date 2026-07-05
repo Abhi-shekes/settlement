@@ -151,9 +151,10 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
     var category = draft.category;
     var date = draft.date;
     final accountService = context.read<AccountService>();
-    String? accountId = accountService.accounts.isNotEmpty
-        ? accountService.accounts.first.id
-        : null;
+    String? accountId =
+        accountService.accounts.isNotEmpty
+            ? accountService.accounts.first.id
+            : null;
 
     await showModalBottomSheet(
       context: context,
@@ -167,7 +168,8 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                 left: AppSpacing.md,
                 right: AppSpacing.md,
                 top: AppSpacing.md,
-                bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.md,
+                bottom:
+                    MediaQuery.of(context).viewInsets.bottom + AppSpacing.md,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -200,14 +202,15 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                   DropdownButtonFormField<ExpenseCategory>(
                     initialValue: category,
                     decoration: const InputDecoration(labelText: 'Category'),
-                    items: ExpenseCategory.values
-                        .map(
-                          (c) => DropdownMenuItem(
-                            value: c,
-                            child: Text(c.categoryDisplayName),
-                          ),
-                        )
-                        .toList(),
+                    items:
+                        ExpenseCategory.values
+                            .map(
+                              (c) => DropdownMenuItem(
+                                value: c,
+                                child: Text(c.categoryDisplayName),
+                              ),
+                            )
+                            .toList(),
                     onChanged: (v) => setSheet(() => category = v ?? category),
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -257,7 +260,8 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                           amountController.text.trim(),
                         );
                         if (amount == null || amount <= 0) return;
-                        final uid = context.read<AuthService>().currentUser?.uid;
+                        final uid =
+                            context.read<AuthService>().currentUser?.uid;
                         if (uid == null) return;
                         final expenseService = context.read<ExpenseService>();
                         final navigator = Navigator.of(context);
@@ -265,9 +269,10 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                           ExpenseModel(
                             id: const Uuid().v4(),
                             userId: uid,
-                            title: titleController.text.trim().isEmpty
-                                ? 'Expense'
-                                : titleController.text.trim(),
+                            title:
+                                titleController.text.trim().isEmpty
+                                    ? 'Expense'
+                                    : titleController.text.trim(),
                             description: 'Added via AI',
                             amount: amount,
                             category: category,
@@ -389,9 +394,10 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
     expenses.getCategoryWiseExpenses().forEach((category, amount) {
       if (amount > 0) {
         final budget = budgets.getBudgetForCategory(category);
-        final note = (budget != null && budget.amount > 0)
-            ? ' (budget ₹${budget.amount.toInt()})'
-            : '';
+        final note =
+            (budget != null && budget.amount > 0)
+                ? ' (budget ₹${budget.amount.toInt()})'
+                : '';
         buffer.writeln(
           '- ${category.categoryDisplayName}: ₹${amount.toInt()}$note',
         );
@@ -641,8 +647,11 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: loading ? null : onGenerate,
-              icon: Icon(output == null ? Icons.auto_awesome_rounded
-                  : Icons.refresh_rounded),
+              icon: Icon(
+                output == null
+                    ? Icons.auto_awesome_rounded
+                    : Icons.refresh_rounded,
+              ),
               label: Text(output == null ? buttonLabel : refreshLabel),
               style: OutlinedButton.styleFrom(foregroundColor: accent),
             ),
@@ -664,9 +673,9 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
         const SizedBox(width: AppSpacing.sm),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: c.muted,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: c.muted),
         ),
       ],
     );
@@ -684,10 +693,9 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
       ),
       child: MarkdownText(
         markdown,
-        baseStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          height: 1.45,
-          color: c.muted,
-        ),
+        baseStyle: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(height: 1.45, color: c.muted),
       ),
     );
   }
@@ -730,16 +738,17 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: _parsing ? null : _parseAndReview,
-              icon: _parsing
-                  ? SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: c.onBrand,
-                      ),
-                    )
-                  : const Icon(Icons.auto_fix_high_rounded),
+              icon:
+                  _parsing
+                      ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: c.onBrand,
+                        ),
+                      )
+                      : const Icon(Icons.auto_fix_high_rounded),
               label: Text(_parsing ? 'Thinking…' : 'Parse with AI'),
             ),
           ),

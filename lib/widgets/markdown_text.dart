@@ -43,44 +43,52 @@ class MarkdownText extends StatelessWidget {
                 ? theme.textTheme.titleMedium
                 : theme.textTheme.titleSmall)!
             .copyWith(color: strong, fontWeight: FontWeight.w700);
-        widgets.add(Padding(
-          padding: const EdgeInsets.only(top: 6, bottom: 2),
-          child: Text.rich(TextSpan(children: _inline(text, style, strong))),
-        ));
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 6, bottom: 2),
+            child: Text.rich(TextSpan(children: _inline(text, style, strong))),
+          ),
+        );
         continue;
       }
 
       // Bullets (-, *, •).
       final bullet = RegExp(r'^[-*•]\s+(.*)$').firstMatch(trimmed);
       if (bullet != null) {
-        widgets.add(_listRow(
-          marker: '•',
-          markerColor: c.brand,
-          child: Text.rich(
-            TextSpan(children: _inline(bullet.group(1)!, base, strong)),
+        widgets.add(
+          _listRow(
+            marker: '•',
+            markerColor: c.brand,
+            child: Text.rich(
+              TextSpan(children: _inline(bullet.group(1)!, base, strong)),
+            ),
           ),
-        ));
+        );
         continue;
       }
 
       // Numbered list (1. …).
       final numbered = RegExp(r'^(\d+)\.\s+(.*)$').firstMatch(trimmed);
       if (numbered != null) {
-        widgets.add(_listRow(
-          marker: '${numbered.group(1)}.',
-          markerColor: c.brand,
-          child: Text.rich(
-            TextSpan(children: _inline(numbered.group(2)!, base, strong)),
+        widgets.add(
+          _listRow(
+            marker: '${numbered.group(1)}.',
+            markerColor: c.brand,
+            child: Text.rich(
+              TextSpan(children: _inline(numbered.group(2)!, base, strong)),
+            ),
           ),
-        ));
+        );
         continue;
       }
 
       // Plain paragraph.
-      widgets.add(Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Text.rich(TextSpan(children: _inline(trimmed, base, strong))),
-      ));
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Text.rich(TextSpan(children: _inline(trimmed, base, strong))),
+        ),
+      );
     }
 
     return Column(
@@ -103,10 +111,7 @@ class MarkdownText extends StatelessWidget {
             width: 20,
             child: Text(
               marker,
-              style: TextStyle(
-                color: markerColor,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(color: markerColor, fontWeight: FontWeight.w700),
             ),
           ),
           Expanded(child: child),
@@ -126,24 +131,30 @@ class MarkdownText extends StatelessWidget {
         spans.add(TextSpan(text: text.substring(index, m.start), style: base));
       }
       if (m.group(2) != null || m.group(3) != null) {
-        spans.add(TextSpan(
-          text: m.group(2) ?? m.group(3),
-          style: base.copyWith(fontWeight: FontWeight.w700, color: strong),
-        ));
-      } else if (m.group(4) != null) {
-        spans.add(TextSpan(
-          text: m.group(4),
-          style: base.copyWith(fontStyle: FontStyle.italic),
-        ));
-      } else if (m.group(5) != null) {
-        spans.add(TextSpan(
-          text: m.group(5),
-          style: base.copyWith(
-            fontFeatures: const [],
-            letterSpacing: 0,
-            color: strong,
+        spans.add(
+          TextSpan(
+            text: m.group(2) ?? m.group(3),
+            style: base.copyWith(fontWeight: FontWeight.w700, color: strong),
           ),
-        ));
+        );
+      } else if (m.group(4) != null) {
+        spans.add(
+          TextSpan(
+            text: m.group(4),
+            style: base.copyWith(fontStyle: FontStyle.italic),
+          ),
+        );
+      } else if (m.group(5) != null) {
+        spans.add(
+          TextSpan(
+            text: m.group(5),
+            style: base.copyWith(
+              fontFeatures: const [],
+              letterSpacing: 0,
+              color: strong,
+            ),
+          ),
+        );
       }
       index = m.end;
     }

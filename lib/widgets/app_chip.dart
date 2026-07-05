@@ -50,7 +50,9 @@ class AppChip extends StatelessWidget {
           ],
           Text(
             label,
-            style: (dense ? theme.textTheme.labelSmall : theme.textTheme.labelMedium)
+            style: (dense
+                    ? theme.textTheme.labelSmall
+                    : theme.textTheme.labelMedium)
                 ?.copyWith(color: fg, fontWeight: FontWeight.w600),
           ),
         ],
