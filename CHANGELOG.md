@@ -7,6 +7,14 @@ is generated automatically from [Conventional Commits](https://www.conventionalc
 by [release-please](https://github.com/googleapis/release-please). **Do not edit
 entries below by hand** — write good commit messages instead.
 
+## [1.1.3](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.1.2...settlement-v1.1.3) (2026-07-05)
+
+
+### Bug Fixes
+
+* remove sms scan feature and permission ([564c7e6](https://github.com/Abhi-shekes/settlement/commit/564c7e6819d9051ca33d74207898baa1bbfee2f1))
+* remove sms scan feature and permission ([d0ed2bd](https://github.com/Abhi-shekes/settlement/commit/d0ed2bdbdcf2dfcd24d73ca54dc4f2d78eb0a474))
+
 ## [1.1.2](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.1.1...settlement-v1.1.2) (2026-07-05)
 
 
