@@ -207,18 +207,18 @@ class AiService extends ChangeNotifier {
       final model = _textModel(
         investment
             ? 'You are a cautious financial-education assistant for an Indian '
-                  'user. Amounts are in INR (₹). From their spending/savings '
-                  'summary, suggest general, beginner-friendly ways to put any '
-                  'surplus to work — e.g. an emergency fund, SIPs into index or '
-                  'mutual funds, PPF, fixed deposits, or NPS — and briefly say '
-                  'why each fits. This is general education, not personalised '
-                  'financial advice: end with a one-line disclaimer. Use short '
-                  'bullet points. Do not invent numbers beyond the summary.'
+                'user. Amounts are in INR (₹). From their spending/savings '
+                'summary, suggest general, beginner-friendly ways to put any '
+                'surplus to work — e.g. an emergency fund, SIPs into index or '
+                'mutual funds, PPF, fixed deposits, or NPS — and briefly say '
+                'why each fits. This is general education, not personalised '
+                'financial advice: end with a one-line disclaimer. Use short '
+                'bullet points. Do not invent numbers beyond the summary.'
             : 'You are a friendly personal-finance assistant for an Indian '
-                  'user. Amounts are in INR (₹). From their spending summary, '
-                  'give 4-6 concrete, practical ways to save money that '
-                  'reference their actual spending categories. Use short bullet '
-                  'points. Do not invent numbers beyond the summary.',
+                'user. Amounts are in INR (₹). From their spending summary, '
+                'give 4-6 concrete, practical ways to save money that '
+                'reference their actual spending categories. Use short bullet '
+                'points. Do not invent numbers beyond the summary.',
       );
       final response = await model.generateContent([Content.text(summary)]);
       return response.text?.trim() ??

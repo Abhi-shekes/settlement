@@ -48,9 +48,7 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
       body: Consumer2<BudgetService, ExpenseService>(
         builder: (context, budgetService, expenseService, child) {
           if (budgetService.isLoading || expenseService.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           // Get categories with budgets
@@ -147,7 +145,11 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.account_balance_wallet, size: 80, color: context.colors.faint),
+          Icon(
+            Icons.account_balance_wallet,
+            size: 80,
+            color: context.colors.faint,
+          ),
           const SizedBox(height: 16),
           Text(
             'No budgets set',

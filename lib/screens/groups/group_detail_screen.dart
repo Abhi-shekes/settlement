@@ -248,9 +248,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
       ),
       body:
           _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(),
-              )
+              ? const Center(child: CircularProgressIndicator())
               : TabBarView(
                 controller: _tabController,
                 children: [
@@ -571,9 +569,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
       future: context.read<GroupService>().getGroupExpenses(group.id),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         final groupExpenses = snapshot.data ?? [];
@@ -842,7 +838,10 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       ),
                       Text(
                         expense.categoryDisplayName,
-                        style: TextStyle(color: context.colors.muted, fontSize: 12),
+                        style: TextStyle(
+                          color: context.colors.muted,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
