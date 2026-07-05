@@ -55,29 +55,32 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     List<ExpenseModel> filteredExpenses = List.from(expenseService.expenses);
 
     if (_searchQuery.isNotEmpty) {
-      filteredExpenses = filteredExpenses.where((expense) {
-        return expense.title.toLowerCase().contains(
-              _searchQuery.toLowerCase(),
-            ) ||
-            expense.description.toLowerCase().contains(
-              _searchQuery.toLowerCase(),
-            );
-      }).toList();
+      filteredExpenses =
+          filteredExpenses.where((expense) {
+            return expense.title.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ||
+                expense.description.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                );
+          }).toList();
     }
 
     if (_selectedCategory != null) {
-      filteredExpenses = filteredExpenses
-          .where((expense) => expense.category == _selectedCategory)
-          .toList();
+      filteredExpenses =
+          filteredExpenses
+              .where((expense) => expense.category == _selectedCategory)
+              .toList();
     }
 
     if (_selectedDateRange != null) {
-      filteredExpenses = filteredExpenses.where((expense) {
-        return expense.createdAt.isAfter(_selectedDateRange!.start) &&
-            expense.createdAt.isBefore(
-              _selectedDateRange!.end.add(const Duration(days: 1)),
-            );
-      }).toList();
+      filteredExpenses =
+          filteredExpenses.where((expense) {
+            return expense.createdAt.isAfter(_selectedDateRange!.start) &&
+                expense.createdAt.isBefore(
+                  _selectedDateRange!.end.add(const Duration(days: 1)),
+                );
+          }).toList();
     }
 
     filteredExpenses.sort((a, b) {
@@ -124,10 +127,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Sort by',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                Text('Sort by', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: AppSpacing.sm),
                 _buildSortOption('Date', 'date'),
                 _buildSortOption('Amount', 'amount'),
@@ -173,9 +173,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final c = context.colors;
     return ListTile(
       title: Text(title),
-      trailing: _sortBy == value
-          ? Icon(Icons.check_rounded, color: c.brand)
-          : null,
+      trailing:
+          _sortBy == value ? Icon(Icons.check_rounded, color: c.brand) : null,
       onTap: () {
         setState(() => _sortBy = value);
         Navigator.pop(context);
@@ -227,17 +226,18 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               decoration: InputDecoration(
                 hintText: 'Search expenses',
                 prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear_rounded),
-                        onPressed: () {
-                          setState(() {
-                            _searchQuery = '';
-                            _searchController.clear();
-                          });
-                        },
-                      )
-                    : null,
+                suffixIcon:
+                    _searchQuery.isNotEmpty
+                        ? IconButton(
+                          icon: const Icon(Icons.clear_rounded),
+                          onPressed: () {
+                            setState(() {
+                              _searchQuery = '';
+                              _searchController.clear();
+                            });
+                          },
+                        )
+                        : null,
               ),
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
@@ -269,10 +269,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       icon: category.icon,
                       color: category.color,
                       selected: _selectedCategory == category,
-                      onTap: () => setState(
-                        () => _selectedCategory =
-                            _selectedCategory == category ? null : category,
-                      ),
+                      onTap:
+                          () => setState(
+                            () =>
+                                _selectedCategory =
+                                    _selectedCategory == category
+                                        ? null
+                                        : category,
+                          ),
                     ),
                   );
                 }),
@@ -288,9 +292,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   Expanded(
                     child: Text(
                       '${filteredExpenses.length} result${filteredExpenses.length == 1 ? '' : 's'}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: c.muted,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: c.muted),
                     ),
                   ),
                   TextButton(
@@ -307,22 +311,24 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
           // List
           Expanded(
-            child: expenseService.isLoading
-                ? const SkeletonList()
-                : filteredExpenses.isEmpty
-                ? _buildEmptyState()
-                : RefreshIndicator(
-                    onRefresh: _refreshExpenses,
-                    color: c.brand,
-                    child: ListView.separated(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      itemCount: filteredExpenses.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: AppSpacing.xs),
-                      itemBuilder: (context, index) =>
-                          _buildExpenseCard(filteredExpenses[index]),
+            child:
+                expenseService.isLoading
+                    ? const SkeletonList()
+                    : filteredExpenses.isEmpty
+                    ? _buildEmptyState()
+                    : RefreshIndicator(
+                      onRefresh: _refreshExpenses,
+                      color: c.brand,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        itemCount: filteredExpenses.length,
+                        separatorBuilder:
+                            (_, __) => const SizedBox(height: AppSpacing.xs),
+                        itemBuilder:
+                            (context, index) =>
+                                _buildExpenseCard(filteredExpenses[index]),
+                      ),
                     ),
-                  ),
           ),
         ],
       ),
@@ -427,10 +433,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             selected: _selectedCategory == category,
                             onTap: () {
                               setSheetState(
-                                () => _selectedCategory =
-                                    _selectedCategory == category
-                                        ? null
-                                        : category,
+                                () =>
+                                    _selectedCategory =
+                                        _selectedCategory == category
+                                            ? null
+                                            : category,
                               );
                               setState(() {});
                             },
@@ -476,13 +483,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     return EmptyState(
       icon: Icons.receipt_long_rounded,
       title: _hasActiveFilters ? 'No matches' : 'No expenses yet',
-      message: _hasActiveFilters
-          ? 'Try adjusting your filters to see more.'
-          : 'Track your first expense to get started.',
+      message:
+          _hasActiveFilters
+              ? 'Try adjusting your filters to see more.'
+              : 'Track your first expense to get started.',
       actionLabel: _hasActiveFilters ? null : 'Add expense',
-      onAction: _hasActiveFilters
-          ? null
-          : () => Navigator.push(
+      onAction:
+          _hasActiveFilters
+              ? null
+              : () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
               ),
@@ -542,7 +551,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       expense.description.isEmpty
                           ? expense.categoryDisplayName
                           : expense.description,
-                      style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: c.muted,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

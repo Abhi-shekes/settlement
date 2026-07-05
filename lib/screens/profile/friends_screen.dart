@@ -155,9 +155,7 @@ class _FriendsScreenState extends State<FriendsScreen>
               Expanded(
                 child:
                     _isLoading
-                        ? const Center(
-                          child: CircularProgressIndicator(),
-                        )
+                        ? const Center(child: CircularProgressIndicator())
                         : filteredFriends.isEmpty
                         ? _buildEmptyState()
                         : RefreshIndicator(

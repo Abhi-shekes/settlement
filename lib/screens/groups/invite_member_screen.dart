@@ -82,14 +82,10 @@ class _InviteMemberScreenState extends State<InviteMemberScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Invite to Group'),
-      ),
+      appBar: AppBar(title: const Text('Invite to Group')),
       body:
           _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(),
-              )
+              ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Form(

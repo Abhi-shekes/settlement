@@ -184,9 +184,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
       ),
       body:
           _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(),
-              )
+              ? const Center(child: CircularProgressIndicator())
               : TabBarView(
                 controller: _tabController,
                 children: [
@@ -357,7 +355,10 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                       ),
                       Text(
                         DateFormat('MMM d, y').format(split.createdAt),
-                        style: TextStyle(color: context.colors.muted, fontSize: 12),
+                        style: TextStyle(
+                          color: context.colors.muted,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -375,7 +376,10 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                     ),
                     Text(
                       'remaining',
-                      style: TextStyle(color: context.colors.muted, fontSize: 12),
+                      style: TextStyle(
+                        color: context.colors.muted,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -521,8 +525,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                 _amountController.text = amount.toString();
                 _settleSplitAmount(split);
               },
-              style: ElevatedButton.styleFrom(
-              ),
+              style: ElevatedButton.styleFrom(),
               child: const Text('Settle'),
             ),
           ],
@@ -727,7 +730,10 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                       ),
                       Text(
                         DateFormat('MMM d, y').format(split.createdAt),
-                        style: TextStyle(color: context.colors.muted, fontSize: 12),
+                        style: TextStyle(
+                          color: context.colors.muted,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -745,7 +751,10 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                     ),
                     Text(
                       'owed to you',
-                      style: TextStyle(color: context.colors.muted, fontSize: 12),
+                      style: TextStyle(
+                        color: context.colors.muted,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),

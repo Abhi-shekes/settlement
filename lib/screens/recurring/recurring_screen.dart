@@ -27,9 +27,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Recurring'),
-      ),
+      appBar: AppBar(title: const Text('Recurring')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(

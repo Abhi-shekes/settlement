@@ -258,14 +258,15 @@ class _HomeScreenState extends State<HomeScreen> {
       body: IndexedStack(index: _currentIndex, children: _screens),
       // Expenses/Splits/Groups each have their own contextual FAB, so the
       // quick-add FAB only appears on the Dashboard tab.
-      floatingActionButton: _currentIndex == 0
-          ? FloatingActionButton(
-              heroTag: 'home_quick_add_fab',
-              onPressed: _openQuickAdd,
-              tooltip: 'Quick add',
-              child: const Icon(Icons.add_rounded, size: 28),
-            )
-          : null,
+      floatingActionButton:
+          _currentIndex == 0
+              ? FloatingActionButton(
+                heroTag: 'home_quick_add_fab',
+                onPressed: _openQuickAdd,
+                tooltip: 'Quick add',
+                child: const Icon(Icons.add_rounded, size: 28),
+              )
+              : null,
       bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
