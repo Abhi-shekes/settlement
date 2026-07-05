@@ -129,6 +129,34 @@ service cloud.firestore {
         request.auth.uid == resource.data.fromUserId;
     }
 
+    // Accounts — a user's payment accounts (cash, bank, card, wallet).
+    // Strictly private to the owner.
+    match /accounts/{accountId} {
+      allow read, update, delete: if isSignedIn() &&
+        request.auth.uid == resource.data.userId;
+      allow create: if isSignedIn() &&
+        request.auth.uid == request.resource.data.userId;
+    }
+
+    // Transfers — history of money moved between the owner's own accounts.
+    // Immutable once written; strictly private to the owner.
+    match /transfers/{transferId} {
+      allow read, delete: if isSignedIn() &&
+        request.auth.uid == resource.data.userId;
+      allow create: if isSignedIn() &&
+        request.auth.uid == request.resource.data.userId;
+      allow update: if false;
+    }
+
+    // Recurring transactions — the rules that materialise repeating expenses.
+    // Strictly private to the owner.
+    match /recurring_transactions/{ruleId} {
+      allow read, update, delete: if isSignedIn() &&
+        request.auth.uid == resource.data.userId;
+      allow create: if isSignedIn() &&
+        request.auth.uid == request.resource.data.userId;
+    }
+
     // Deny everything else by default (e.g. the legacy top-level `settlements`
     // collection, which the app no longer writes).
     match /{document=**} {

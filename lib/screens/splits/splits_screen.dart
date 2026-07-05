@@ -319,11 +319,18 @@ class _SplitsScreenState extends State<SplitsScreen>
                     style: theme.textTheme.labelSmall?.copyWith(color: c.faint),
                   ),
                   const SizedBox(height: 6),
-                  AppChip(
-                    label: split.isFullySettled ? 'Settled' : 'Pending',
-                    color: split.isFullySettled ? c.positive : c.warning,
-                    dense: true,
-                  ),
+                  if (isPayer && split.pendingParticipants.isNotEmpty)
+                    AppChip(
+                      label: 'Awaiting approval',
+                      color: c.info,
+                      dense: true,
+                    )
+                  else
+                    AppChip(
+                      label: split.isFullySettled ? 'Settled' : 'Pending',
+                      color: split.isFullySettled ? c.positive : c.warning,
+                      dense: true,
+                    ),
                 ],
               ),
             ],

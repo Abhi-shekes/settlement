@@ -9,7 +9,13 @@ import '../models/friend_request_model.dart';
 
 class AuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // Pass the Firebase Web client ID explicitly as the serverClientId so Google
+  // mints a valid ID token for Firebase across build variants. Without this,
+  // sign-in can fail with ApiException: 10 (DEVELOPER_ERROR) / a null idToken.
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId:
+        '558917768047-qh90bdr8r19k5a6mkcoj800ihr1bdkt2.apps.googleusercontent.com',
+  );
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   User? get currentUser => _auth.currentUser;
