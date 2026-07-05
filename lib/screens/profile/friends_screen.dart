@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
 import '../../models/friend_request_model.dart';
@@ -87,13 +88,8 @@ class _FriendsScreenState extends State<FriendsScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Friends'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
           tabs: [
             const Tab(text: 'Friends'),
             Consumer<AuthService>(
@@ -134,18 +130,18 @@ class _FriendsScreenState extends State<FriendsScreen>
                             : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
+                      borderSide: BorderSide(color: context.colors.cardBorder),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
+                      borderSide: BorderSide(color: context.colors.cardBorder),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF008080)),
+                      borderSide: const BorderSide(color: Color(0xFF0F766E)),
                     ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: context.colors.surfaceSunken,
                   ),
                   onChanged: (value) {
                     setState(() {
@@ -160,15 +156,13 @@ class _FriendsScreenState extends State<FriendsScreen>
                 child:
                     _isLoading
                         ? const Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFF008080),
-                          ),
+                          child: CircularProgressIndicator(),
                         )
                         : filteredFriends.isEmpty
                         ? _buildEmptyState()
                         : RefreshIndicator(
                           onRefresh: _loadFriends,
-                          color: const Color(0xFF008080),
+                          color: const Color(0xFF0F766E),
                           child: ListView.builder(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             itemCount: filteredFriends.length,
@@ -195,7 +189,7 @@ class _FriendsScreenState extends State<FriendsScreen>
       //             onPressed: () {
       //               _tabController.animateTo(1);
       //             },
-      //             backgroundColor: const Color(0xFF008080),
+      //             backgroundColor: const Color(0xFF0F766E),
       //             foregroundColor: Colors.white,
       //             child: const Icon(Icons.person_add),
       //           )
@@ -212,20 +206,20 @@ class _FriendsScreenState extends State<FriendsScreen>
         if (incoming.isEmpty && outgoing.isEmpty) {
           return RefreshIndicator(
             onRefresh: _loadRequests,
-            color: const Color(0xFF008080),
+            color: const Color(0xFF0F766E),
             child: ListView(
               children: [
                 const SizedBox(height: 120),
                 Icon(
                   Icons.mark_email_read_outlined,
                   size: 64,
-                  color: Colors.grey[400],
+                  color: context.colors.faint,
                 ),
                 const SizedBox(height: 12),
                 Center(
                   child: Text(
                     'No friend requests',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(color: context.colors.muted, fontSize: 16),
                   ),
                 ),
               ],
@@ -235,7 +229,7 @@ class _FriendsScreenState extends State<FriendsScreen>
 
         return RefreshIndicator(
           onRefresh: _loadRequests,
-          color: const Color(0xFF008080),
+          color: const Color(0xFF0F766E),
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -244,7 +238,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                   'Received',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF008080),
+                    color: Color(0xFF0F766E),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -256,7 +250,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                   'Sent',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF008080),
+                    color: Color(0xFF0F766E),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -275,7 +269,7 @@ class _FriendsScreenState extends State<FriendsScreen>
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: const Color(0xFF008080).withValues(alpha: 0.1),
+          backgroundColor: const Color(0xFF0F766E).withValues(alpha: 0.1),
           backgroundImage:
               (r.fromPhotoURL != null && r.fromPhotoURL!.isNotEmpty)
                   ? NetworkImage(r.fromPhotoURL!)
@@ -285,7 +279,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                   ? Text(
                     r.fromName.isNotEmpty ? r.fromName[0].toUpperCase() : '?',
                     style: const TextStyle(
-                      color: Color(0xFF008080),
+                      color: Color(0xFF0F766E),
                       fontWeight: FontWeight.bold,
                     ),
                   )
@@ -338,14 +332,14 @@ class _FriendsScreenState extends State<FriendsScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.people, size: 80, color: Colors.grey[400]),
+          Icon(Icons.people, size: 80, color: context.colors.faint),
           const SizedBox(height: 16),
           Text(
             _searchQuery.isNotEmpty ? 'No friends found' : 'No friends yet',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
+              color: context.colors.muted,
             ),
           ),
           const SizedBox(height: 8),
@@ -353,7 +347,7 @@ class _FriendsScreenState extends State<FriendsScreen>
             _searchQuery.isNotEmpty
                 ? 'Try changing your search query'
                 : 'Add friends to start splitting expenses',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            style: TextStyle(fontSize: 16, color: context.colors.muted),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -363,8 +357,6 @@ class _FriendsScreenState extends State<FriendsScreen>
               icon: const Icon(Icons.person_add),
               label: const Text('Add Friend'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF008080),
-                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
@@ -389,7 +381,7 @@ class _FriendsScreenState extends State<FriendsScreen>
           children: [
             CircleAvatar(
               radius: 28,
-              backgroundColor: const Color(0xFF008080).withValues(alpha: 0.1),
+              backgroundColor: const Color(0xFF0F766E).withValues(alpha: 0.1),
               backgroundImage:
                   friend.photoURL != null
                       ? NetworkImage(friend.photoURL!)
@@ -401,7 +393,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                             ? friend.displayName[0].toUpperCase()
                             : '?',
                         style: const TextStyle(
-                          color: Color(0xFF008080),
+                          color: Color(0xFF0F766E),
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
                         ),
@@ -423,12 +415,12 @@ class _FriendsScreenState extends State<FriendsScreen>
                   const SizedBox(height: 4),
                   Text(
                     friend.email,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    style: TextStyle(color: context.colors.muted, fontSize: 14),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Friend Code: ${friend.friendCode}',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                    style: TextStyle(color: context.colors.faint, fontSize: 12),
                   ),
                 ],
               ),
@@ -542,7 +534,7 @@ class _AddFriendTabState extends State<AddFriendTab> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Friend request sent to ${user.displayName}.'),
-              backgroundColor: const Color(0xFF008080),
+              backgroundColor: const Color(0xFF0F766E),
             ),
           );
         }
@@ -599,7 +591,7 @@ class _AddFriendTabState extends State<AddFriendTab> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Friend request sent to ${user.displayName}.'),
-              backgroundColor: const Color(0xFF008080),
+              backgroundColor: const Color(0xFF0F766E),
             ),
           );
         }
@@ -633,13 +625,13 @@ class _AddFriendTabState extends State<AddFriendTab> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF008080),
+              color: Color(0xFF0F766E),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Enter your friend\'s unique friend code to add them',
-            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            style: TextStyle(color: context.colors.muted, fontSize: 14),
           ),
           const SizedBox(height: 16),
           Row(
@@ -659,8 +651,6 @@ class _AddFriendTabState extends State<AddFriendTab> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _addFriendByCode,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF008080),
-                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 16,
@@ -689,18 +679,18 @@ class _AddFriendTabState extends State<AddFriendTab> {
           // Divider
           Row(
             children: [
-              Expanded(child: Divider(color: Colors.grey[300])),
+              Expanded(child: Divider(color: context.colors.cardBorder)),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   'OR',
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: context.colors.muted,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-              Expanded(child: Divider(color: Colors.grey[300])),
+              Expanded(child: Divider(color: context.colors.cardBorder)),
             ],
           ),
 
@@ -712,13 +702,13 @@ class _AddFriendTabState extends State<AddFriendTab> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF008080),
+              color: Color(0xFF0F766E),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Enter your friend\'s email address to send them a friend request',
-            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            style: TextStyle(color: context.colors.muted, fontSize: 14),
           ),
           const SizedBox(height: 16),
           Row(
@@ -738,8 +728,6 @@ class _AddFriendTabState extends State<AddFriendTab> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _addFriendByEmail,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF008080),
-                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 16,
@@ -769,7 +757,7 @@ class _AddFriendTabState extends State<AddFriendTab> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF008080).withValues(alpha: 0.1),
+              color: const Color(0xFF0F766E).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -777,13 +765,13 @@ class _AddFriendTabState extends State<AddFriendTab> {
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.lightbulb, color: Color(0xFF008080), size: 20),
+                    Icon(Icons.lightbulb, color: Color(0xFF0F766E), size: 20),
                     SizedBox(width: 8),
                     Text(
                       'Tips',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF008080),
+                        color: Color(0xFF0F766E),
                       ),
                     ),
                   ],
@@ -793,7 +781,7 @@ class _AddFriendTabState extends State<AddFriendTab> {
                   '• Share your friend code from the profile screen\n'
                   '• Friend codes are unique 8-character identifiers\n'
                   '• Both users must add each other to become friends',
-                  style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                  style: TextStyle(color: context.colors.muted, fontSize: 14),
                 ),
               ],
             ),

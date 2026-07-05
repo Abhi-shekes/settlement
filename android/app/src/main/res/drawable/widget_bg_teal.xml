@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Signature brand gradient (theme-aware / dynamic via @color tokens). -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <gradient
         android:angle="45"
-        android:startColor="#FF008080"
-        android:endColor="#FF20B2AA" />
-    <corners android:radius="20dp" />
+        android:startColor="@color/widget_bg_gradient_start"
+        android:endColor="@color/widget_bg_gradient_end" />
+    <corners android:radius="@dimen/widget_corner_radius" />
 </shape>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Rounded progress bar for budget rows. The fill defaults to the brand color;
+    on Android 12+ the provider re-tints it per row (ok / warn / over) via
+    RemoteViews.setColorStateList("setProgressTintList", …).
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape android:shape="rectangle">
+            <corners android:radius="999dp" />
+            <solid android:color="@color/widget_track" />
+        </shape>
+    </item>
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape android:shape="rectangle">
+                <corners android:radius="999dp" />
+                <solid android:color="@color/widget_brand" />
+            </shape>
+        </clip>
+    </item>
+</layer-list>

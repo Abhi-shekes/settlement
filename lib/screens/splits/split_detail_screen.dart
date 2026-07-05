@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -119,8 +120,6 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
                         _settleUp(participantId, amount);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF008080),
-                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -173,7 +172,7 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
             content: Text(
               'Payment recorded — waiting for the other person to confirm.',
             ),
-            backgroundColor: Color(0xFF008080),
+            backgroundColor: Color(0xFF0F766E),
           ),
         );
       }
@@ -202,13 +201,11 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Split Details'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
       ),
       body:
           _isLoading
               ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF008080)),
+                child: CircularProgressIndicator(),
               )
               : SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -230,7 +227,7 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
                                 isGroupSplit
                                     ? [Colors.purple, Colors.deepPurple]
                                     : [
-                                      const Color(0xFFFF7F50),
+                                      const Color(0xFFF97316),
                                       Colors.deepOrange,
                                     ],
                             begin: Alignment.topLeft,
@@ -289,7 +286,7 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF008080),
+                        color: Color(0xFF0F766E),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -328,7 +325,7 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF008080),
+                        color: Color(0xFF0F766E),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -386,7 +383,7 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF008080),
+                          color: Color(0xFF0F766E),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -413,7 +410,7 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey[200]!),
+        side: BorderSide(color: context.colors.surfaceSunken),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -432,7 +429,7 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
             width: 100,
             child: Text(
               label,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 14, color: context.colors.muted),
             ),
           ),
           Expanded(
@@ -467,10 +464,10 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
               backgroundColor:
                   isPayer
                       ? Colors.green.withValues(alpha: 0.1)
-                      : const Color(0xFFFF7F50).withValues(alpha: 0.1),
+                      : const Color(0xFFF97316).withValues(alpha: 0.1),
               child: Icon(
                 isPayer ? Icons.check_circle : Icons.person,
-                color: isPayer ? Colors.green : const Color(0xFFFF7F50),
+                color: isPayer ? Colors.green : const Color(0xFFF97316),
               ),
             ),
             const SizedBox(width: 16),
@@ -493,14 +490,14 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
                         ? 'Paid ${widget.split.formattedTotalAmount}'
                         : 'Owes ₹${amountOwed.toInt()}',
                     style: TextStyle(
-                      color: isPayer ? Colors.green : Colors.grey[600],
+                      color: isPayer ? Colors.green : context.colors.muted,
                     ),
                   ),
                   if (!isPayer && remainingAmount > 0)
                     Text(
                       'Remaining: ₹${remainingAmount.toInt()}',
                       style: const TextStyle(
-                        color: Color(0xFFFF7F50),
+                        color: Color(0xFFF97316),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -514,8 +511,6 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
                 onPressed:
                     () => _showSettleUpDialog(participantId, remainingAmount),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF008080),
-                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -574,7 +569,7 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
                     DateFormat(
                       'MMM d, y • h:mm a',
                     ).format(settlement.settledAt),
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: 12, color: context.colors.muted),
                   ),
                   if (settlement.notes.isNotEmpty) ...[
                     const SizedBox(height: 4),
@@ -582,7 +577,7 @@ class _SplitDetailScreenState extends State<SplitDetailScreen> {
                       settlement.notes,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        color: context.colors.muted,
                         fontStyle: FontStyle.italic,
                       ),
                     ),

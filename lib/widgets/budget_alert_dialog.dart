@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/expense_model.dart';
+import '../theme/app_colors.dart';
 
 class BudgetAlertDialog extends StatelessWidget {
   final ExpenseCategory category;
@@ -68,22 +69,24 @@ class BudgetAlertDialog extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Budget Details
-            _buildDetailRow('Budget Amount:', '₹${budgetAmount.toInt()}'),
+            _buildDetailRow(context, 'Budget Amount:', '₹${budgetAmount.toInt()}'),
             const SizedBox(height: 8),
-            _buildDetailRow('Current Spending:', '₹${newSpending.toInt()}'),
+            _buildDetailRow(context, 'Current Spending:', '₹${newSpending.toInt()}'),
             const SizedBox(height: 8),
             _buildDetailRow(
+              context,
               isApproaching ? 'Remaining:' : 'Exceeded By:',
               isApproaching
                   ? '₹${(budgetAmount - newSpending).toInt()}'
                   : '₹${exceededBy.toInt()}',
-              isApproaching ? Colors.orange : Colors.red,
+              isApproaching ? context.colors.warning : context.colors.negative,
             ),
             const SizedBox(height: 8),
             _buildDetailRow(
+              context,
               'Usage:',
               '${percentage.toInt()}%',
-              isApproaching ? Colors.orange : Colors.red,
+              isApproaching ? context.colors.warning : context.colors.negative,
             ),
             const SizedBox(height: 16),
 
@@ -92,7 +95,7 @@ class BudgetAlertDialog extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
                 value: percentage > 100 ? 1.0 : percentage / 100,
-                backgroundColor: Colors.grey.shade200,
+                backgroundColor: context.colors.surfaceSunken,
                 color: isApproaching ? Colors.orange : Colors.red,
                 minHeight: 10,
               ),
@@ -105,7 +108,7 @@ class BudgetAlertDialog extends StatelessWidget {
                   ? 'You\'re approaching your monthly budget limit for this category. Consider reducing expenses to stay within budget.'
                   : 'You\'ve exceeded your monthly budget for this category. Consider adjusting your budget or reducing expenses.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              style: TextStyle(fontSize: 14, color: context.colors.muted),
             ),
             const SizedBox(height: 24),
 
@@ -133,8 +136,6 @@ class BudgetAlertDialog extends StatelessWidget {
                       Navigator.pushNamed(context, '/budgets');
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF008080),
-                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -151,17 +152,17 @@ class BudgetAlertDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, [Color? valueColor]) {
+  Widget _buildDetailRow(BuildContext context, String label, String value, [Color? valueColor]) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+        Text(label, style: TextStyle(fontSize: 14, color: context.colors.muted)),
         Text(
           value,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: valueColor ?? Colors.black,
+            color: valueColor ?? Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],

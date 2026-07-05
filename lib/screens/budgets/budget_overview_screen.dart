@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../../services/budget_service.dart';
 import '../../services/expense_service.dart';
@@ -31,8 +32,6 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Budget Overview'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -50,7 +49,7 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
         builder: (context, budgetService, expenseService, child) {
           if (budgetService.isLoading || expenseService.isLoading) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF008080)),
+              child: CircularProgressIndicator(),
             );
           }
 
@@ -65,7 +64,7 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
 
           return RefreshIndicator(
             onRefresh: _loadData,
-            color: const Color(0xFF008080),
+            color: const Color(0xFF0F766E),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -82,7 +81,7 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF008080),
+                      color: Color(0xFF0F766E),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -126,8 +125,8 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
                       label: const Text('Manage Budgets'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        foregroundColor: const Color(0xFF008080),
-                        side: const BorderSide(color: Color(0xFF008080)),
+                        foregroundColor: const Color(0xFF0F766E),
+                        side: const BorderSide(color: Color(0xFF0F766E)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -148,20 +147,20 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.account_balance_wallet, size: 80, color: Colors.grey[400]),
+          Icon(Icons.account_balance_wallet, size: 80, color: context.colors.faint),
           const SizedBox(height: 16),
           Text(
             'No budgets set',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
+              color: context.colors.muted,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Set budgets to track your spending',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            style: TextStyle(fontSize: 16, color: context.colors.muted),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -174,8 +173,6 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
             icon: const Icon(Icons.add),
             label: const Text('Set Budgets'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF008080),
-              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -236,7 +233,7 @@ class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF008080), Color(0xFF20B2AA)],
+          colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

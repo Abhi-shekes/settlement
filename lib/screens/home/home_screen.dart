@@ -14,10 +14,14 @@ import 'dashboard_screen.dart';
 import '../expenses/expenses_screen.dart';
 import '../expenses/add_expense_screen.dart';
 import '../splits/splits_screen.dart';
+import '../splits/add_split_screen.dart';
 import '../groups/groups_screen.dart';
-import '../analytics/analytics_screen.dart';
+import '../groups/create_group_screen.dart';
 import '../profile/profile_screen.dart';
 import '../ai/ai_assistant_screen.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../widgets/app_bottom_nav.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,7 +38,6 @@ class _HomeScreenState extends State<HomeScreen> {
     const ExpensesScreen(),
     const SplitsScreen(),
     const GroupsScreen(),
-    const AnalyticsScreen(),
     const ProfileScreen(),
   ];
 
@@ -124,6 +127,11 @@ class _HomeScreenState extends State<HomeScreen> {
             MaterialPageRoute(builder: (_) => const AiAssistantScreen()),
           );
           break;
+        case 'refresh':
+          // The Quick Add refresh tap just opens the app and re-pushes the
+          // latest snapshot to every widget; no navigation.
+          _pushWidgets();
+          break;
       }
     });
   }
@@ -140,43 +148,153 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  void _openQuickAdd() {
+    final c = context.colors;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              AppSpacing.lg,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: c.cardBorder,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Quick add',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _quickAddTile(
+                  sheetContext,
+                  icon: Icons.receipt_long_rounded,
+                  color: c.brand,
+                  title: 'Add expense',
+                  subtitle: 'Track personal spending',
+                  builder: (_) => const AddExpenseScreen(),
+                ),
+                _quickAddTile(
+                  sheetContext,
+                  icon: Icons.call_split_rounded,
+                  color: c.accent,
+                  title: 'Split a bill',
+                  subtitle: 'Share an expense with friends',
+                  builder: (_) => const AddSplitScreen(),
+                ),
+                _quickAddTile(
+                  sheetContext,
+                  icon: Icons.group_add_rounded,
+                  color: c.info,
+                  title: 'Create group',
+                  subtitle: 'Track shared group expenses',
+                  builder: (_) => const CreateGroupScreen(),
+                ),
+                _quickAddTile(
+                  sheetContext,
+                  icon: Icons.auto_awesome_rounded,
+                  color: c.warning,
+                  title: 'Ask the assistant',
+                  subtitle: 'Add expenses by voice or chat',
+                  builder: (_) => const AiAssistantScreen(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _quickAddTile(
+    BuildContext sheetContext, {
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+    required WidgetBuilder builder,
+  }) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(AppRadii.md),
+        ),
+        child: Icon(icon, color: color),
+      ),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      onTap: () {
+        Navigator.pop(sheetContext);
+        Navigator.push(context, MaterialPageRoute(builder: builder));
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _screens),
-      bottomNavigationBar: BottomNavigationBar(
+      // Expenses/Splits/Groups each have their own contextual FAB, so the
+      // quick-add FAB only appears on the Dashboard tab.
+      floatingActionButton: _currentIndex == 0
+          ? FloatingActionButton(
+              heroTag: 'home_quick_add_fab',
+              onPressed: _openQuickAdd,
+              tooltip: 'Quick add',
+              child: const Icon(Icons.add_rounded, size: 28),
+            )
+          : null,
+      bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF008080),
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.white,
-        elevation: 8,
-        selectedFontSize: 12,
-        unselectedFontSize: 12,
+        onTap: (index) => setState(() => _currentIndex = index),
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+          AppNavItem(
+            icon: Icons.dashboard_outlined,
+            selectedIcon: Icons.dashboard_rounded,
+            label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long),
+          AppNavItem(
+            icon: Icons.receipt_long_outlined,
+            selectedIcon: Icons.receipt_long_rounded,
             label: 'Expenses',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.call_split),
+          AppNavItem(
+            icon: Icons.call_split_outlined,
+            selectedIcon: Icons.call_split_rounded,
             label: 'Splits',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Groups'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.analytics),
-            label: 'Analytics',
+          AppNavItem(
+            icon: Icons.groups_outlined,
+            selectedIcon: Icons.groups_rounded,
+            label: 'Groups',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          AppNavItem(
+            icon: Icons.person_outline_rounded,
+            selectedIcon: Icons.person_rounded,
+            label: 'Profile',
+          ),
         ],
       ),
     );

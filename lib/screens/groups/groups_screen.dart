@@ -4,6 +4,11 @@ import 'package:intl/intl.dart';
 import '../../models/group_model.dart';
 import '../../services/group_service.dart';
 import '../../services/auth_service.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../widgets/app_chip.dart';
+import '../../widgets/empty_state.dart';
+import '../../widgets/loading_skeleton.dart';
 import 'create_group_screen.dart';
 import 'group_detail_screen.dart';
 
@@ -21,7 +26,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
   @override
   void initState() {
     super.initState();
-    _refreshGroups();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshGroups());
   }
 
   @override
@@ -39,20 +44,13 @@ class _GroupsScreenState extends State<GroupsScreen> {
     List<GroupModel> filteredGroups = List.from(groupService.groups);
 
     if (_searchQuery.isNotEmpty) {
-      filteredGroups =
-          filteredGroups.where((group) {
-            return group.name.toLowerCase().contains(
-                  _searchQuery.toLowerCase(),
-                ) ||
-                group.description.toLowerCase().contains(
-                  _searchQuery.toLowerCase(),
-                );
-          }).toList();
+      filteredGroups = filteredGroups.where((group) {
+        return group.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            group.description.toLowerCase().contains(_searchQuery.toLowerCase());
+      }).toList();
     }
 
-    // Sort by creation date (most recent first)
     filteredGroups.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
     return filteredGroups;
   }
 
@@ -60,162 +58,97 @@ class _GroupsScreenState extends State<GroupsScreen> {
   Widget build(BuildContext context) {
     final filteredGroups = _getFilteredGroups();
     final groupService = context.watch<GroupService>();
+    final c = context.colors;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Groups'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
-      ),
+      backgroundColor: c.surface,
+      appBar: AppBar(title: const Text('Groups')),
       body: Column(
         children: [
-          // Search Bar
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search groups...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon:
-                    _searchQuery.isNotEmpty
-                        ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            setState(() {
-                              _searchQuery = '';
-                              _searchController.clear();
-                            });
-                          },
-                        )
-                        : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF008080)),
-                ),
-                filled: true,
-                fillColor: Colors.white,
+                hintText: 'Search groups',
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear_rounded),
+                        onPressed: () {
+                          setState(() {
+                            _searchQuery = '';
+                            _searchController.clear();
+                          });
+                        },
+                      )
+                    : null,
               ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
+              onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
-
-          // Groups List
           Expanded(
-            child:
-                groupService.isLoading
-                    ? const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFF008080),
-                      ),
-                    )
-                    : filteredGroups.isEmpty
-                    ? _buildEmptyState()
-                    : RefreshIndicator(
-                      onRefresh: _refreshGroups,
-                      color: const Color(0xFF008080),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: filteredGroups.length,
-                        itemBuilder: (context, index) {
-                          final group = filteredGroups[index];
-                          return _buildGroupCard(group);
-                        },
-                      ),
+            child: groupService.isLoading
+                ? const SkeletonList()
+                : filteredGroups.isEmpty
+                ? _buildEmptyState()
+                : RefreshIndicator(
+                    onRefresh: _refreshGroups,
+                    color: c.brand,
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      itemCount: filteredGroups.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: AppSpacing.xs),
+                      itemBuilder: (context, index) =>
+                          _buildGroupCard(filteredGroups[index]),
                     ),
+                  ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'groups_fab',
         onPressed: () async {
           await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const CreateGroupScreen()),
           );
-          // Refresh groups when returning from create screen
           _refreshGroups();
         },
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('New group'),
       ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.group, size: 80, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            _searchQuery.isNotEmpty ? 'No groups found' : 'No groups yet',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _searchQuery.isNotEmpty
-                ? 'Try changing your search query'
-                : 'Create your first group to start splitting expenses',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          if (_searchQuery.isEmpty)
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CreateGroupScreen(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Create Group'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF008080),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-        ],
-      ),
+    return EmptyState(
+      icon: Icons.groups_rounded,
+      title: _searchQuery.isNotEmpty ? 'No groups found' : 'No groups yet',
+      message: _searchQuery.isNotEmpty
+          ? 'Try a different search.'
+          : 'Create a group to split expenses with friends and roommates.',
+      actionLabel: _searchQuery.isEmpty ? 'Create group' : null,
+      onAction: _searchQuery.isEmpty
+          ? () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
+              )
+          : null,
     );
   }
 
   Widget _buildGroupCard(GroupModel group) {
+    final theme = Theme.of(context);
+    final c = context.colors;
     final currentUserId = context.read<AuthService>().currentUser?.uid ?? '';
     final isAdmin = group.adminId == currentUserId;
     final memberCount = group.allMemberIds.length;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Material(
+      color: c.surfaceElevated,
+      borderRadius: AppRadii.card,
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -225,135 +158,89 @@ class _GroupsScreenState extends State<GroupsScreen> {
             ),
           ).then((_) => _refreshGroups());
         },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+        borderRadius: AppRadii.card,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: AppRadii.card,
+            border: Border.all(color: c.cardBorder),
+          ),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Group Avatar
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: Colors.purple.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child:
-                        group.imageUrl != null
-                            ? ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.network(
-                                group.imageUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(
-                                    Icons.group,
-                                    color: Colors.purple,
-                                    size: 32,
-                                  );
-                                },
-                              ),
-                            )
-                            : const Icon(
-                              Icons.group,
-                              color: Colors.purple,
-                              size: 32,
-                            ),
-                  ),
-                  const SizedBox(width: 16),
-
-                  // Group Info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                group.name,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (isAdmin)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFF008080,
-                                  ).withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Text(
-                                  'ADMIN',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF008080),
-                                  ),
-                                ),
-                              ),
-                          ],
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: c.info.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                ),
+                child: group.imageUrl != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(AppRadii.md),
+                        child: Image.network(
+                          group.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(Icons.groups_rounded, color: c.info, size: 28),
                         ),
-                        const SizedBox(height: 4),
-                        if (group.description.isNotEmpty)
-                          Text(
-                            group.description,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                            maxLines: 2,
+                      )
+                    : Icon(Icons.groups_rounded, color: c.info, size: 28),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            group.name,
+                            style: theme.textTheme.titleMedium,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.people,
-                              size: 16,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '$memberCount member${memberCount != 1 ? 's' : ''}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Icon(
-                              Icons.calendar_today,
-                              size: 16,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              DateFormat('MMM d, y').format(group.createdAt),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
+                        ),
+                        if (isAdmin)
+                          AppChip(label: 'Admin', dense: true),
+                      ],
+                    ),
+                    if (group.description.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        group.description,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: c.muted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.xs),
+                    Row(
+                      children: [
+                        Icon(Icons.people_alt_rounded, size: 15, color: c.faint),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$memberCount member${memberCount != 1 ? 's' : ''}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: c.faint,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Icon(Icons.schedule_rounded, size: 15, color: c.faint),
+                        const SizedBox(width: 4),
+                        Text(
+                          DateFormat('MMM d, y').format(group.createdAt),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: c.faint,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../models/group_model.dart';
@@ -149,7 +150,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
             content: Text(
               'Payment recorded — waiting for the other person to confirm.',
             ),
-            backgroundColor: Color(0xFF008080),
+            backgroundColor: Color(0xFF0F766E),
           ),
         );
       }
@@ -176,20 +177,15 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settle Up'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
           tabs: const [Tab(text: 'You Owe'), Tab(text: 'Owed to You')],
         ),
       ),
       body:
           _isLoading
               ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF008080)),
+                child: CircularProgressIndicator(),
               )
               : TabBarView(
                 controller: _tabController,
@@ -229,7 +225,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color:
-                  totalOwedAmount > 0 ? const Color(0xFFFF7F50) : Colors.green,
+                  totalOwedAmount > 0 ? const Color(0xFFF97316) : Colors.green,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -289,7 +285,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                   Text(
                     'You have no outstanding amounts from group splits',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(color: context.colors.muted, fontSize: 16),
                   ),
                 ],
               ),
@@ -300,7 +296,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF008080),
+                color: Color(0xFF0F766E),
               ),
             ),
             const SizedBox(height: 16),
@@ -338,12 +334,12 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF7F50).withValues(alpha: 0.1),
+                    color: const Color(0xFFF97316).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
                     Icons.receipt,
-                    color: Color(0xFFFF7F50),
+                    color: Color(0xFFF97316),
                     size: 20,
                   ),
                 ),
@@ -361,7 +357,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                       ),
                       Text(
                         DateFormat('MMM d, y').format(split.createdAt),
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        style: TextStyle(color: context.colors.muted, fontSize: 12),
                       ),
                     ],
                   ),
@@ -374,12 +370,12 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: Color(0xFFFF7F50),
+                        color: Color(0xFFF97316),
                       ),
                     ),
                     Text(
                       'remaining',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      style: TextStyle(color: context.colors.muted, fontSize: 12),
                     ),
                   ],
                 ),
@@ -390,7 +386,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
               const SizedBox(height: 8),
               Text(
                 split.description,
-                style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                style: TextStyle(color: context.colors.muted, fontSize: 14),
               ),
             ],
 
@@ -409,14 +405,14 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                           Text(
                             'Paid: ₹${settledAmount.toInt()}',
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              color: context.colors.muted,
                               fontSize: 12,
                             ),
                           ),
                           Text(
                             'Total: ₹${totalOwed.toInt()}',
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              color: context.colors.muted,
                               fontSize: 12,
                             ),
                           ),
@@ -425,9 +421,9 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                       const SizedBox(height: 4),
                       LinearProgressIndicator(
                         value: totalOwed > 0 ? settledAmount / totalOwed : 0,
-                        backgroundColor: Colors.grey[300],
+                        backgroundColor: context.colors.cardBorder,
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF008080),
+                          Color(0xFF0F766E),
                         ),
                       ),
                     ],
@@ -446,14 +442,14 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                     onPressed:
                         () => _showSettleSplitDialog(split, currentUserId),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF008080)),
+                      side: const BorderSide(color: Color(0xFF0F766E)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     child: const Text(
                       'Settle Partial',
-                      style: TextStyle(color: Color(0xFF008080)),
+                      style: TextStyle(color: Color(0xFF0F766E)),
                     ),
                   ),
                 ),
@@ -463,8 +459,6 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                     onPressed:
                         () => _settleFullSplitAmount(split, currentUserId),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF008080),
-                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -528,8 +522,6 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                 _settleSplitAmount(split);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF008080),
-                foregroundColor: Colors.white,
               ),
               child: const Text('Settle'),
             ),
@@ -634,25 +626,25 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
               ),
               child: Column(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.account_balance_wallet,
-                    color: Colors.grey,
+                    color: context.colors.faint,
                     size: 64,
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'No Outstanding Amounts',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                      color: context.colors.faint,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'No one owes you money from group splits',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(color: context.colors.muted, fontSize: 16),
                   ),
                 ],
               ),
@@ -663,7 +655,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF008080),
+                color: Color(0xFF0F766E),
               ),
             ),
             const SizedBox(height: 16),
@@ -735,7 +727,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                       ),
                       Text(
                         DateFormat('MMM d, y').format(split.createdAt),
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        style: TextStyle(color: context.colors.muted, fontSize: 12),
                       ),
                     ],
                   ),
@@ -753,7 +745,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                     ),
                     Text(
                       'owed to you',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      style: TextStyle(color: context.colors.muted, fontSize: 12),
                     ),
                   ],
                 ),
@@ -764,7 +756,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
               const SizedBox(height: 8),
               Text(
                 split.description,
-                style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                style: TextStyle(color: context.colors.muted, fontSize: 14),
               ),
             ],
 
@@ -776,7 +768,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
-                color: Color(0xFF008080),
+                color: Color(0xFF0F766E),
               ),
             ),
             const SizedBox(height: 8),
@@ -794,9 +786,9 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: context.colors.surfaceSunken,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[200]!),
+                  border: Border.all(color: context.colors.surfaceSunken),
                 ),
                 child: Row(
                   children: [
@@ -827,7 +819,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                           Text(
                             'Paid: ₹${settledByParticipant.toInt()} / ₹${totalOwedByParticipant.toInt()}',
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              color: context.colors.muted,
                               fontSize: 12,
                             ),
                           ),
@@ -848,7 +840,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                         Text(
                           'remaining',
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: context.colors.muted,
                             fontSize: 10,
                           ),
                         ),
@@ -922,14 +914,14 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                             border: Border.all(
                               color:
                                   selectedParticipants[participantId]!
-                                      ? const Color(0xFF008080)
-                                      : Colors.grey[300]!,
+                                      ? const Color(0xFF0F766E)
+                                      : context.colors.cardBorder,
                             ),
                             borderRadius: BorderRadius.circular(8),
                             color:
                                 selectedParticipants[participantId]!
                                     ? const Color(
-                                      0xFF008080,
+                                      0xFF0F766E,
                                     ).withValues(alpha: 0.1)
                                     : null,
                           ),
@@ -945,7 +937,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                                             value ?? false;
                                       });
                                     },
-                                    activeColor: const Color(0xFF008080),
+                                    activeColor: const Color(0xFF0F766E),
                                   ),
                                   Expanded(
                                     child: Column(
@@ -961,7 +953,7 @@ class _GroupSettleScreenState extends State<GroupSettleScreen>
                                         Text(
                                           'Owes: ₹${owedAmount.toInt()}',
                                           style: TextStyle(
-                                            color: Colors.grey[600],
+                                            color: context.colors.muted,
                                             fontSize: 12,
                                           ),
                                         ),

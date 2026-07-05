@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../models/group_model.dart';
@@ -103,7 +104,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Group created successfully!'),
-            backgroundColor: Color(0xFF008080),
+            backgroundColor: Color(0xFF0F766E),
           ),
         );
       }
@@ -128,13 +129,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Group'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
       ),
       body:
           _isLoading
               ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF008080)),
+                child: CircularProgressIndicator(),
               )
               : Form(
                 key: _formKey,
@@ -200,13 +199,13 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF008080),
+                          color: Color(0xFF0F766E),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Select friends to add to this group',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: 14, color: context.colors.muted),
                       ),
                       const SizedBox(height: 16),
 
@@ -214,7 +213,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
+                            color: context.colors.surfaceSunken,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
@@ -222,7 +221,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                               Icon(
                                 Icons.person_add,
                                 size: 48,
-                                color: Colors.grey[400],
+                                color: context.colors.faint,
                               ),
                               const SizedBox(height: 16),
                               const Text(
@@ -236,7 +235,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                               Text(
                                 'Add friends from the profile section to create groups with them.',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.grey[600]),
+                                style: TextStyle(color: context.colors.muted),
                               ),
                             ],
                           ),
@@ -251,7 +250,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                                 margin: const EdgeInsets.only(bottom: 16),
                                 decoration: BoxDecoration(
                                   color: const Color(
-                                    0xFF008080,
+                                    0xFF0F766E,
                                   ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -259,14 +258,14 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                                   children: [
                                     const Icon(
                                       Icons.people,
-                                      color: Color(0xFF008080),
+                                      color: Color(0xFF0F766E),
                                       size: 20,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       '${_selectedFriendIds.length} member${_selectedFriendIds.length != 1 ? 's' : ''} selected',
                                       style: const TextStyle(
-                                        color: Color(0xFF008080),
+                                        color: Color(0xFF0F766E),
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -292,7 +291,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                                     side: BorderSide(
                                       color:
                                           isSelected
-                                              ? const Color(0xFF008080)
+                                              ? const Color(0xFF0F766E)
                                               : Colors.transparent,
                                       width: 2,
                                     ),
@@ -312,7 +311,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                                                 friend.photoURL != null
                                                     ? Colors.transparent
                                                     : const Color(
-                                                      0xFF008080,
+                                                      0xFF0F766E,
                                                     ).withValues(alpha: 0.1),
                                             backgroundImage:
                                                 friend.photoURL != null
@@ -332,7 +331,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                                                           : '?',
                                                       style: const TextStyle(
                                                         color: Color(
-                                                          0xFF008080,
+                                                          0xFF0F766E,
                                                         ),
                                                         fontWeight:
                                                             FontWeight.bold,
@@ -358,7 +357,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                                                 Text(
                                                   friend.email,
                                                   style: TextStyle(
-                                                    color: Colors.grey[600],
+                                                    color: context.colors.muted,
                                                     fontSize: 14,
                                                   ),
                                                 ),
@@ -372,7 +371,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                                                   friend.uid,
                                                 ),
                                             activeColor: const Color(
-                                              0xFF008080,
+                                              0xFF0F766E,
                                             ),
                                           ),
                                         ],
@@ -393,8 +392,6 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                         child: ElevatedButton(
                           onPressed: _createGroup,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF008080),
-                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),

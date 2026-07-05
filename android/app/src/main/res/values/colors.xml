@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Home-screen widget color tokens (light / default).
+
+    These mirror the Flutter design system in lib/theme/app_colors.dart so the
+    native widgets stay on-brand. Dark values live in values-night/colors.xml,
+    and values-v31 / values-night-v31 re-point the brand + surface tokens at the
+    Material You dynamic palette so widgets tint to the wallpaper on Android 12+.
+    Semantic progress colors (ok/warn/over) are intentionally NOT overridden in
+    the v31 folders — they carry meaning the wallpaper palette can't express.
+-->
+<resources>
+    <!-- Hero gradient (Net Worth / Quick Add / Overview header). -->
+    <color name="widget_bg_gradient_start">#FF0F766E</color>
+    <color name="widget_bg_gradient_end">#FF14B8A6</color>
+
+    <!-- Card surface (Month Spend / Budgets). -->
+    <color name="widget_surface">#FFFFFFFF</color>
+    <color name="widget_border">#FFE6EAF0</color>
+
+    <!-- Text on the teal gradient. -->
+    <color name="widget_on_brand">#FFFFFFFF</color>
+    <color name="widget_on_brand_muted">#E6FFFFFF</color>
+    <color name="widget_on_brand_faint">#99FFFFFF</color>
+
+    <!-- Brand accent used for headline figures on card surfaces. -->
+    <color name="widget_brand">#FF0F766E</color>
+
+    <!-- Text on card surfaces. -->
+    <color name="widget_text_primary">#FF1A2233</color>
+    <color name="widget_text_muted">#FF5B6472</color>
+    <color name="widget_text_faint">#FF98A2B3</color>
+
+    <!-- Progress track + translucent button fill. -->
+    <color name="widget_track">#FFEEF1F5</color>
+    <color name="widget_btn_bg">#33FFFFFF</color>
+    <color name="widget_btn_ripple">#40FFFFFF</color>
+
+    <!-- Semantic budget-progress states (green / amber / red). -->
+    <color name="widget_progress_ok">#FF16A34A</color>
+    <color name="widget_progress_warn">#FFD97706</color>
+    <color name="widget_progress_over">#FFE11D48</color>
+</resources>

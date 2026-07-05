@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../models/expense_model.dart';
@@ -67,7 +68,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
           content: Text(
             'Budget for ${category.toString().split('.').last.toUpperCase()} updated',
           ),
-          backgroundColor: const Color(0xFF008080),
+          backgroundColor: const Color(0xFF0F766E),
         ),
       );
     } catch (e) {
@@ -85,14 +86,12 @@ class _BudgetScreenState extends State<BudgetScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Budget Management'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
       ),
       body: Consumer2<BudgetService, ExpenseService>(
         builder: (context, budgetService, expenseService, child) {
           if (budgetService.isLoading) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF008080)),
+              child: CircularProgressIndicator(),
             );
           }
 
@@ -102,7 +101,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
 
           return RefreshIndicator(
             onRefresh: _loadBudgets,
-            color: const Color(0xFF008080),
+            color: const Color(0xFF0F766E),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -114,7 +113,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF008080), Color(0xFF20B2AA)],
+                        colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -194,7 +193,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF008080),
+                      color: Color(0xFF0F766E),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -220,7 +219,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                         currentSpending >= budgetAmount * 0.8) {
                       progressColor = Colors.orange;
                     } else {
-                      progressColor = const Color(0xFF008080);
+                      progressColor = const Color(0xFF0F766E);
                     }
 
                     return _buildBudgetCard(
@@ -252,13 +251,11 @@ class _BudgetScreenState extends State<BudgetScreen> {
                         messenger.showSnackBar(
                           const SnackBar(
                             content: Text('All budgets updated successfully'),
-                            backgroundColor: Color(0xFF008080),
+                            backgroundColor: Color(0xFF0F766E),
                           ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF008080),
-                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -468,7 +465,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
                   value: usagePercentage / 100,
-                  backgroundColor: Colors.grey.shade200,
+                  backgroundColor: context.colors.surfaceSunken,
                   color: progressColor,
                   minHeight: 8,
                 ),
