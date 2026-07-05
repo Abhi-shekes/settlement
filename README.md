@@ -286,18 +286,6 @@ Unit tests cover the pure business logic:
 
 ---
 
-## Roadmap & known limitations
-
-- **`applicationId`** is still the template `com.example.settlement`; change it
-  (and re‑register in Firebase) before shipping.
-- **`firebase_options.dart`** is not yet generated — run `flutterfire configure`
-  and switch `Firebase.initializeApp` to use `DefaultFirebaseOptions`.
-- **iOS push** needs the APNs key + Xcode capability described above.
-- Notification taps do not yet deep‑link into the Requests inbox (the payload
-  carries a `type` + id to make this straightforward to add).
-
----
-
 ## License
 
 Proprietary — all rights reserved (update as appropriate).
