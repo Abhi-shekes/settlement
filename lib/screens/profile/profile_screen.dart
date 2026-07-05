@@ -18,7 +18,7 @@ import '../../widgets/section_header.dart';
 import 'friends_screen.dart';
 import '../accounts/accounts_screen.dart';
 import '../recurring/recurring_screen.dart';
-import '../import/scan_messages_screen.dart';
+
 import '../ai/ai_assistant_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -156,19 +156,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         },
                       ),
 
-                      _buildMenuItem(
-                        icon: Icons.mark_email_read,
-                        title: 'Import from Messages',
-                        subtitle: 'Scan SMS or paste a bank message',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ScanMessagesScreen(),
-                            ),
-                          );
-                        },
-                      ),
+
 
                       _buildMenuItem(
                         icon: Icons.autorenew,
