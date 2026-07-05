@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../models/split_model.dart';
@@ -184,7 +185,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Split created successfully!'),
-            backgroundColor: Color(0xFF008080),
+            backgroundColor: Color(0xFF0F766E),
           ),
         );
       }
@@ -209,13 +210,11 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Split a Bill'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
       ),
       body:
           _isLoading
               ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF008080)),
+                child: CircularProgressIndicator(),
               )
               : Form(
                 key: _formKey,
@@ -286,7 +285,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF008080),
+                          color: Color(0xFF0F766E),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -319,7 +318,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF008080),
+                          color: Color(0xFF0F766E),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -327,7 +326,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
+                            color: context.colors.surfaceSunken,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Center(
@@ -355,7 +354,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                                 side: BorderSide(
                                   color:
                                       isSelected
-                                          ? const Color(0xFF008080)
+                                          ? const Color(0xFF0F766E)
                                           : Colors.transparent,
                                   width: 2,
                                 ),
@@ -370,7 +369,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                                       CircleAvatar(
                                         radius: 20,
                                         backgroundColor: const Color(
-                                          0xFF008080,
+                                          0xFF0F766E,
                                         ).withValues(alpha: 0.1),
                                         child: Text(
                                           friend.displayName.isNotEmpty
@@ -378,7 +377,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                                                   .toUpperCase()
                                               : '?',
                                           style: const TextStyle(
-                                            color: Color(0xFF008080),
+                                            color: Color(0xFF0F766E),
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -399,7 +398,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                                             Text(
                                               friend.email,
                                               style: TextStyle(
-                                                color: Colors.grey[600],
+                                                color: context.colors.muted,
                                                 fontSize: 14,
                                               ),
                                             ),
@@ -412,7 +411,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                                             (_) => _toggleFriendSelection(
                                               friend.uid,
                                             ),
-                                        activeColor: const Color(0xFF008080),
+                                        activeColor: const Color(0xFF0F766E),
                                       ),
                                       if (isSelected &&
                                           _splitType == SplitType.unequal)
@@ -459,10 +458,10 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: const Color(
-                              0xFF008080,
+                              0xFF0F766E,
                             ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFF008080)),
+                            border: Border.all(color: const Color(0xFF0F766E)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -472,7 +471,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF008080),
+                                  color: Color(0xFF0F766E),
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -480,7 +479,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                                 children: [
                                   CircleAvatar(
                                     radius: 20,
-                                    backgroundColor: const Color(0xFF008080),
+                                    backgroundColor: const Color(0xFF0F766E),
                                     child: const Icon(
                                       Icons.person,
                                       color: Colors.white,
@@ -553,8 +552,6 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                         child: ElevatedButton(
                           onPressed: _saveSplit,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF008080),
-                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -598,11 +595,11 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
         decoration: BoxDecoration(
           color:
               isSelected
-                  ? const Color(0xFF008080).withValues(alpha: 0.1)
-                  : Colors.white,
+                  ? context.colors.brand.withValues(alpha: 0.1)
+                  : context.colors.surfaceElevated,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF008080) : Colors.grey[300]!,
+            color: isSelected ? context.colors.brand : context.colors.cardBorder,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -610,7 +607,7 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? const Color(0xFF008080) : Colors.grey[600],
+              color: isSelected ? context.colors.brand : context.colors.muted,
               size: 32,
             ),
             const SizedBox(height: 8),
@@ -618,13 +615,13 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
               title,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: isSelected ? const Color(0xFF008080) : Colors.black,
+                color: isSelected ? context.colors.brand : context.colors.muted,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               description,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 12, color: context.colors.muted),
               textAlign: TextAlign.center,
             ),
           ],

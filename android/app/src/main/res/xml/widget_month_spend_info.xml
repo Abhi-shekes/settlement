@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- description / previewLayout / maxResize* / targetCell* apply on Android 12+
+     and are safely ignored on older versions. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_month_spend_desc"
     android:minWidth="180dp"
     android:minHeight="110dp"
+    android:minResizeWidth="140dp"
+    android:minResizeHeight="100dp"
+    android:maxResizeWidth="320dp"
+    android:maxResizeHeight="220dp"
     android:targetCellWidth="2"
     android:targetCellHeight="1"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_month_spend"
+    android:previewLayout="@layout/widget_month_spend"
     android:previewImage="@mipmap/ic_launcher"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen" />

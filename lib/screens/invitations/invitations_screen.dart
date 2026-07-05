@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:settlement/models/group_invitation_model.dart';
@@ -41,13 +42,8 @@ class _InvitationsScreenState extends State<InvitationsScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Invitations'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
           tabs: const [Tab(text: 'Received'), Tab(text: 'Sent')],
         ),
       ),
@@ -65,7 +61,7 @@ class _InvitationsScreenState extends State<InvitationsScreen>
 
         if (invitationService.isLoading) {
           return const Center(
-            child: CircularProgressIndicator(color: Color(0xFF008080)),
+            child: CircularProgressIndicator(),
           );
         }
 
@@ -74,20 +70,20 @@ class _InvitationsScreenState extends State<InvitationsScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.mail_outline, size: 80, color: Colors.grey[400]),
+                Icon(Icons.mail_outline, size: 80, color: context.colors.faint),
                 const SizedBox(height: 16),
                 Text(
                   'No invitations received',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[700],
+                    color: context.colors.muted,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Group invitations will appear here',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 16, color: context.colors.muted),
                 ),
               ],
             ),
@@ -96,7 +92,7 @@ class _InvitationsScreenState extends State<InvitationsScreen>
 
         return RefreshIndicator(
           onRefresh: _loadInvitations,
-          color: const Color(0xFF008080),
+          color: const Color(0xFF0F766E),
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: receivedInvitations.length,
@@ -120,20 +116,20 @@ class _InvitationsScreenState extends State<InvitationsScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.send, size: 80, color: Colors.grey[400]),
+                Icon(Icons.send, size: 80, color: context.colors.faint),
                 const SizedBox(height: 16),
                 Text(
                   'No invitations sent',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[700],
+                    color: context.colors.muted,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Invitations you send will appear here',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 16, color: context.colors.muted),
                 ),
               ],
             ),
@@ -166,12 +162,12 @@ class _InvitationsScreenState extends State<InvitationsScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF008080).withValues(alpha: 0.1),
+                    color: const Color(0xFF0F766E).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
                     Icons.group,
-                    color: Color(0xFF008080),
+                    color: Color(0xFF0F766E),
                     size: 20,
                   ),
                 ),
@@ -189,7 +185,7 @@ class _InvitationsScreenState extends State<InvitationsScreen>
                       ),
                       Text(
                         'Invited by ${invitation.invitedByName}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        style: TextStyle(color: context.colors.muted, fontSize: 14),
                       ),
                     ],
                   ),
@@ -220,7 +216,7 @@ class _InvitationsScreenState extends State<InvitationsScreen>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: context.colors.surfaceSunken,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -237,7 +233,7 @@ class _InvitationsScreenState extends State<InvitationsScreen>
               children: [
                 Text(
                   'Expires: ${DateFormat('MMM d, y').format(invitation.expiresAt)}',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  style: TextStyle(color: context.colors.muted, fontSize: 12),
                 ),
                 const Spacer(),
                 TextButton(
@@ -249,8 +245,6 @@ class _InvitationsScreenState extends State<InvitationsScreen>
                 ElevatedButton(
                   onPressed: () => _acceptInvitation(invitation.id),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF008080),
-                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -279,12 +273,12 @@ class _InvitationsScreenState extends State<InvitationsScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF008080).withValues(alpha: 0.1),
+                    color: const Color(0xFF0F766E).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
                     Icons.group,
-                    color: Color(0xFF008080),
+                    color: Color(0xFF0F766E),
                     size: 20,
                   ),
                 ),
@@ -302,7 +296,7 @@ class _InvitationsScreenState extends State<InvitationsScreen>
                       ),
                       Text(
                         'Sent to ${invitation.inviteeEmail}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        style: TextStyle(color: context.colors.muted, fontSize: 14),
                       ),
                     ],
                   ),
@@ -334,7 +328,7 @@ class _InvitationsScreenState extends State<InvitationsScreen>
               children: [
                 Text(
                   'Sent: ${DateFormat('MMM d, y').format(invitation.createdAt)}',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  style: TextStyle(color: context.colors.muted, fontSize: 12),
                 ),
                 const Spacer(),
                 if (invitation.status == InvitationStatus.pending)
@@ -371,7 +365,7 @@ class _InvitationsScreenState extends State<InvitationsScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Invitation accepted! You\'ve joined the group.'),
-            backgroundColor: Color(0xFF008080),
+            backgroundColor: Color(0xFF0F766E),
           ),
         );
       }

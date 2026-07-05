@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Brand pill with press feedback. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/widget_btn_ripple">
+    <item android:drawable="@drawable/widget_btn_brand" />
+</ripple>

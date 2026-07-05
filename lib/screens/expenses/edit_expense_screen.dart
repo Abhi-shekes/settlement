@@ -72,7 +72,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Expense updated successfully!'),
-            backgroundColor: Color(0xFF008080),
+            backgroundColor: Color(0xFF0F766E),
           ),
         );
       }
@@ -81,7 +81,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error updating expense: $e'),
-            backgroundColor: const Color(0xFFFF7F50),
+            backgroundColor: const Color(0xFFF97316),
           ),
         );
       }
@@ -93,8 +93,6 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Expense'),
-        backgroundColor: const Color(0xFF008080),
-        foregroundColor: Colors.white,
       ),
       body: Form(
         key: _formKey,
@@ -237,8 +235,6 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                 child: ElevatedButton(
                   onPressed: _updateExpense,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF008080),
-                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: const Text(
