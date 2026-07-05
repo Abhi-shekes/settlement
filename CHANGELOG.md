@@ -7,6 +7,14 @@ is generated automatically from [Conventional Commits](https://www.conventionalc
 by [release-please](https://github.com/googleapis/release-please). **Do not edit
 entries below by hand** — write good commit messages instead.
 
+## [1.1.2](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.1.1...settlement-v1.1.2) (2026-07-05)
+
+
+### Documentation
+
+* update README ([386ccc9](https://github.com/Abhi-shekes/settlement/commit/386ccc9e24f33ff9e02144485e821ffbbbcb029c))
+* update README ([3cc7a3b](https://github.com/Abhi-shekes/settlement/commit/3cc7a3b010d7174d48289638f38a063187c82f99))
+
 ## [1.1.1](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.1.0...settlement-v1.1.1) (2026-07-04)
 
 
