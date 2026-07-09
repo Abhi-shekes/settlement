@@ -10,6 +10,7 @@ import '../../services/group_service.dart';
 import '../../services/budget_service.dart';
 import '../../services/invitation_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/notification_center_service.dart';
 import '../../services/theme_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -18,6 +19,7 @@ import '../../widgets/section_header.dart';
 import 'friends_screen.dart';
 import '../accounts/accounts_screen.dart';
 import '../recurring/recurring_screen.dart';
+import 'notification_settings_screen.dart';
 
 import '../ai/ai_assistant_screen.dart';
 
@@ -76,6 +78,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   context.read<GroupService>().reset();
                   context.read<BudgetService>().reset();
                   context.read<InvitationService>().reset();
+                  context.read<NotificationCenterService>().stop();
                   final authService = context.read<AuthService>();
                   final uid = authService.currentUser?.uid;
                   if (uid != null) {
@@ -186,18 +189,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         },
                       ),
 
+                      _buildMenuItem(
+                        icon: Icons.notifications_active_outlined,
+                        title: 'Notifications',
+                        subtitle: 'Choose what you get notified about',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const NotificationSettingsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
                       const SizedBox(height: AppSpacing.lg),
                       const SectionHeader('Appearance'),
                       const SizedBox(height: AppSpacing.sm),
                       _buildThemeSelector(),
 
                       // _buildMenuItem(
-                      //   icon: Icons.notifications,
-                      //   title: 'Notifications',
-                      //   subtitle: 'Manage notification preferences',
+                      //   icon: Icons.security,
+                      //   title: 'Privacy & Security',
+                      //   subtitle: 'Manage your privacy settings',
                       //   onTap: () {
                       //     ScaffoldMessenger.of(context).showSnackBar(
-                      //       const SnackBar(content: Text('Notifications feature coming soon!')),
+                      //       const SnackBar(content: Text('Privacy settings feature coming soon!')),
                       //     );
                       //   },
                       // ),

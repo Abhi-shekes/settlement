@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_ai/firebase_ai.dart';
-import 'package:intl/intl.dart';
 import '../models/expense_model.dart';
 
 /// A transaction drafted by the AI from a natural-language sentence, ready for
@@ -20,15 +19,35 @@ class ParsedExpenseDraft {
   });
 }
 
+/// One turn of the running conversation, sent back to the model so it has
+/// memory of what was said earlier in the chat.
+class AiChatTurn {
+  final bool isUser;
+  final String text;
+  const AiChatTurn({required this.isUser, required this.text});
+}
+
+/// The outcome of a single [AiService.chat] turn. [text] is the assistant's
+/// reply to show in the thread; [draft] is present when the user asked to log
+/// an expense, so the UI can offer a review-and-save card.
+class AiChatResult {
+  final String text;
+  final ParsedExpenseDraft? draft;
+  const AiChatResult({required this.text, this.draft});
+}
+
 /// AI features powered by Gemini through Firebase AI Logic (the Gemini Developer
 /// API backend — `FirebaseAI.googleAI()` — which has a no-billing free tier and
 /// reuses the app's existing Firebase project, so there's no API key to embed).
 ///
-/// Provides: category suggestion, natural-language expense entry, and spending
-/// insights. Uses `gemini-2.5-flash` for low latency and cost; structured
-/// features constrain the model to JSON via a response schema.
+/// The app talks to one conversational assistant through a single chat box
+/// (like ChatGPT/Gemini): [chat] answers questions, gives insights and advice,
+/// and logs expenses — deciding what to do from the message itself, using the
+/// `log_expense` tool when the user wants to record spending. [suggestCategory]
+/// remains a small structured helper used by the manual add-expense form.
 ///
-/// Requires "Firebase AI Logic" to be enabled once in the Firebase console.
+/// Uses `gemini-2.5-flash` for low latency and cost. Requires "Firebase AI
+/// Logic" to be enabled once in the Firebase console.
 class AiService extends ChangeNotifier {
   static const _modelName = 'gemini-2.5-flash';
 
@@ -39,8 +58,29 @@ class AiService extends ChangeNotifier {
       ExpenseCategory.values.map((c) => c.categoryDisplayName).toList();
 
   GenerativeModel? _categoryModel;
-  GenerativeModel? _parseModel;
-  GenerativeModel? _insightsModel;
+
+  static const _agentPersona =
+      'You are the built-in AI money assistant for "Settlement", a personal-'
+      'finance app for an Indian user. All amounts are in INR (₹).\n\n'
+      'You handle everything from a single chat box:\n'
+      '1. Answer questions about the user\'s money using ONLY the financial '
+      'context provided (their transactions, budgets and account balances). If '
+      "the answer isn't in the context, say you don't have that data rather "
+      'than guessing. Never invent numbers.\n'
+      '2. Give insights and advice when asked — spending patterns, unusual or '
+      'high spending, concrete ways to save, and beginner-friendly, general '
+      'investment ideas for any surplus (emergency fund, SIPs into index or '
+      'mutual funds, PPF, fixed deposits, NPS). Investment ideas are general '
+      'education, not personalised advice — add a one-line disclaimer when you '
+      'give them.\n'
+      '3. Log expenses: when the user says they spent, paid for or bought '
+      'something and wants it recorded, call the log_expense tool with the '
+      'details instead of only replying. Keep your reply to one short '
+      'confirming sentence — the app shows a review card for the user to '
+      'confirm and save.\n\n'
+      'Style: concise and friendly. Use short paragraphs or bullet points, and '
+      'show relevant totals. The current date and all figures are in the '
+      'context below.';
 
   GenerativeModel get _category =>
       _categoryModel ??= FirebaseAI.googleAI().generativeModel(
@@ -58,46 +98,27 @@ class AiService extends ChangeNotifier {
         ),
       );
 
-  GenerativeModel get _parse =>
-      _parseModel ??= FirebaseAI.googleAI().generativeModel(
-        model: _modelName,
-        systemInstruction: Content.text(
-          'You extract a single expense from a short natural-language sentence '
-          'for an Indian personal-finance app. Amounts are in INR (₹). Respond '
-          'only with the JSON schema.',
-        ),
-        generationConfig: GenerationConfig(
-          responseMimeType: 'application/json',
-          responseSchema: Schema.object(
-            properties: {
-              'title': Schema.string(
-                description: 'Short label for the expense, e.g. "Groceries".',
-              ),
-              'amount': Schema.number(description: 'Amount in rupees.'),
-              'category': Schema.enumString(enumValues: _categoryNames),
-              'date': Schema.string(
-                description:
-                    'ISO 8601 date (yyyy-MM-dd). Resolve relative words like '
-                    '"today"/"yesterday" against the provided current date.',
-                nullable: true,
-              ),
-            },
-            optionalProperties: ['date'],
-          ),
-        ),
-      );
-
-  GenerativeModel get _insights =>
-      _insightsModel ??= FirebaseAI.googleAI().generativeModel(
-        model: _modelName,
-        systemInstruction: Content.text(
-          'You are a friendly personal-finance assistant for an Indian user. '
-          'Amounts are in INR (₹). Given a spending summary, give brief, '
-          'practical insights: notable patterns, any unusual or high spending, '
-          'and 2-3 concrete ways to save. Use short paragraphs or bullet '
-          'points. Do not invent numbers beyond the summary.',
-        ),
-      );
+  FunctionDeclaration get _logExpenseFn => FunctionDeclaration(
+    'log_expense',
+    'Records a new expense in the user\'s tracker. Call this whenever the user '
+        'says they spent, paid for or bought something and wants it logged '
+        '(e.g. "spent ₹450 on groceries", "add ₹1200 dinner yesterday"). Do '
+        'NOT call it for questions about past spending.',
+    parameters: {
+      'title': Schema.string(
+        description: 'Short label for the expense, e.g. "Groceries", "Dinner".',
+      ),
+      'amount': Schema.number(description: 'Amount in rupees (INR).'),
+      'category': Schema.enumString(enumValues: _categoryNames),
+      'date': Schema.string(
+        description:
+            'ISO 8601 date (yyyy-MM-dd). Resolve relative words like '
+            '"today"/"yesterday" against the current date given in the context.',
+        nullable: true,
+      ),
+    },
+    optionalParameters: ['date'],
+  );
 
   void _setBusy(bool value) {
     _isBusy = value;
@@ -135,126 +156,93 @@ class AiService extends ChangeNotifier {
     }
   }
 
-  /// Parses a natural-language sentence like "Spent ₹450 on groceries today"
-  /// into a draft expense for review. Returns null if no amount could be found.
-  Future<ParsedExpenseDraft?> parseNaturalLanguage(String text) async {
-    if (text.trim().isEmpty) return null;
-    _setBusy(true);
-    try {
-      final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      final response = await _parse.generateContent([
-        Content.text('Current date: $today\nSentence: "$text"'),
-      ]);
-      final map = _decode(response.text);
-      if (map == null) return null;
-
-      final amount = (map['amount'] as num?)?.toDouble();
-      if (amount == null || amount <= 0) return null;
-
-      DateTime date = DateTime.now();
-      final dateStr = map['date'] as String?;
-      if (dateStr != null && dateStr.isNotEmpty) {
-        date = DateTime.tryParse(dateStr) ?? date;
-      }
-
-      return ParsedExpenseDraft(
-        title:
-            (map['title'] as String?)?.trim().isNotEmpty == true
-                ? (map['title'] as String).trim()
-                : 'Expense',
-        amount: amount,
-        category: _categoryFromName(map['category'] as String?),
-        date: date,
-      );
-    } catch (e) {
-      debugPrint('AI parseNaturalLanguage error: $e');
-      rethrow;
-    } finally {
-      _setBusy(false);
-    }
-  }
-
-  /// Generates free-text spending insights from a pre-built [summary].
-  Future<String> generateInsights(String summary) async {
-    _setBusy(true);
-    try {
-      final response = await _insights.generateContent([Content.text(summary)]);
-      return response.text?.trim() ??
-          'No insights available right now. Please try again.';
-    } catch (e) {
-      debugPrint('AI generateInsights error: $e');
-      rethrow;
-    } finally {
-      _setBusy(false);
-    }
-  }
-
-  /// Builds a Gemini model with a one-off [systemInstruction]. Used for the
-  /// advice and free-form Q&A features that each want their own persona.
-  GenerativeModel _textModel(String systemInstruction) =>
-      FirebaseAI.googleAI().generativeModel(
-        model: _modelName,
-        systemInstruction: Content.text(systemInstruction),
-      );
-
-  /// Saving or investment tips grounded in a pre-built spending [summary].
-  Future<String> generateTips(
-    String summary, {
-    required bool investment,
+  /// The single entry point for the assistant chat. Sends the running [history]
+  /// plus the new [message] to Gemini, primed with the user's financial
+  /// [context]. Returns the assistant's reply, and — when the user asked to log
+  /// spending — a [ParsedExpenseDraft] for the UI to review and save.
+  Future<AiChatResult> chat({
+    required String message,
+    required String context,
+    List<AiChatTurn> history = const [],
   }) async {
     _setBusy(true);
     try {
-      final model = _textModel(
-        investment
-            ? 'You are a cautious financial-education assistant for an Indian '
-                'user. Amounts are in INR (₹). From their spending/savings '
-                'summary, suggest general, beginner-friendly ways to put any '
-                'surplus to work — e.g. an emergency fund, SIPs into index or '
-                'mutual funds, PPF, fixed deposits, or NPS — and briefly say '
-                'why each fits. This is general education, not personalised '
-                'financial advice: end with a one-line disclaimer. Use short '
-                'bullet points. Do not invent numbers beyond the summary.'
-            : 'You are a friendly personal-finance assistant for an Indian '
-                'user. Amounts are in INR (₹). From their spending summary, '
-                'give 4-6 concrete, practical ways to save money that '
-                'reference their actual spending categories. Use short bullet '
-                'points. Do not invent numbers beyond the summary.',
+      final model = FirebaseAI.googleAI().generativeModel(
+        model: _modelName,
+        systemInstruction: Content.system(
+          '$_agentPersona\n\nFinancial context (use only this for facts and '
+          'figures):\n$context',
+        ),
+        tools: [
+          Tool.functionDeclarations([_logExpenseFn]),
+        ],
       );
-      final response = await model.generateContent([Content.text(summary)]);
-      return response.text?.trim() ??
-          'No tips available right now. Please try again.';
+
+      final contents = <Content>[
+        for (final turn in history)
+          if (turn.isUser)
+            Content.text(turn.text)
+          else
+            Content.model([TextPart(turn.text)]),
+        Content.text(message),
+      ];
+
+      final response = await model.generateContent(contents);
+
+      FunctionCall? logCall;
+      for (final call in response.functionCalls) {
+        if (call.name == 'log_expense') {
+          logCall = call;
+          break;
+        }
+      }
+
+      if (logCall != null) {
+        final draft = _draftFromArgs(logCall.args);
+        final reply = response.text?.trim();
+        return AiChatResult(
+          text:
+              (reply != null && reply.isNotEmpty)
+                  ? reply
+                  : (draft != null
+                      ? "Here's the expense I picked up — review and save it below."
+                      : "I couldn't catch the amount. Try including how much you spent."),
+          draft: draft,
+        );
+      }
+
+      final reply = response.text?.trim();
+      return AiChatResult(
+        text:
+            (reply != null && reply.isNotEmpty)
+                ? reply
+                : "I couldn't work that out. Please try rephrasing.",
+      );
     } catch (e) {
-      debugPrint('AI generateTips error: $e');
+      debugPrint('AI chat error: $e');
       rethrow;
     } finally {
       _setBusy(false);
     }
   }
 
-  /// Answers a free-form [question] using only the provided financial
-  /// [context] (recent transactions, budgets, account balances).
-  Future<String> answerQuery(String question, String context) async {
-    _setBusy(true);
-    try {
-      final model = _textModel(
-        'You are a helpful personal-finance assistant for an Indian user. '
-        'Amounts are in INR (₹). Answer the question using ONLY the provided '
-        'financial context (their transactions, budgets and accounts). If the '
-        "answer isn't in the context, say you don't have that data rather than "
-        'guessing. Be concise — use short paragraphs or bullet points, and '
-        'show relevant totals. Do not invent numbers.',
-      );
-      final response = await model.generateContent([
-        Content.text('Financial context:\n$context\n\nQuestion: $question'),
-      ]);
-      return response.text?.trim() ??
-          "I couldn't work that out. Please try rephrasing.";
-    } catch (e) {
-      debugPrint('AI answerQuery error: $e');
-      rethrow;
-    } finally {
-      _setBusy(false);
+  ParsedExpenseDraft? _draftFromArgs(Map<String, Object?> args) {
+    final amount = (args['amount'] as num?)?.toDouble();
+    if (amount == null || amount <= 0) return null;
+
+    DateTime date = DateTime.now();
+    final dateStr = args['date'] as String?;
+    if (dateStr != null && dateStr.isNotEmpty) {
+      date = DateTime.tryParse(dateStr) ?? date;
     }
+
+    final title = (args['title'] as String?)?.trim();
+    return ParsedExpenseDraft(
+      title: (title != null && title.isNotEmpty) ? title : 'Expense',
+      amount: amount,
+      category: _categoryFromName(args['category'] as String?),
+      date: date,
+    );
   }
 
   Map<String, dynamic>? _decode(String? text) {
