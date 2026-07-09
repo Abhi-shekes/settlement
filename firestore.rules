@@ -41,6 +41,19 @@ service cloud.firestore {
         onlyChanges(['groups'])
       );
       allow delete: if false;
+
+      // In-app notification history. On the Spark plan there is no Cloud
+      // Functions server, so the acting client writes notifications directly to
+      // the recipient — any signed-in user may create an (unread) notification
+      // for another user (friend requests, split approvals, group activity…).
+      // Only the owner may read, mark read, or delete their own notifications.
+      match /notifications/{notifId} {
+        allow create: if isSignedIn() &&
+          request.resource.data.read == false &&
+          request.resource.data.title is string &&
+          request.resource.data.category is string;
+        allow read, update, delete: if isSignedIn() && request.auth.uid == userId;
+      }
     }
 
     // Groups — readable by any signed-in user so a pending invitee can load the

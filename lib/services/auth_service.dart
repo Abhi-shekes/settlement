@@ -6,6 +6,8 @@ import 'package:uuid/uuid.dart';
 import 'dart:math';
 import '../models/user_model.dart';
 import '../models/friend_request_model.dart';
+import '../models/app_notification.dart';
+import 'notification_emitter.dart';
 
 class AuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -225,6 +227,16 @@ class AuthService extends ChangeNotifier {
         .doc(request.id)
         .set(request.toMap());
 
+    // Notify the recipient (client-side; no Cloud Functions on the Spark plan).
+    NotificationEmitter.send(
+      target.uid,
+      type: 'friend_request',
+      category: NotificationCategory.requests,
+      title: 'New friend request',
+      body: '${request.fromName} wants to be your friend',
+      data: {'requestId': request.id},
+    );
+
     _outgoingFriendRequests = [request, ..._outgoingFriendRequests];
     notifyListeners();
   }
@@ -283,6 +295,15 @@ class AuthService extends ChangeNotifier {
       await _firestore.collection('users').doc(request.fromUserId).update({
         'friends': FieldValue.arrayUnion([currentUser!.uid]),
       });
+
+      // Tell the original requester their request was accepted.
+      NotificationEmitter.send(
+        request.fromUserId,
+        type: 'friend_accepted',
+        category: NotificationCategory.requests,
+        title: 'Friend request accepted',
+        body: '${request.toName} accepted your friend request',
+      );
 
       _incomingFriendRequests.removeWhere((r) => r.id == request.id);
       notifyListeners();
