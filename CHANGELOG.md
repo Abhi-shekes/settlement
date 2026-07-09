@@ -7,6 +7,15 @@ is generated automatically from [Conventional Commits](https://www.conventionalc
 by [release-please](https://github.com/googleapis/release-please). **Do not edit
 entries below by hand** — write good commit messages instead.
 
+## [1.2.1](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.2.0...settlement-v1.2.1) (2026-07-09)
+
+
+### Bug Fixes
+
+* **auth:** show a network-aware sign-in error message ([1c044f0](https://github.com/Abhi-shekes/settlement/commit/1c044f0aea4f167af7d444b299ba6de5954e038e))
+* home unmount crash and clearer sign-in error ([e6f4066](https://github.com/Abhi-shekes/settlement/commit/e6f40664de55a13a181ec0acb67a0e9be24ea4cb))
+* **home:** detach provider listeners without context.read in dispose ([d55fc11](https://github.com/Abhi-shekes/settlement/commit/d55fc11166cfb5f48847e9ed852a8de1a53e7890))
+
 ## [1.2.0](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.1.4...settlement-v1.2.0) (2026-07-09)
 
 
