@@ -9,6 +9,7 @@ import '../../services/budget_service.dart';
 import '../../services/group_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/notification_center_service.dart';
 import '../../services/home_widget_service.dart';
 import 'dashboard_screen.dart';
 import '../expenses/expenses_screen.dart';
@@ -60,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final recurringService = context.read<RecurringService>();
       final budgetService = context.read<BudgetService>();
       final groupService = context.read<GroupService>();
+      final notificationCenter = context.read<NotificationCenterService>();
       final uid = context.read<AuthService>().currentUser?.uid;
 
       // Load accounts and expenses first, then materialise any due recurring
@@ -82,8 +84,14 @@ class _HomeScreenState extends State<HomeScreen> {
         budgetService.addListener(_pushWidgets);
       }
 
-      // Register this device for push notifications now that we're signed in.
-      if (uid != null) NotificationService.instance.registerDevice(uid);
+      // Register this device for push notifications now that we're signed in,
+      // start streaming the notification centre, and route any tap that
+      // cold-started the app.
+      if (uid != null) {
+        NotificationService.instance.registerDevice(uid);
+        notificationCenter.start(uid);
+        NotificationService.instance.routePendingInitialMessage();
+      }
     });
   }
 
