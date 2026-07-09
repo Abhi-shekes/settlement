@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/group_model.dart';
 import '../models/split_model.dart';
 import '../models/expense_model.dart';
+import '../models/app_notification.dart';
+import 'notification_emitter.dart';
 
 /// A pending settlement paired with the split it belongs to, for the confirm
 /// inbox.
@@ -25,6 +27,12 @@ class GroupService extends ChangeNotifier {
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  /// The signed-in user's display name, used in notification bodies such as
+  /// "Alex split ...".
+  String get _myName => _auth.currentUser?.displayName ?? 'Someone';
+
+  String _rupees(num n) => '₹${n.round()}';
 
   /// Clears cached data (e.g. on sign-out).
   void reset() {
@@ -154,6 +162,21 @@ class GroupService extends ChangeNotifier {
           .set(pendingSplit.toMap());
       _splits.add(pendingSplit);
 
+      // Ask each other participant to approve their share.
+      for (final p in pendingSplit.participants) {
+        if (p == pendingSplit.paidBy) continue;
+        NotificationEmitter.send(
+          p,
+          type: 'split_approval',
+          category: NotificationCategory.requests,
+          title: 'Approve your share',
+          body:
+              '$_myName split "${pendingSplit.title}" — your share is '
+              '${_rupees(pendingSplit.getAmountOwedBy(p))}',
+          data: {'splitId': pendingSplit.id},
+        );
+      }
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -242,6 +265,17 @@ class GroupService extends ChangeNotifier {
 
       if (result == null) return;
       _applyLocalSplitAndBalances(result);
+
+      final split = result['split'] as SplitModel;
+      NotificationEmitter.send(
+        split.paidBy,
+        type: 'split_share_accepted',
+        category: NotificationCategory.requests,
+        title: 'Share approved',
+        body: '$_myName approved their share of "${split.title}"',
+        data: {'splitId': split.id},
+      );
+
       notifyListeners();
     } catch (e) {
       debugPrint('Error accepting split share: $e');
@@ -261,6 +295,15 @@ class GroupService extends ChangeNotifier {
       status[userId] = ParticipantStatus.declined;
 
       await splitRef.update({'participantStatus': status});
+
+      NotificationEmitter.send(
+        split.paidBy,
+        type: 'split_share_declined',
+        category: NotificationCategory.requests,
+        title: 'Share declined',
+        body: '$_myName declined their share of "${split.title}"',
+        data: {'splitId': split.id},
+      );
 
       final idx = _splits.indexWhere((s) => s.id == splitId);
       if (idx != -1) {
@@ -295,6 +338,20 @@ class GroupService extends ChangeNotifier {
       await splitRef.update({
         'settlements': updated.map((s) => s.toMap()).toList(),
       });
+
+      // Ask the counterparty to confirm the payment happened.
+      if (settlement.isPending) {
+        NotificationEmitter.send(
+          settlement.confirmerId,
+          type: 'settlement_confirm',
+          category: NotificationCategory.payments,
+          title: 'Confirm a payment',
+          body:
+              '$_myName recorded a payment of ${_rupees(settlement.amount)} '
+              'for "${split.title}"',
+          data: {'splitId': splitId, 'settlementId': settlement.id},
+        );
+      }
 
       final idx = _splits.indexWhere((s) => s.id == splitId);
       if (idx != -1) {
@@ -377,6 +434,37 @@ class GroupService extends ChangeNotifier {
 
       if (result == null) return;
       _applyLocalSplitAndBalances(result);
+
+      final split = result['split'] as SplitModel;
+      final sIdx = split.settlements.indexWhere((s) => s.id == settlementId);
+      if (sIdx != -1) {
+        final s = split.settlements[sIdx];
+        if (s.recordedBy != null) {
+          NotificationEmitter.send(
+            s.recordedBy!,
+            type: 'settlement_confirmed',
+            category: NotificationCategory.payments,
+            title: 'Payment confirmed',
+            body:
+                'Your ${_rupees(s.amount)} payment for "${split.title}" '
+                'was confirmed',
+            data: {'splitId': split.id},
+          );
+        }
+      }
+
+      // Congratulate everyone when the split has just cleared.
+      if (split.isFullySettled) {
+        NotificationEmitter.sendToAll(
+          split.participants,
+          type: 'split_settled',
+          category: NotificationCategory.payments,
+          title: 'All settled up',
+          body: '"${split.title}" is now fully settled 🎉',
+          data: {'splitId': split.id},
+        );
+      }
+
       notifyListeners();
     } catch (e) {
       debugPrint('Error confirming settlement: $e');
@@ -395,12 +483,26 @@ class GroupService extends ChangeNotifier {
       final sIdx = split.settlements.indexWhere((s) => s.id == settlementId);
       if (sIdx == -1) return;
 
+      final rejected = split.settlements[sIdx];
       final updated = List<SettlementModel>.from(split.settlements);
       updated[sIdx] = updated[sIdx].copyWith(status: SettlementStatus.rejected);
 
       await splitRef.update({
         'settlements': updated.map((s) => s.toMap()).toList(),
       });
+
+      if (rejected.recordedBy != null) {
+        NotificationEmitter.send(
+          rejected.recordedBy!,
+          type: 'settlement_rejected',
+          category: NotificationCategory.payments,
+          title: 'Payment rejected',
+          body:
+              'Your ${_rupees(rejected.amount)} payment for "${split.title}" '
+              'was rejected',
+          data: {'splitId': splitId},
+        );
+      }
 
       final idx = _splits.indexWhere((s) => s.id == splitId);
       if (idx != -1) {
@@ -601,6 +703,22 @@ class GroupService extends ChangeNotifier {
       await _firestore.collection('groups').doc(groupId).update({
         'expenseIds': FieldValue.arrayUnion([expense.id]),
       });
+
+      // Notify every other group member about the new shared expense.
+      final gi = _groups.indexWhere((g) => g.id == groupId);
+      if (gi != -1) {
+        final group = _groups[gi];
+        NotificationEmitter.sendToAll(
+          group.allMemberIds.where((m) => m != expense.userId),
+          type: 'group_expense',
+          category: NotificationCategory.groups,
+          title: group.name,
+          body:
+              '$_myName added "${expense.title}" '
+              '(${_rupees(expense.amount)}) to ${group.name}',
+          data: {'groupId': groupId, 'expenseId': expense.id},
+        );
+      }
 
       // Update local group
       final groupIndex = _groups.indexWhere((g) => g.id == groupId);
