@@ -45,6 +45,13 @@ class _HomeScreenState extends State<HomeScreen> {
   StreamSubscription<Uri?>? _widgetClickSub;
   bool _widgetListenersAttached = false;
 
+  // Captured provider references for the widget-sync listeners. Saved at attach
+  // time so dispose() can detach them without calling context.read (which is
+  // unsafe once the element is defunct during unmount).
+  ExpenseService? _expenseServiceRef;
+  AccountService? _accountServiceRef;
+  BudgetService? _budgetServiceRef;
+
   @override
   void initState() {
     super.initState();
@@ -79,6 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
       _pushWidgets();
       if (!_widgetListenersAttached) {
         _widgetListenersAttached = true;
+        _expenseServiceRef = expenseService;
+        _accountServiceRef = accountService;
+        _budgetServiceRef = budgetService;
         expenseService.addListener(_pushWidgets);
         accountService.addListener(_pushWidgets);
         budgetService.addListener(_pushWidgets);
@@ -147,12 +157,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _widgetClickSub?.cancel();
-    if (_widgetListenersAttached) {
-      // Providers outlive this screen; detach our listeners to avoid leaks.
-      context.read<ExpenseService>().removeListener(_pushWidgets);
-      context.read<AccountService>().removeListener(_pushWidgets);
-      context.read<BudgetService>().removeListener(_pushWidgets);
-    }
+    // Providers outlive this screen; detach our listeners to avoid leaks. Use
+    // the captured references, not context.read — the element is defunct during
+    // dispose, so a lookup would throw.
+    _expenseServiceRef?.removeListener(_pushWidgets);
+    _accountServiceRef?.removeListener(_pushWidgets);
+    _budgetServiceRef?.removeListener(_pushWidgets);
     super.dispose();
   }
 
