@@ -6,6 +6,7 @@ import '../../services/expense_service.dart';
 import '../../services/group_service.dart';
 import '../../services/budget_service.dart';
 import '../../services/invitation_service.dart';
+import '../../services/notification_center_service.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -22,6 +23,7 @@ import '../groups/create_group_screen.dart';
 import '../budgets/budget_screen.dart';
 import '../analytics/analytics_screen.dart';
 import '../requests/requests_screen.dart';
+import '../notifications/notifications_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -162,7 +164,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               builder: (context, auth, groups, invites, _) {
                 final count = pendingRequestCount(auth, groups, invites);
                 return _headerAction(
-                  icon: Icons.notifications_none_rounded,
+                  icon: Icons.checklist_rounded,
                   tooltip: 'Requests',
                   badgeCount: count,
                   onTap:
@@ -170,6 +172,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => const RequestsScreen(),
+                        ),
+                      ),
+                );
+              },
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Consumer<NotificationCenterService>(
+              builder: (context, center, _) {
+                return _headerAction(
+                  icon: Icons.notifications_none_rounded,
+                  tooltip: 'Notifications',
+                  badgeCount: center.unreadCount,
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationsScreen(),
                         ),
                       ),
                 );
@@ -397,10 +416,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionHeader('Quick actions'),
-        // The action tiles have their own top padding, so a smaller spacer here
-        // keeps the visual gap under the heading in line with the other
-        // sections (whose list tiles inset far less before their content).
-        const SizedBox(height: AppSpacing.xs),
+        // The action tiles carry a large (14px) internal top padding before
+        // their icon, so we use an extra-small spacer here. That lands the
+        // first icon at roughly the same distance below the heading as the
+        // other sections, keeping the vertical rhythm consistent.
+        const SizedBox(height: AppSpacing.xxs),
         GridView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),

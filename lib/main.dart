@@ -13,7 +13,9 @@ import 'services/recurring_service.dart';
 import 'services/ai_service.dart';
 import 'services/group_service.dart';
 import 'services/notification_service.dart';
+import 'services/notification_center_service.dart';
 import 'services/theme_service.dart';
+import 'utils/notification_router.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
@@ -75,11 +77,13 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BudgetService()),
         ChangeNotifierProvider(create: (_) => InvitationService()),
         ChangeNotifierProvider(create: (_) => AiService()),
+        ChangeNotifierProvider(create: (_) => NotificationCenterService()),
       ],
       child: Consumer<ThemeService>(
         builder: (context, theme, _) {
           return MaterialApp(
             title: 'Settlement',
+            navigatorKey: NotificationRouter.navigatorKey,
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,

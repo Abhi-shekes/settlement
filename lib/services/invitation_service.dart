@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:settlement/models/group_invitation_model.dart';
 import 'package:settlement/models/group_model.dart';
+import 'package:settlement/models/app_notification.dart';
+import 'package:settlement/services/notification_emitter.dart';
 import 'package:uuid/uuid.dart';
 
 class InvitationService extends ChangeNotifier {
@@ -55,6 +57,16 @@ class InvitationService extends ChangeNotifier {
           .collection('group_invitations')
           .doc(invitation.id)
           .set(invitation.toMap());
+
+      // Notify the invitee if they already have an account.
+      NotificationEmitter.sendToEmail(
+        invitation.inviteeEmail,
+        type: 'group_invite',
+        category: NotificationCategory.groups,
+        title: 'Group invitation',
+        body: '${invitation.invitedByName} invited you to "$groupName"',
+        data: {'groupId': groupId},
+      );
 
       _sentInvitations.add(invitation);
       _isLoading = false;
@@ -176,6 +188,17 @@ class InvitationService extends ChangeNotifier {
       await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
         'groups': FieldValue.arrayUnion([invitation.groupId]),
       });
+
+      // Tell the existing members that someone joined.
+      final joinerName = _auth.currentUser?.displayName ?? 'Someone';
+      NotificationEmitter.sendToAll(
+        group.allMemberIds,
+        type: 'group_member',
+        category: NotificationCategory.groups,
+        title: group.name,
+        body: '$joinerName joined "${group.name}"',
+        data: {'groupId': invitation.groupId},
+      );
 
       // Remove from received invitations
       _receivedInvitations.removeWhere((inv) => inv.id == invitationId);
