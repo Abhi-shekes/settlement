@@ -8,6 +8,8 @@ import '../../services/auth_service.dart';
 import '../../services/budget_service.dart';
 import '../../services/account_service.dart';
 import '../../services/ai_service.dart';
+import '../../services/notification_center_service.dart';
+import '../../models/app_notification.dart';
 import '../../widgets/budget_alert_dialog.dart';
 
 class AddExpenseScreen extends StatefulWidget {
@@ -102,6 +104,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final authService = context.read<AuthService>();
     final expenseService = context.read<ExpenseService>();
     final budgetService = context.read<BudgetService>();
+    final notificationCenter = context.read<NotificationCenterService>();
 
     if (authService.currentUser == null) return;
 
@@ -132,6 +135,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     try {
       // Save the expense
       await expenseService.addExpense(expense);
+
+      // Emit a budget notification (local push + history) whenever a threshold
+      // is crossed — the previously unused half of checkBudgetExceeded.
+      if (budgetCheck != null) {
+        _emitBudgetNotification(notificationCenter, budgetCheck);
+      }
 
       if (mounted) {
         // Show budget alert if needed
@@ -189,6 +198,40 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         );
       }
     }
+  }
+
+  /// Records a budget alert in the notification centre. The heads-up itself is
+  /// raised by NotificationCenterService's stream listener (respecting the
+  /// budgets preference), so we only write history here. Budget data is
+  /// private, so this is done client-side.
+  void _emitBudgetNotification(
+    NotificationCenterService center,
+    Map<String, dynamic> check,
+  ) {
+    final ExpenseCategory category = check['category'] as ExpenseCategory;
+    final name = category.categoryDisplayName;
+    final pct = (check['percentage'] as num).round();
+    final approaching = check['isApproaching'] == true;
+
+    final title =
+        approaching ? 'Approaching $name budget' : '$name budget exceeded';
+    final body = approaching
+        ? "You've used $pct% of your $name budget this month."
+        : "You've spent ₹${(check['newSpending'] as num).round()} — "
+            "₹${(check['exceededBy'] as num).round()} over your $name budget.";
+
+    center.addLocal(
+      AppNotification(
+        id: '',
+        type: 'budget',
+        category: NotificationCategory.budgets,
+        title: title,
+        body: body,
+        data: const {'type': 'budget', 'category': NotificationCategory.budgets},
+        read: false,
+        createdAt: DateTime.now(),
+      ),
+    );
   }
 
   @override
