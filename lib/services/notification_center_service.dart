@@ -51,15 +51,12 @@ class NotificationCenterService extends ChangeNotifier {
         .orderBy('createdAt', descending: true)
         .limit(_limit)
         .snapshots()
-        .listen(
-          (snap) {
-            _items = snap.docs.map(AppNotification.fromDoc).toList();
-            _raiseHeadsUpFor(snap);
-            _primed = true;
-            notifyListeners();
-          },
-          onError: (e) => debugPrint('notifications stream error: $e'),
-        );
+        .listen((snap) {
+          _items = snap.docs.map(AppNotification.fromDoc).toList();
+          _raiseHeadsUpFor(snap);
+          _primed = true;
+          notifyListeners();
+        }, onError: (e) => debugPrint('notifications stream error: $e'));
     loadPrefs();
   }
 

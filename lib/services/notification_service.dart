@@ -85,10 +85,11 @@ class NotificationService {
   }
 
   Future<void> _createChannels() async {
-    final android = _local
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
+    final android =
+        _local
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
     if (android == null) return;
     for (final entry in _channelNames.entries) {
       await android.createNotificationChannel(
@@ -129,7 +130,8 @@ class NotificationService {
     if ((title == null || title.isEmpty) && (body == null || body.isEmpty)) {
       return;
     }
-    final category = (data['category'] ?? NotificationCategory.system).toString();
+    final category =
+        (data['category'] ?? NotificationCategory.system).toString();
     showLocal(
       title: title ?? '',
       body: body ?? '',
@@ -148,7 +150,9 @@ class NotificationService {
     Map<String, dynamic> data = const {},
   }) async {
     final channelId =
-        _channelNames.containsKey(category) ? category : NotificationCategory.system;
+        _channelNames.containsKey(category)
+            ? category
+            : NotificationCategory.system;
     await _local.show(
       DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title,

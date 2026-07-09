@@ -159,8 +159,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         },
                       ),
 
-
-
                       _buildMenuItem(
                         icon: Icons.autorenew,
                         title: 'Recurring',
@@ -197,8 +195,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  const NotificationSettingsScreen(),
+                              builder:
+                                  (context) =>
+                                      const NotificationSettingsScreen(),
                             ),
                           );
                         },

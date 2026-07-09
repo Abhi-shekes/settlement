@@ -83,11 +83,12 @@ class NotificationEmitter {
   }) async {
     if (email.isEmpty) return;
     try {
-      final q = await _firestore
-          .collection('users')
-          .where('email', isEqualTo: email.toLowerCase())
-          .limit(1)
-          .get();
+      final q =
+          await _firestore
+              .collection('users')
+              .where('email', isEqualTo: email.toLowerCase())
+              .limit(1)
+              .get();
       if (q.docs.isEmpty) return; // invitee hasn't signed up yet
       await send(
         q.docs.first.id,
