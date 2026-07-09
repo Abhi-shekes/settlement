@@ -215,10 +215,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
     final title =
         approaching ? 'Approaching $name budget' : '$name budget exceeded';
-    final body = approaching
-        ? "You've used $pct% of your $name budget this month."
-        : "You've spent ₹${(check['newSpending'] as num).round()} — "
-            "₹${(check['exceededBy'] as num).round()} over your $name budget.";
+    final body =
+        approaching
+            ? "You've used $pct% of your $name budget this month."
+            : "You've spent ₹${(check['newSpending'] as num).round()} — "
+                "₹${(check['exceededBy'] as num).round()} over your $name budget.";
 
     center.addLocal(
       AppNotification(
@@ -227,7 +228,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         category: NotificationCategory.budgets,
         title: title,
         body: body,
-        data: const {'type': 'budget', 'category': NotificationCategory.budgets},
+        data: const {
+          'type': 'budget',
+          'category': NotificationCategory.budgets,
+        },
         read: false,
         createdAt: DateTime.now(),
       ),
