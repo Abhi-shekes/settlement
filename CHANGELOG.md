@@ -7,6 +7,14 @@ is generated automatically from [Conventional Commits](https://www.conventionalc
 by [release-please](https://github.com/googleapis/release-please). **Do not edit
 entries below by hand** — write good commit messages instead.
 
+## [1.2.2](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.2.1...settlement-v1.2.2) (2026-07-09)
+
+
+### Bug Fixes
+
+* **auth:** drop serverClientId that broke Google sign-in on release ([0e1b943](https://github.com/Abhi-shekes/settlement/commit/0e1b943bd68c6ac7d6adef169bf0e9142eb0bbc0))
+* restore Google sign-in on release builds ([0127b03](https://github.com/Abhi-shekes/settlement/commit/0127b0396bb52bdc95e863309826632bfc54baa7))
+
 ## [1.2.1](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.2.0...settlement-v1.2.1) (2026-07-09)
 
 
