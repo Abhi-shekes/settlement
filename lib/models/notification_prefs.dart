@@ -14,7 +14,10 @@ class NotificationPreferences {
   /// Per-category enablement, keyed by [NotificationCategory] constants.
   final Map<String, bool> categories;
 
-  const NotificationPreferences({this.master = true, this.categories = const {}});
+  const NotificationPreferences({
+    this.master = true,
+    this.categories = const {},
+  });
 
   /// All categories enabled — the default for a brand-new user.
   factory NotificationPreferences.defaults() => const NotificationPreferences();
@@ -43,7 +46,10 @@ class NotificationPreferences {
     };
   }
 
-  NotificationPreferences copyWith({bool? master, Map<String, bool>? categories}) {
+  NotificationPreferences copyWith({
+    bool? master,
+    Map<String, bool>? categories,
+  }) {
     return NotificationPreferences(
       master: master ?? this.master,
       categories: categories ?? this.categories,

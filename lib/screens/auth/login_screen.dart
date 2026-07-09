@@ -120,10 +120,23 @@ class LoginScreen extends StatelessWidget {
                                 try {
                                   await authService.signInWithGoogle();
                                 } catch (e) {
+                                  // The most common cause in the field is a
+                                  // flaky connection (Google/Firestore hosts
+                                  // fail to resolve), so call that out; keep a
+                                  // generic fallback for everything else.
+                                  final msg = e.toString().toLowerCase();
+                                  final isNetwork =
+                                      msg.contains('network') ||
+                                      msg.contains('unavailable') ||
+                                      msg.contains('resolve host') ||
+                                      msg.contains('timeout') ||
+                                      msg.contains('unknownhost');
                                   if (context.mounted) {
                                     AppSnackbar.error(
                                       context,
-                                      'Sign in failed. Please try again.',
+                                      isNetwork
+                                          ? 'Sign in failed — check your internet connection and try again.'
+                                          : 'Sign in failed. Please try again.',
                                     );
                                   }
                                 }
