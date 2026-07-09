@@ -7,6 +7,16 @@ is generated automatically from [Conventional Commits](https://www.conventionalc
 by [release-please](https://github.com/googleapis/release-please). **Do not edit
 entries below by hand** — write good commit messages instead.
 
+## [1.2.0](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.1.4...settlement-v1.2.0) (2026-07-09)
+
+
+### Features
+
+* **ai:** unify assistant into a single chat box ([a2fe855](https://github.com/Abhi-shekes/settlement/commit/a2fe855ccf44ce952980316c15e79883547d6b50))
+* notification added & ai at one input ([27a9d6c](https://github.com/Abhi-shekes/settlement/commit/27a9d6c6956b86cbd4ea3eac9fa1806605f0e627))
+* **notifications:** add in-app notification center ([795c35a](https://github.com/Abhi-shekes/settlement/commit/795c35a5a924d9b6e38858f462dae95bc57fbaec))
+* single bot for all ai job ([4bc40a7](https://github.com/Abhi-shekes/settlement/commit/4bc40a7b9c6dd4d26f503a10e8bc5ac347069fa1))
+
 ## [1.1.4](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.1.3...settlement-v1.1.4) (2026-07-05)
 
 
