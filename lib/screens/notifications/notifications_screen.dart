@@ -33,20 +33,22 @@ class NotificationsScreen extends StatelessWidget {
                 onSelected: (v) {
                   if (v == 'clear') _confirmClear(context, center);
                 },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'clear', child: Text('Clear all')),
-                ],
+                itemBuilder:
+                    (_) => const [
+                      PopupMenuItem(value: 'clear', child: Text('Clear all')),
+                    ],
               ),
           ],
-          body: items.isEmpty
-              ? const EmptyState(
-                  icon: Icons.notifications_none_rounded,
-                  title: 'No notifications yet',
-                  message:
-                      "Friend requests, split approvals, payments and group "
-                      "activity will show up here.",
-                )
-              : _buildList(context, center, items),
+          body:
+              items.isEmpty
+                  ? const EmptyState(
+                    icon: Icons.notifications_none_rounded,
+                    title: 'No notifications yet',
+                    message:
+                        "Friend requests, split approvals, payments and group "
+                        "activity will show up here.",
+                  )
+                  : _buildList(context, center, items),
         );
       },
     );
@@ -145,7 +147,11 @@ class NotificationsScreen extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         n.body,
-                        style: TextStyle(color: c.muted, fontSize: 13, height: 1.3),
+                        style: TextStyle(
+                          color: c.muted,
+                          fontSize: 13,
+                          height: 1.3,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -176,26 +182,29 @@ class NotificationsScreen extends StatelessWidget {
   void _confirmClear(BuildContext context, NotificationCenterService center) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Clear all notifications?'),
-        content: const Text('This removes your entire notification history.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              center.clearAll();
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: context.colors.negative,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Clear all notifications?'),
+            content: const Text(
+              'This removes your entire notification history.',
             ),
-            child: const Text('Clear all'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  center.clearAll();
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: context.colors.negative,
+                ),
+                child: const Text('Clear all'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 

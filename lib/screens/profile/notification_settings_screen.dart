@@ -28,8 +28,8 @@ class NotificationSettingsScreen extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 child: SwitchListTile(
                   value: prefs.master,
-                  onChanged: (v) =>
-                      center.updatePrefs(prefs.copyWith(master: v)),
+                  onChanged:
+                      (v) => center.updatePrefs(prefs.copyWith(master: v)),
                   title: const Text(
                     'Push notifications',
                     style: TextStyle(fontWeight: FontWeight.w700),
@@ -96,9 +96,10 @@ class NotificationSettingsScreen extends StatelessWidget {
       children: [
         SwitchListTile(
           value: enabled,
-          onChanged: prefs.master
-              ? (v) => center.updatePrefs(prefs.withCategory(category, v))
-              : null,
+          onChanged:
+              prefs.master
+                  ? (v) => center.updatePrefs(prefs.withCategory(category, v))
+                  : null,
           secondary: Container(
             width: 36,
             height: 36,
@@ -106,7 +107,11 @@ class NotificationSettingsScreen extends StatelessWidget {
               color: accent.withValues(alpha: 0.14),
               shape: BoxShape.circle,
             ),
-            child: Icon(NotificationCategory.icon(category), color: accent, size: 18),
+            child: Icon(
+              NotificationCategory.icon(category),
+              color: accent,
+              size: 18,
+            ),
           ),
           title: Text(
             NotificationCategory.label(category),
@@ -118,7 +123,12 @@ class NotificationSettingsScreen extends StatelessWidget {
           ),
         ),
         if (!last)
-          Divider(height: 1, indent: AppSpacing.md, endIndent: AppSpacing.md, color: c.cardBorder),
+          Divider(
+            height: 1,
+            indent: AppSpacing.md,
+            endIndent: AppSpacing.md,
+            color: c.cardBorder,
+          ),
       ],
     );
   }
