@@ -801,9 +801,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                     suffixIcon: IconButton(
                       tooltip: _listening ? 'Stop' : 'Speak',
                       icon: Icon(
-                        _listening
-                            ? Icons.mic_rounded
-                            : Icons.mic_none_rounded,
+                        _listening ? Icons.mic_rounded : Icons.mic_none_rounded,
                         color: _listening ? c.negative : c.muted,
                       ),
                       onPressed: _toggleListen,
