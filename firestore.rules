@@ -112,6 +112,14 @@ service cloud.firestore {
         request.auth.uid == request.resource.data.userId;
     }
 
+    // Custom spending categories — private to their owner.
+    match /categories/{categoryId} {
+      allow read, update, delete: if isSignedIn() &&
+        request.auth.uid == resource.data.userId;
+      allow create: if isSignedIn() &&
+        request.auth.uid == request.resource.data.userId;
+    }
+
     // Group invitations — visible to the sender and the invited email. The
     // invitee changes status (accept/decline); the sender can cancel.
     match /group_invitations/{invitationId} {

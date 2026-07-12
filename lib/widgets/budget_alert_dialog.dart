@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/expense_model.dart';
+import '../models/category_model.dart';
 import '../theme/app_colors.dart';
 
 class BudgetAlertDialog extends StatelessWidget {
-  final ExpenseCategory category;
+  final Category category;
   final double budgetAmount;
   final double currentSpending;
   final double newSpending;
@@ -63,7 +63,7 @@ class BudgetAlertDialog extends StatelessWidget {
 
             // Category
             Text(
-              category.toString().split('.').last.toUpperCase(),
+              category.name.toUpperCase(),
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 24),

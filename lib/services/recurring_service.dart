@@ -164,7 +164,7 @@ class RecurringService extends ChangeNotifier {
       title: rule.title,
       description: rule.description,
       amount: rule.amount,
-      category: rule.category,
+      categoryId: rule.categoryId,
       createdAt: date,
       accountId: rule.accountId,
       recurringId: rule.id,

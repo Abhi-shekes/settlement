@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:home_widget/home_widget.dart';
 import '../../services/expense_service.dart';
+import '../../services/category_service.dart';
 import '../../services/account_service.dart';
 import '../../services/recurring_service.dart';
 import '../../services/budget_service.dart';
@@ -64,12 +65,17 @@ class _HomeScreenState extends State<HomeScreen> {
       // Capture services before any await so we never touch context across an
       // async gap.
       final accountService = context.read<AccountService>();
+      final categoryService = context.read<CategoryService>();
       final expenseService = context.read<ExpenseService>();
       final recurringService = context.read<RecurringService>();
       final budgetService = context.read<BudgetService>();
       final groupService = context.read<GroupService>();
       final notificationCenter = context.read<NotificationCenterService>();
       final uid = context.read<AuthService>().currentUser?.uid;
+
+      // Load custom categories first so expenses/budgets resolve their category
+      // (name, icon, colour) as soon as they load.
+      await categoryService.loadUserCategories();
 
       // Load accounts and expenses first, then materialise any due recurring
       // transactions — accounts must be loaded so their balances get adjusted.
