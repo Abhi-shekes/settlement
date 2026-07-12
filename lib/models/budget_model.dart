@@ -1,9 +1,13 @@
 import 'package:settlement/models/expense_model.dart';
+import 'package:settlement/models/category_model.dart';
 
 class BudgetModel {
   final String id;
   final String userId;
-  final ExpenseCategory category;
+
+  /// Stored category identifier (built-in enum string or a custom category's
+  /// UUID). Resolve to a [Category] via [category].
+  final String categoryId;
   final double amount;
   final DateTime month; // First day of the month
   final DateTime createdAt;
@@ -12,21 +16,22 @@ class BudgetModel {
   BudgetModel({
     required this.id,
     required this.userId,
-    required this.category,
+    required this.categoryId,
     required this.amount,
     required this.month,
     required this.createdAt,
     required this.updatedAt,
   });
 
+  /// The resolved category (built-in or custom).
+  Category get category => CategoryRegistry.instance.byId(categoryId);
+
   factory BudgetModel.fromMap(Map<String, dynamic> map) {
     return BudgetModel(
       id: map['id'] ?? '',
       userId: map['userId'] ?? '',
-      category: ExpenseCategory.values.firstWhere(
-        (e) => e.toString() == map['category'],
-        orElse: () => ExpenseCategory.other,
-      ),
+      categoryId:
+          (map['category'] ?? ExpenseCategory.other.toString()) as String,
       amount: (map['amount'] ?? 0).toDouble(),
       month: DateTime.fromMillisecondsSinceEpoch(map['month'] ?? 0),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
@@ -38,7 +43,7 @@ class BudgetModel {
     return {
       'id': id,
       'userId': userId,
-      'category': category.toString(),
+      'category': categoryId,
       'amount': amount,
       'month': month.millisecondsSinceEpoch,
       'createdAt': createdAt.millisecondsSinceEpoch,
@@ -49,7 +54,7 @@ class BudgetModel {
   BudgetModel copyWith({
     String? id,
     String? userId,
-    ExpenseCategory? category,
+    String? categoryId,
     double? amount,
     DateTime? month,
     DateTime? createdAt,
@@ -58,7 +63,7 @@ class BudgetModel {
     return BudgetModel(
       id: id ?? this.id,
       userId: userId ?? this.userId,
-      category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
       amount: amount ?? this.amount,
       month: month ?? this.month,
       createdAt: createdAt ?? this.createdAt,

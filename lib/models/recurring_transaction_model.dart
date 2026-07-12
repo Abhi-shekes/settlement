@@ -1,4 +1,5 @@
 import 'expense_model.dart';
+import 'category_model.dart';
 
 /// How often a recurring transaction repeats.
 enum RecurrenceFrequency {
@@ -57,7 +58,10 @@ class RecurringTransactionModel {
   final String title;
   final String description;
   final double amount;
-  final ExpenseCategory category;
+
+  /// Stored category identifier (built-in enum string or a custom category's
+  /// UUID). Resolve to a [Category] via [category].
+  final String categoryId;
   final String? accountId;
   final RecurrenceFrequency frequency;
 
@@ -83,7 +87,7 @@ class RecurringTransactionModel {
     required this.title,
     required this.description,
     required this.amount,
-    required this.category,
+    required this.categoryId,
     required this.accountId,
     required this.frequency,
     required this.startDate,
@@ -94,6 +98,9 @@ class RecurringTransactionModel {
     required this.createdAt,
   });
 
+  /// The resolved category (built-in or custom).
+  Category get category => CategoryRegistry.instance.byId(categoryId);
+
   factory RecurringTransactionModel.fromMap(Map<String, dynamic> map) {
     return RecurringTransactionModel(
       id: map['id'] ?? '',
@@ -101,10 +108,8 @@ class RecurringTransactionModel {
       title: map['title'] ?? '',
       description: map['description'] ?? '',
       amount: (map['amount'] ?? 0).toDouble(),
-      category: ExpenseCategory.values.firstWhere(
-        (e) => e.toString() == map['category'],
-        orElse: () => ExpenseCategory.other,
-      ),
+      categoryId:
+          (map['category'] ?? ExpenseCategory.other.toString()) as String,
       accountId: map['accountId'],
       frequency: RecurrenceFrequency.values.firstWhere(
         (f) => f.name == map['frequency'],
@@ -132,7 +137,7 @@ class RecurringTransactionModel {
       'title': title,
       'description': description,
       'amount': amount,
-      'category': category.toString(),
+      'category': categoryId,
       'accountId': accountId,
       'frequency': frequency.name,
       'startDate': startDate.millisecondsSinceEpoch,
@@ -148,7 +153,7 @@ class RecurringTransactionModel {
     String? title,
     String? description,
     double? amount,
-    ExpenseCategory? category,
+    String? categoryId,
     String? accountId,
     RecurrenceFrequency? frequency,
     DateTime? startDate,
@@ -166,7 +171,7 @@ class RecurringTransactionModel {
       title: title ?? this.title,
       description: description ?? this.description,
       amount: amount ?? this.amount,
-      category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
       accountId: clearAccount ? null : (accountId ?? this.accountId),
       frequency: frequency ?? this.frequency,
       startDate: startDate ?? this.startDate,

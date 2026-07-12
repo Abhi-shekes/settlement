@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../models/expense_model.dart';
+import '../../models/category_model.dart';
 import '../../services/expense_service.dart';
+import '../../services/category_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_typography.dart';
-import '../../utils/category_style.dart';
 import '../../widgets/app_chip.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/loading_skeleton.dart';
@@ -22,7 +23,7 @@ class ExpensesScreen extends StatefulWidget {
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
   String _searchQuery = '';
-  ExpenseCategory? _selectedCategory;
+  Category? _selectedCategory;
   String _sortBy = 'date'; // 'date', 'amount', 'category'
   bool _sortAscending = false;
 
@@ -69,7 +70,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     if (_selectedCategory != null) {
       filteredExpenses =
           filteredExpenses
-              .where((expense) => expense.category == _selectedCategory)
+              .where((expense) => expense.categoryId == _selectedCategory!.id)
               .toList();
     }
 
@@ -90,7 +91,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           result = a.amount.compareTo(b.amount);
           break;
         case 'category':
-          result = a.category.toString().compareTo(b.category.toString());
+          result = a.category.name.compareTo(b.category.name);
           break;
         case 'date':
         default:
@@ -261,7 +262,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     onTap: () => setState(() => _selectedCategory = null),
                   ),
                 ),
-                ...ExpenseCategory.values.map((category) {
+                ...context.watch<CategoryService>().all.map((category) {
                   return Padding(
                     padding: const EdgeInsets.only(right: AppSpacing.xs),
                     child: AppChip(
@@ -425,7 +426,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             setState(() {});
                           },
                         ),
-                        ...ExpenseCategory.values.map((category) {
+                        ...CategoryRegistry.instance.all.map((category) {
                           return AppChip(
                             label: category.categoryDisplayName,
                             icon: category.icon,

@@ -1,8 +1,10 @@
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart';
+// Hide foundation's `Category` annotation so our category model's `Category`
+// (used below for the top-spending grouping) is unambiguous.
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
-import '../models/expense_model.dart';
+import '../models/category_model.dart';
 import 'expense_service.dart';
 import 'account_service.dart';
 import 'budget_service.dart';
@@ -60,7 +62,7 @@ class HomeWidgetService {
       );
 
       // Per-category month totals → top spending category.
-      final Map<ExpenseCategory, double> byCategory = {};
+      final Map<Category, double> byCategory = {};
       for (final e in monthExpenses) {
         byCategory[e.category] = (byCategory[e.category] ?? 0) + e.amount;
       }
@@ -68,7 +70,7 @@ class HomeWidgetService {
       if (byCategory.isNotEmpty) {
         final top = byCategory.entries
             .where((e) => e.value > 0)
-            .fold<MapEntry<ExpenseCategory, double>?>(
+            .fold<MapEntry<Category, double>?>(
               null,
               (best, e) => best == null || e.value > best.value ? e : best,
             );
