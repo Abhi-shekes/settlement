@@ -7,6 +7,21 @@ is generated automatically from [Conventional Commits](https://www.conventionalc
 by [release-please](https://github.com/googleapis/release-please). **Do not edit
 entries below by hand** — write good commit messages instead.
 
+## [1.3.0](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.2.2...settlement-v1.3.0) (2026-07-12)
+
+
+### Features
+
+* **ai:** draft and create splits from the AI assistant ([e3ea352](https://github.com/Abhi-shekes/settlement/commit/e3ea3520e6c43062abb838ba6b83fa0cdd639630))
+* custom spending categories, AI-drafted splits, and group deletion fix ([815e78d](https://github.com/Abhi-shekes/settlement/commit/815e78d3fdb7d5dfa06dcc8554886b784e255188))
+* **expenses:** custom user-defined spending categories ([9aaa8eb](https://github.com/Abhi-shekes/settlement/commit/9aaa8eb5ba3aba373de7d544bae56a3066cec517))
+
+
+### Bug Fixes
+
+* **auth:** register release (upload) keystore SHA in Firebase config ([f800879](https://github.com/Abhi-shekes/settlement/commit/f800879ba4944dd27e7abeed97087ac7fb905f72))
+* **groups:** let the group admin query group splits so delete works ([8767c18](https://github.com/Abhi-shekes/settlement/commit/8767c1885bdd5778165353dc2634daf8c7165164))
+
 ## [1.2.2](https://github.com/Abhi-shekes/settlement/compare/settlement-v1.2.1...settlement-v1.2.2) (2026-07-09)
 
 
