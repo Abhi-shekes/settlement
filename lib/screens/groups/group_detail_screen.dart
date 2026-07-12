@@ -819,7 +819,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    _getCategoryIcon(expense.category),
+                    expense.category.icon,
                     color: const Color(0xFF0F766E),
                     size: 20,
                   ),
@@ -881,27 +881,6 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
         ),
       ),
     );
-  }
-
-  IconData _getCategoryIcon(ExpenseCategory category) {
-    switch (category) {
-      case ExpenseCategory.food:
-        return Icons.restaurant;
-      case ExpenseCategory.travel:
-        return Icons.directions_car;
-      case ExpenseCategory.shopping:
-        return Icons.shopping_bag;
-      case ExpenseCategory.entertainment:
-        return Icons.movie;
-      case ExpenseCategory.utilities:
-        return Icons.electrical_services;
-      case ExpenseCategory.healthcare:
-        return Icons.medical_services;
-      case ExpenseCategory.education:
-        return Icons.school;
-      case ExpenseCategory.other:
-        return Icons.category;
-    }
   }
 
   void _showDeleteConfirmation() {

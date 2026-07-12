@@ -6,6 +6,7 @@ import '../../services/auth_service.dart';
 import '../../services/account_service.dart';
 import '../../services/recurring_service.dart';
 import '../../services/expense_service.dart';
+import '../../services/category_service.dart';
 import '../../services/group_service.dart';
 import '../../services/budget_service.dart';
 import '../../services/invitation_service.dart';
@@ -75,6 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   context.read<ExpenseService>().reset();
                   context.read<AccountService>().reset();
                   context.read<RecurringService>().reset();
+                  context.read<CategoryService>().reset();
                   context.read<GroupService>().reset();
                   context.read<BudgetService>().reset();
                   context.read<InvitationService>().reset();

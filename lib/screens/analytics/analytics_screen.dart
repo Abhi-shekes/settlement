@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import '../../models/expense_model.dart';
+import '../../models/category_model.dart';
 import '../../services/expense_service.dart';
 import '../../services/group_service.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
-import '../../utils/category_style.dart';
 import '../../utils/money.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/stat_card.dart';
@@ -270,14 +269,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                           sideTitles: SideTitles(
                             showTitles: true,
                             getTitlesWidget: (value, meta) {
-                              final categories = ExpenseCategory.values;
+                              final categories = CategoryRegistry.instance.all;
                               if (value.toInt() < categories.length) {
+                                final name =
+                                    categories[value.toInt()]
+                                        .categoryDisplayName;
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 6),
                                   child: Text(
-                                    categories[value.toInt()]
-                                        .categoryDisplayName
-                                        .substring(0, 3),
+                                    name.length <= 3
+                                        ? name
+                                        : name.substring(0, 3),
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: c.faint,
@@ -458,9 +460,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
   List<BarChartGroupData> _buildBarChartGroups(ExpenseService expenseService) {
     final categoryData = expenseService.getCategoryWiseExpenses();
+    final categories = CategoryRegistry.instance.all;
     final groups = <BarChartGroupData>[];
-    for (int i = 0; i < ExpenseCategory.values.length; i++) {
-      final category = ExpenseCategory.values[i];
+    for (int i = 0; i < categories.length; i++) {
+      final category = categories[i];
       final value = categoryData[category] ?? 0.0;
       groups.add(
         BarChartGroupData(
