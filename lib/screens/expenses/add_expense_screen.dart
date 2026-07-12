@@ -3,7 +3,9 @@ import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../models/expense_model.dart';
+import '../../models/category_model.dart';
 import '../../services/expense_service.dart';
+import '../../services/category_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/budget_service.dart';
 import '../../services/account_service.dart';
@@ -25,7 +27,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
 
-  ExpenseCategory _selectedCategory = ExpenseCategory.food;
+  Category _selectedCategory = kDefaultCategory;
   String? _selectedAccountId;
   bool _suggesting = false;
   final _tagController = TextEditingController();
@@ -127,7 +129,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       amount: amount,
-      category: _selectedCategory,
+      categoryId: _selectedCategory.id,
       createdAt: DateTime.now(),
       accountId: _selectedAccountId,
     );
@@ -208,7 +210,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     NotificationCenterService center,
     Map<String, dynamic> check,
   ) {
-    final ExpenseCategory category = check['category'] as ExpenseCategory;
+    final Category category = check['category'] as Category;
     final name = category.categoryDisplayName;
     final pct = (check['percentage'] as num).round();
     final approaching = check['isApproaching'] == true;
@@ -289,25 +291,20 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               const SizedBox(height: 16),
 
               // Category
-              DropdownButtonFormField<ExpenseCategory>(
+              DropdownButtonFormField<Category>(
                 initialValue: _selectedCategory,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.category),
                 ),
-                items:
-                    ExpenseCategory.values.map((category) {
-                      return DropdownMenuItem(
-                        value: category,
-                        child: Text(
-                          category.toString().split('.').last.toUpperCase(),
-                        ),
-                      );
-                    }).toList(),
+                items: categoryDropdownItems(
+                  context.watch<CategoryService>().all,
+                ),
                 onChanged: (value) {
                   setState(() {
-                    _selectedCategory = value!;
+                    _selectedCategory = value ?? _selectedCategory;
                   });
                 },
               ),

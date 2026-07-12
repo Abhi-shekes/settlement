@@ -1,14 +1,10 @@
-// enum ExpenseCategory {
-//   food,
-//   travel,
-//   shopping,
-//   entertainment,
-//   utilities,
-//   healthcare,
-//   education,
-//   other,
-// }
+import 'category_model.dart';
 
+/// The fixed, built-in spending categories. Custom user-defined categories are
+/// modelled by [Category]; these enum values seed the built-in [Category] set
+/// (see `category_model.dart`). An expense stores its category as a string id
+/// ([ExpenseModel.categoryId]); the resolved [Category] is exposed via
+/// [ExpenseModel.category].
 enum ExpenseCategory {
   food('Food'),
   travel('Travel'),
@@ -29,7 +25,11 @@ class ExpenseModel {
   final String title;
   final String description;
   final double amount; // Amount in INR
-  final ExpenseCategory category;
+
+  /// Stored category identifier. For built-ins this is the [ExpenseCategory]
+  /// enum string (e.g. `"ExpenseCategory.food"`); for custom categories it is
+  /// the category's UUID. Resolve to a [Category] via [category].
+  final String categoryId;
   final DateTime createdAt;
   final String? groupId;
   final bool isSettled;
@@ -55,7 +55,7 @@ class ExpenseModel {
     required this.title,
     required this.description,
     required this.amount,
-    required this.category,
+    required this.categoryId,
     required this.createdAt,
     this.groupId,
     this.isSettled = false,
@@ -68,6 +68,11 @@ class ExpenseModel {
   /// rather than money spent.
   bool get isRefund => refundOfExpenseId != null;
 
+  /// The resolved category (built-in or custom). Resolved lazily through
+  /// [CategoryRegistry] so a newly created custom category is reflected without
+  /// reloading expenses.
+  Category get category => CategoryRegistry.instance.byId(categoryId);
+
   factory ExpenseModel.fromMap(Map<String, dynamic> map) {
     return ExpenseModel(
       id: map['id'] ?? '',
@@ -75,10 +80,8 @@ class ExpenseModel {
       title: map['title'] ?? '',
       description: map['description'] ?? '',
       amount: (map['amount'] ?? 0).toDouble(),
-      category: ExpenseCategory.values.firstWhere(
-        (e) => e.toString() == map['category'],
-        orElse: () => ExpenseCategory.other,
-      ),
+      categoryId:
+          (map['category'] ?? ExpenseCategory.other.toString()) as String,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
       groupId: map['groupId'],
       isSettled: map['isSettled'] ?? false,
@@ -95,7 +98,7 @@ class ExpenseModel {
       'title': title,
       'description': description,
       'amount': amount,
-      'category': category.toString(),
+      'category': categoryId,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'groupId': groupId,
       'isSettled': isSettled,
@@ -105,26 +108,8 @@ class ExpenseModel {
     };
   }
 
-  String get categoryDisplayName {
-    switch (category) {
-      case ExpenseCategory.food:
-        return 'Food';
-      case ExpenseCategory.travel:
-        return 'Travel';
-      case ExpenseCategory.shopping:
-        return 'Shopping';
-      case ExpenseCategory.entertainment:
-        return 'Entertainment';
-      case ExpenseCategory.utilities:
-        return 'Utilities';
-      case ExpenseCategory.healthcare:
-        return 'Healthcare';
-      case ExpenseCategory.education:
-        return 'Education';
-      case ExpenseCategory.other:
-        return 'Other';
-    }
-  }
+  /// Display name of the resolved category (built-in or custom).
+  String get categoryDisplayName => category.categoryDisplayName;
 
   /// Whole-rupee display. Refunds (negative amounts) are shown as a credit,
   /// e.g. `+₹200`.

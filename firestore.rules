@@ -86,10 +86,13 @@ service cloud.firestore {
     }
 
     // Splits — only participants can see/modify a split (recording settlements).
-    // A group admin may delete a split when deleting the group.
+    // A group admin may also read (query by groupId) and delete a group's
+    // splits when deleting the group.
     match /splits/{splitId} {
-      allow read: if isSignedIn() &&
-        request.auth.uid in resource.data.participants;
+      allow read: if isSignedIn() && (
+        request.auth.uid in resource.data.participants ||
+        (resource.data.groupId != null && isGroupAdmin(resource.data.groupId))
+      );
       allow create: if isSignedIn() &&
         request.auth.uid == request.resource.data.paidBy &&
         request.auth.uid in request.resource.data.participants;
@@ -103,6 +106,14 @@ service cloud.firestore {
 
     // Budgets — strictly private to the owner.
     match /budgets/{budgetId} {
+      allow read, update, delete: if isSignedIn() &&
+        request.auth.uid == resource.data.userId;
+      allow create: if isSignedIn() &&
+        request.auth.uid == request.resource.data.userId;
+    }
+
+    // Custom spending categories — private to their owner.
+    match /categories/{categoryId} {
       allow read, update, delete: if isSignedIn() &&
         request.auth.uid == resource.data.userId;
       allow create: if isSignedIn() &&

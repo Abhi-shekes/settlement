@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import '../models/expense_model.dart';
+import '../models/category_model.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
-import '../utils/category_style.dart';
 import 'app_chip.dart';
 import 'money_text.dart';
 
 class BudgetProgressCard extends StatelessWidget {
-  final ExpenseCategory category;
+  final Category category;
   final double budgetAmount;
   final double currentSpending;
   final VoidCallback onTap;

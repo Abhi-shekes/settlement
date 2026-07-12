@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/expense_model.dart';
+import '../../models/category_model.dart';
 import '../../services/expense_service.dart';
+import '../../services/category_service.dart';
 import '../../services/account_service.dart';
 
 class EditExpenseScreen extends StatefulWidget {
@@ -19,7 +21,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
   late TextEditingController _descriptionController;
   late TextEditingController _amountController;
 
-  late ExpenseCategory _selectedCategory;
+  late Category _selectedCategory;
   String? _selectedAccountId;
   final _tagController = TextEditingController();
 
@@ -58,7 +60,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       amount: double.parse(_amountController.text),
-      category: _selectedCategory,
+      categoryId: _selectedCategory.id,
       createdAt: widget.expense.createdAt,
       groupId: widget.expense.groupId,
       isSettled: widget.expense.isSettled,
@@ -139,25 +141,20 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
               const SizedBox(height: 16),
 
               // Category
-              DropdownButtonFormField<ExpenseCategory>(
+              DropdownButtonFormField<Category>(
                 initialValue: _selectedCategory,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.category),
                 ),
-                items:
-                    ExpenseCategory.values.map((category) {
-                      return DropdownMenuItem(
-                        value: category,
-                        child: Text(
-                          category.toString().split('.').last.toUpperCase(),
-                        ),
-                      );
-                    }).toList(),
+                items: categoryDropdownItems(
+                  context.watch<CategoryService>().all,
+                ),
                 onChanged: (value) {
                   setState(() {
-                    _selectedCategory = value!;
+                    _selectedCategory = value ?? _selectedCategory;
                   });
                 },
               ),

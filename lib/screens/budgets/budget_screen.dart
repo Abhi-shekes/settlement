@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../models/expense_model.dart';
+import '../../models/category_model.dart';
 import '../../services/budget_service.dart';
+import '../../services/category_service.dart';
 import '../../services/expense_service.dart';
 
 class BudgetScreen extends StatefulWidget {
@@ -14,51 +15,52 @@ class BudgetScreen extends StatefulWidget {
 }
 
 class _BudgetScreenState extends State<BudgetScreen> {
-  final Map<ExpenseCategory, TextEditingController> _controllers = {};
+  /// One amount controller per category, keyed by category id so custom
+  /// categories (added at runtime) get controllers lazily.
+  final Map<String, TextEditingController> _controllers = {};
 
   @override
   void initState() {
     super.initState();
-    _initControllers();
     _loadBudgets();
   }
 
   @override
   void dispose() {
-    // Dispose all controllers
     for (final controller in _controllers.values) {
       controller.dispose();
     }
     super.dispose();
   }
 
-  void _initControllers() {
-    for (final category in ExpenseCategory.values) {
-      _controllers[category] = TextEditingController();
-    }
+  TextEditingController _controllerFor(String categoryId) {
+    return _controllers.putIfAbsent(categoryId, () => TextEditingController());
   }
 
   Future<void> _loadBudgets() async {
-    await context.read<BudgetService>().loadUserBudgets();
+    // Capture services before any await so we never touch context across a gap.
+    final categoryService = context.read<CategoryService>();
+    final budgetService = context.read<BudgetService>();
+
+    // Categories must be loaded before we seed controllers so custom ones show.
+    await categoryService.loadUserCategories();
+    await budgetService.loadUserBudgets();
     if (!mounted) return;
 
-    // Set controller values from loaded budgets
-    final budgetService = context.read<BudgetService>();
-    for (final category in ExpenseCategory.values) {
+    for (final category in categoryService.all) {
       final budget = budgetService.getBudgetForCategory(category);
-      if (budget != null && budget.amount > 0) {
-        _controllers[category]!.text = budget.amount.toString();
-      } else {
-        _controllers[category]!.text = '';
-      }
+      final controller = _controllerFor(category.id);
+      controller.text =
+          (budget != null && budget.amount > 0) ? budget.amount.toString() : '';
     }
+    setState(() {});
   }
 
   /// Saves a single category budget. Set [showFeedback] to false when saving
   /// many at once (the "Save All" flow shows a single summary snackbar instead
   /// of one per category).
   Future<void> _saveBudget(
-    ExpenseCategory category,
+    Category category,
     String value, {
     bool showFeedback = true,
   }) async {
@@ -73,9 +75,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
       if (!showFeedback) return;
       messenger.showSnackBar(
         SnackBar(
-          content: Text(
-            'Budget for ${category.toString().split('.').last.toUpperCase()} updated',
-          ),
+          content: Text('Budget for ${category.name.toUpperCase()} updated'),
           backgroundColor: const Color(0xFF0F766E),
         ),
       );
@@ -93,14 +93,28 @@ class _BudgetScreenState extends State<BudgetScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Budget Management')),
-      body: Consumer2<BudgetService, ExpenseService>(
-        builder: (context, budgetService, expenseService, child) {
+      appBar: AppBar(
+        title: const Text('Budget Management'),
+        actions: [
+          TextButton.icon(
+            onPressed: _showCreateCategoryDialog,
+            icon: const Icon(Icons.add),
+            label: const Text('New category'),
+          ),
+        ],
+      ),
+      body: Consumer3<BudgetService, ExpenseService, CategoryService>(
+        builder: (
+          context,
+          budgetService,
+          expenseService,
+          categoryService,
+          child,
+        ) {
           if (budgetService.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // Get current month for display
           final now = DateTime.now();
           final currentMonth = DateFormat('MMMM yyyy').format(now);
 
@@ -178,6 +192,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                         const SizedBox(height: 8),
                         Text(
                           '• Set monthly budgets for each expense category\n'
+                          '• Add your own categories with "New category"\n'
                           '• Get alerts when you exceed your budget\n'
                           '• Receive notifications when nearing budget limits (80%)\n'
                           '• Leave a budget empty or set to 0 to disable tracking',
@@ -203,20 +218,18 @@ class _BudgetScreenState extends State<BudgetScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  ...ExpenseCategory.values.map((category) {
+                  ...categoryService.all.map((category) {
                     final currentSpending = expenseService
                         .getTotalExpenseAmountByCategory(category);
                     final budget = budgetService.getBudgetForCategory(category);
                     final budgetAmount = budget?.amount ?? 0;
 
-                    // Calculate usage percentage
                     double usagePercentage = 0;
                     if (budgetAmount > 0) {
                       usagePercentage = (currentSpending / budgetAmount) * 100;
                       if (usagePercentage > 100) usagePercentage = 100;
                     }
 
-                    // Determine progress color based on usage
                     Color progressColor;
                     if (budgetAmount > 0 && currentSpending > budgetAmount) {
                       progressColor = Colors.red;
@@ -229,7 +242,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
 
                     return _buildBudgetCard(
                       category,
-                      _controllers[category]!,
+                      _controllerFor(category.id),
                       currentSpending,
                       budgetAmount,
                       usagePercentage,
@@ -245,14 +258,13 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     child: ElevatedButton(
                       onPressed: () async {
                         final messenger = ScaffoldMessenger.of(context);
-                        // Save all budgets without a per-category snackbar, then
-                        // show a single summary message.
+                        final categoryService = context.read<CategoryService>();
                         try {
                           for (final entry in _controllers.entries) {
                             final value = entry.value.text.trim();
                             if (value.isNotEmpty) {
                               await _saveBudget(
-                                entry.key,
+                                categoryService.byId(entry.key),
                                 value,
                                 showFeedback: false,
                               );
@@ -298,7 +310,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
   }
 
   Widget _buildBudgetCard(
-    ExpenseCategory category,
+    Category category,
     TextEditingController controller,
     double currentSpending,
     double budgetAmount,
@@ -319,24 +331,22 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: _getCategoryColor(category).withValues(alpha: 0.1),
+                    color: category.color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    _getCategoryIcon(category),
-                    color: _getCategoryColor(category),
-                    size: 20,
-                  ),
+                  child: Icon(category.icon, color: category.color, size: 20),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  category.toString().split('.').last.toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    category.name.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Spacer(),
                 if (budgetAmount > 0 && currentSpending > budgetAmount)
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -376,6 +386,17 @@ class _BudgetScreenState extends State<BudgetScreen> {
                         fontSize: 12,
                       ),
                     ),
+                  ),
+                // Custom categories can be removed; built-ins are permanent.
+                if (category.isCustom)
+                  IconButton(
+                    tooltip: 'Delete category',
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: context.colors.muted,
+                      size: 20,
+                    ),
+                    onPressed: () => _confirmDeleteCategory(category),
                   ),
               ],
             ),
@@ -495,45 +516,220 @@ class _BudgetScreenState extends State<BudgetScreen> {
     );
   }
 
-  IconData _getCategoryIcon(ExpenseCategory category) {
-    switch (category) {
-      case ExpenseCategory.food:
-        return Icons.restaurant;
-      case ExpenseCategory.travel:
-        return Icons.directions_car;
-      case ExpenseCategory.shopping:
-        return Icons.shopping_bag;
-      case ExpenseCategory.entertainment:
-        return Icons.movie;
-      case ExpenseCategory.utilities:
-        return Icons.lightbulb;
-      case ExpenseCategory.healthcare:
-        return Icons.medical_services;
-      case ExpenseCategory.education:
-        return Icons.school;
-      case ExpenseCategory.other:
-        return Icons.category;
+  // ── Custom category creation ────────────────────────────────────────────────
+
+  Future<void> _showCreateCategoryDialog() async {
+    final nameController = TextEditingController();
+    int selectedIcon = kCategoryIconPalette.first.codePoint;
+    int selectedColor = kCategoryColorPalette.first;
+    String? errorText;
+
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialog) {
+            return AlertDialog(
+              title: const Text('New category'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      autofocus: true,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: InputDecoration(
+                        labelText: 'Name',
+                        hintText: 'e.g. Rent, Gym, Pets',
+                        errorText: errorText,
+                        border: const OutlineInputBorder(),
+                      ),
+                      onChanged: (_) {
+                        if (errorText != null) {
+                          setDialog(() => errorText = null);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Icon', style: TextStyle(fontSize: 13)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final icon in kCategoryIconPalette)
+                          _pickChip(
+                            selected: icon.codePoint == selectedIcon,
+                            color: Color(selectedColor),
+                            onTap:
+                                () => setDialog(
+                                  () => selectedIcon = icon.codePoint,
+                                ),
+                            child: Icon(icon, size: 20),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Colour', style: TextStyle(fontSize: 13)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final colorValue in kCategoryColorPalette)
+                          _pickChip(
+                            selected: colorValue == selectedColor,
+                            color: Color(colorValue),
+                            filled: true,
+                            onTap:
+                                () =>
+                                    setDialog(() => selectedColor = colorValue),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    final name = nameController.text.trim();
+                    final categoryService = context.read<CategoryService>();
+                    if (name.isEmpty) {
+                      setDialog(() => errorText = 'Enter a name');
+                      return;
+                    }
+                    if (categoryService.nameExists(name)) {
+                      setDialog(
+                        () => errorText = 'A category with this name exists',
+                      );
+                      return;
+                    }
+                    final navigator = Navigator.of(context);
+                    try {
+                      await categoryService.addCustomCategory(
+                        name: name,
+                        iconCodePoint: selectedIcon,
+                        colorValue: selectedColor,
+                      );
+                      navigator.pop(true);
+                    } catch (e) {
+                      setDialog(() => errorText = 'Could not save: $e');
+                    }
+                  },
+                  child: const Text('Create'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    nameController.dispose();
+    if (created == true && mounted) {
+      // A controller for the new category is created lazily on next build.
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Category added'),
+          backgroundColor: Color(0xFF0F766E),
+        ),
+      );
     }
   }
 
-  Color _getCategoryColor(ExpenseCategory category) {
-    switch (category) {
-      case ExpenseCategory.food:
-        return Colors.orange;
-      case ExpenseCategory.travel:
-        return Colors.blue;
-      case ExpenseCategory.shopping:
-        return Colors.purple;
-      case ExpenseCategory.entertainment:
-        return Colors.red;
-      case ExpenseCategory.utilities:
-        return Colors.amber;
-      case ExpenseCategory.healthcare:
-        return Colors.green;
-      case ExpenseCategory.education:
-        return Colors.indigo;
-      case ExpenseCategory.other:
-        return Colors.grey;
+  Widget _pickChip({
+    required bool selected,
+    required Color color,
+    required VoidCallback onTap,
+    Widget? child,
+    bool filled = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: filled ? color : color.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: selected ? color : Colors.transparent,
+            width: 2.5,
+          ),
+        ),
+        child:
+            child != null
+                ? IconTheme(
+                  data: IconThemeData(color: color),
+                  child: Center(child: child),
+                )
+                : (selected
+                    ? const Icon(Icons.check, color: Colors.white, size: 20)
+                    : null),
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteCategory(Category category) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Delete "${category.name}"?'),
+            content: const Text(
+              'This removes the category and its budget. Expenses already logged '
+              'under it are kept but will show as an unnamed category.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+    );
+    if (confirm != true || !mounted) return;
+
+    final categoryService = context.read<CategoryService>();
+    final budgetService = context.read<BudgetService>();
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      // Remove any budgets tied to this category so nothing is orphaned.
+      final orphaned =
+          budgetService.budgets
+              .where((b) => b.categoryId == category.id)
+              .map((b) => b.id)
+              .toList();
+      for (final id in orphaned) {
+        await budgetService.deleteBudget(id);
+      }
+      await categoryService.deleteCustomCategory(category.id);
+      _controllers.remove(category.id)?.dispose();
+      if (mounted) setState(() {});
+      messenger.showSnackBar(
+        SnackBar(content: Text('Deleted "${category.name}"')),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Could not delete: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 }
