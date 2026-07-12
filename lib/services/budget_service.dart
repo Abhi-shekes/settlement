@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
 import '../models/budget_model.dart';
-import '../models/expense_model.dart';
+import '../models/category_model.dart';
 
 class BudgetService extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -56,7 +56,7 @@ class BudgetService extends ChangeNotifier {
   }
 
   // Set or update a budget for a category
-  Future<void> setBudget(ExpenseCategory category, double amount) async {
+  Future<void> setBudget(Category category, double amount) async {
     if (_auth.currentUser == null) return;
 
     try {
@@ -69,14 +69,14 @@ class BudgetService extends ChangeNotifier {
       // Check if budget already exists for this category and month
       final existingBudget = _budgets.firstWhere(
         (b) =>
-            b.category == category &&
+            b.categoryId == category.id &&
             b.month.year == currentMonth.year &&
             b.month.month == currentMonth.month,
         orElse:
             () => BudgetModel(
               id: const Uuid().v4(),
               userId: _auth.currentUser!.uid,
-              category: category,
+              categoryId: category.id,
               amount: 0,
               month: currentMonth,
               createdAt: now,
@@ -125,20 +125,20 @@ class BudgetService extends ChangeNotifier {
   }
 
   // Get budget for a specific category in the current month
-  BudgetModel? getBudgetForCategory(ExpenseCategory category) {
+  BudgetModel? getBudgetForCategory(Category category) {
     final now = DateTime.now();
     final currentMonth = DateTime(now.year, now.month, 1);
 
     return _budgets.firstWhere(
       (b) =>
-          b.category == category &&
+          b.categoryId == category.id &&
           b.month.year == currentMonth.year &&
           b.month.month == currentMonth.month,
       orElse:
           () => BudgetModel(
             id: const Uuid().v4(),
             userId: _auth.currentUser?.uid ?? '',
-            category: category,
+            categoryId: category.id,
             amount: 0, // No budget set
             month: currentMonth,
             createdAt: now,
@@ -148,7 +148,7 @@ class BudgetService extends ChangeNotifier {
   }
 
   // Check if a category has exceeded its budget
-  bool isBudgetExceeded(ExpenseCategory category, double currentSpending) {
+  bool isBudgetExceeded(Category category, double currentSpending) {
     final budget = getBudgetForCategory(category);
     if (budget == null || budget.amount <= 0) return false; // No budget set
 
@@ -156,7 +156,7 @@ class BudgetService extends ChangeNotifier {
   }
 
   // Check if a category is nearing its budget limit
-  bool isBudgetNearLimit(ExpenseCategory category, double currentSpending) {
+  bool isBudgetNearLimit(Category category, double currentSpending) {
     final budget = getBudgetForCategory(category);
     if (budget == null || budget.amount <= 0) return false; // No budget set
 
@@ -165,10 +165,7 @@ class BudgetService extends ChangeNotifier {
   }
 
   // Calculate budget usage percentage
-  double getBudgetUsagePercentage(
-    ExpenseCategory category,
-    double currentSpending,
-  ) {
+  double getBudgetUsagePercentage(Category category, double currentSpending) {
     final budget = getBudgetForCategory(category);
     if (budget == null || budget.amount <= 0) return 0.0; // No budget set
 
@@ -176,7 +173,7 @@ class BudgetService extends ChangeNotifier {
   }
 
   // Get remaining budget amount
-  double getRemainingBudget(ExpenseCategory category, double currentSpending) {
+  double getRemainingBudget(Category category, double currentSpending) {
     final budget = getBudgetForCategory(category);
     if (budget == null || budget.amount <= 0) return 0.0; // No budget set
 
@@ -184,7 +181,7 @@ class BudgetService extends ChangeNotifier {
   }
 
   // Get all categories with budgets
-  List<ExpenseCategory> getCategoriesWithBudgets() {
+  List<Category> getCategoriesWithBudgets() {
     final now = DateTime.now();
     final currentMonth = DateTime(now.year, now.month, 1);
 
@@ -201,7 +198,7 @@ class BudgetService extends ChangeNotifier {
 
   // Check if any budget is exceeded after adding a new expense
   Map<String, dynamic>? checkBudgetExceeded(
-    ExpenseCategory category,
+    Category category,
     double amount,
     double currentCategorySpending,
   ) {

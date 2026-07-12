@@ -3,10 +3,12 @@ import '../../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../models/expense_model.dart';
+import '../../models/category_model.dart';
 import '../../models/group_model.dart';
 import '../../models/split_model.dart';
 import '../../models/user_model.dart';
 import '../../services/group_service.dart';
+import '../../services/category_service.dart';
 import '../../services/auth_service.dart';
 import '../../utils/money.dart';
 
@@ -27,7 +29,7 @@ class _AddGroupExpenseWithSplitScreenState
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
 
-  ExpenseCategory _selectedCategory = ExpenseCategory.food;
+  Category _selectedCategory = kDefaultCategory;
   final _tagController = TextEditingController();
   bool _isLoading = false;
 
@@ -137,7 +139,7 @@ class _AddGroupExpenseWithSplitScreenState
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
         amount: double.parse(_amountController.text),
-        category: _selectedCategory,
+        categoryId: _selectedCategory.id,
         createdAt: DateTime.now(),
         groupId: widget.group.id,
       );
@@ -328,23 +330,20 @@ class _AddGroupExpenseWithSplitScreenState
                       const SizedBox(height: 16),
 
                       // Category
-                      DropdownButtonFormField<ExpenseCategory>(
+                      DropdownButtonFormField<Category>(
                         initialValue: _selectedCategory,
+                        isExpanded: true,
                         decoration: const InputDecoration(
                           labelText: 'Category',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.category),
                         ),
-                        items:
-                            ExpenseCategory.values.map((category) {
-                              return DropdownMenuItem(
-                                value: category,
-                                child: Text(category.categoryDisplayName),
-                              );
-                            }).toList(),
+                        items: categoryDropdownItems(
+                          context.watch<CategoryService>().all,
+                        ),
                         onChanged: (value) {
                           setState(() {
-                            _selectedCategory = value!;
+                            _selectedCategory = value ?? _selectedCategory;
                           });
                         },
                       ),

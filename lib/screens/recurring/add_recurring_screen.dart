@@ -4,8 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../../models/recurring_transaction_model.dart';
-import '../../models/expense_model.dart';
+import '../../models/category_model.dart';
 import '../../services/recurring_service.dart';
+import '../../services/category_service.dart';
 import '../../services/account_service.dart';
 import '../../services/auth_service.dart';
 
@@ -29,7 +30,7 @@ class _AddRecurringScreenState extends State<AddRecurringScreen> {
   late final TextEditingController _amountController;
   late final TextEditingController _descriptionController;
 
-  late ExpenseCategory _category;
+  late Category _category;
   late RecurrenceFrequency _frequency;
   late DateTime _startDate;
   String? _accountId;
@@ -45,7 +46,7 @@ class _AddRecurringScreenState extends State<AddRecurringScreen> {
       text: r != null ? r.amount.toString() : '',
     );
     _descriptionController = TextEditingController(text: r?.description ?? '');
-    _category = r?.category ?? ExpenseCategory.utilities;
+    _category = r?.category ?? kUtilitiesCategory;
     _frequency = r?.frequency ?? RecurrenceFrequency.monthly;
     _startDate = r?.startDate ?? DateTime.now();
     _accountId = r?.accountId;
@@ -100,7 +101,7 @@ class _AddRecurringScreenState extends State<AddRecurringScreen> {
             title: _titleController.text.trim(),
             description: _descriptionController.text.trim(),
             amount: amount,
-            category: _category,
+            categoryId: _category.id,
             frequency: _frequency,
             startDate: _startDate,
             accountId: _accountId,
@@ -114,7 +115,7 @@ class _AddRecurringScreenState extends State<AddRecurringScreen> {
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           amount: amount,
-          category: _category,
+          categoryId: _category.id,
           accountId: _accountId,
           frequency: _frequency,
           startDate: _startDate,
@@ -241,21 +242,19 @@ class _AddRecurringScreenState extends State<AddRecurringScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<ExpenseCategory>(
+              DropdownButtonFormField<Category>(
                 initialValue: _category,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.category),
                 ),
-                items:
-                    ExpenseCategory.values.map((category) {
-                      return DropdownMenuItem(
-                        value: category,
-                        child: Text(category.categoryDisplayName),
-                      );
-                    }).toList(),
-                onChanged: (value) => setState(() => _category = value!),
+                items: categoryDropdownItems(
+                  context.watch<CategoryService>().all,
+                ),
+                onChanged:
+                    (value) => setState(() => _category = value ?? _category),
               ),
               const SizedBox(height: 16),
 
