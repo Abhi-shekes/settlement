@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/expense_model.dart';
+import '../models/category_model.dart';
 import 'account_service.dart';
 
 class ExpenseService extends ChangeNotifier {
@@ -168,7 +169,7 @@ class ExpenseService extends ChangeNotifier {
               ? note!.trim()
               : 'Refund/reversal of "${original.title}"',
       amount: -amount.abs(),
-      category: original.category,
+      categoryId: original.categoryId,
       createdAt: DateTime.now(),
       accountId: accountId ?? original.accountId,
       refundOfExpenseId: original.id,
@@ -187,8 +188,8 @@ class ExpenseService extends ChangeNotifier {
     return getRefundsFor(expenseId).fold(0.0, (acc, r) => acc + r.amount.abs());
   }
 
-  List<ExpenseModel> getExpensesByCategory(ExpenseCategory category) {
-    return _expenses.where((e) => e.category == category).toList();
+  List<ExpenseModel> getExpensesByCategory(Category category) {
+    return _expenses.where((e) => e.categoryId == category.id).toList();
   }
 
   List<ExpenseModel> getExpensesByDateRange(DateTime start, DateTime end) {
@@ -209,17 +210,25 @@ class ExpenseService extends ChangeNotifier {
     return _expenses.fold(0.0, (acc, expense) => acc + expense.amount);
   }
 
-  double getTotalExpenseAmountByCategory(ExpenseCategory category) {
+  double getTotalExpenseAmountByCategory(Category category) {
     return getExpensesByCategory(
       category,
     ).fold(0.0, (acc, expense) => acc + expense.amount);
   }
 
-  Map<ExpenseCategory, double> getCategoryWiseExpenses() {
-    final Map<ExpenseCategory, double> categoryExpenses = {};
+  /// Spending grouped by category. Seeded with every known category (built-in +
+  /// custom) so categories with no spending still appear, and augmented with
+  /// any category id that only exists on expenses (e.g. a since-deleted custom
+  /// category), so nothing is dropped from totals.
+  Map<Category, double> getCategoryWiseExpenses() {
+    final Map<Category, double> categoryExpenses = {
+      for (final c in CategoryRegistry.instance.all) c: 0.0,
+    };
 
-    for (final category in ExpenseCategory.values) {
-      categoryExpenses[category] = getTotalExpenseAmountByCategory(category);
+    for (final expense in _expenses) {
+      final category = expense.category;
+      categoryExpenses[category] =
+          (categoryExpenses[category] ?? 0) + expense.amount;
     }
 
     return categoryExpenses;

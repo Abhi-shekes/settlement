@@ -9,6 +9,7 @@ import 'package:settlement/services/budget_service.dart';
 import 'services/auth_service.dart';
 import 'services/account_service.dart';
 import 'services/expense_service.dart';
+import 'services/category_service.dart';
 import 'services/recurring_service.dart';
 import 'services/ai_service.dart';
 import 'services/group_service.dart';
@@ -74,6 +75,7 @@ class MyApp extends StatelessWidget {
           },
         ),
         ChangeNotifierProvider(create: (_) => GroupService()),
+        ChangeNotifierProvider(create: (_) => CategoryService()),
         ChangeNotifierProvider(create: (_) => BudgetService()),
         ChangeNotifierProvider(create: (_) => InvitationService()),
         ChangeNotifierProvider(create: (_) => AiService()),
