@@ -89,5 +89,5 @@ pull requests".
 
 `android/app/build.gradle.kts` still uses `applicationId = "com.example.settlement"`.
 GitHub distribution doesn't care, but change it to a real ID (e.g.
-`in.filamentai.settlement`) before any Play Store submission — and it must match
+`com.abhishektiwari.settlement`) before any Play Store submission — and it must match
 `package_name` in `google-services.json`.
