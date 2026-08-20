@@ -7,7 +7,8 @@ effect once the other party confirms — and each event triggers a **push
 notification** via Firebase Cloud Messaging.
 
 > **Stack:** Flutter (Dart 3.7+) · Firebase Auth (Google Sign‑In) · Cloud
-> Firestore · Cloud Messaging · Cloud Functions (Node 20) · Provider
+> Firestore · Cloud Messaging · Cloud Functions (Node 20) · Firebase AI ·
+> Provider
 
 ---
 
@@ -36,12 +37,22 @@ notification** via Firebase Cloud Messaging.
   that the other person must **accept**; the friendship forms only on acceptance.
 
 ### Personal finance
-- **Expense tracking** across 8 categories with search, edit, and delete. Group
-  expenses are excluded from personal totals so nothing is double‑counted.
+- **Expense tracking** with search, edit, and delete, plus **user‑defined custom
+  categories** on top of the built‑in set. Group expenses are excluded from
+  personal totals so nothing is double‑counted.
+- **Recurring expenses** — define an expense once (rent, subscriptions, EMIs)
+  and it's logged automatically on schedule.
+- **Accounts** — track balances across multiple accounts/wallets.
 - **Budgets** — per‑category monthly limits with 80%‑near‑limit and over‑budget
   alerts, plus progress visualizations.
 - **Analytics** — weekly / monthly / yearly spend charts (via `fl_chart`) and a
   splits breakdown.
+- **Home‑screen widget** — glanceable balance/spend summary without opening the app.
+
+### AI assistant
+- **Draft splits from natural language or voice** (`speech_to_text` + Firebase AI)
+  — describe an expense in plain English and the assistant proposes a split for
+  you to review and confirm before it's created.
 
 ### Splitting & settling (the handshake)
 - **Split a bill** equally or with custom amounts. Amounts are divided to the
@@ -57,6 +68,8 @@ notification** via Firebase Cloud Messaging.
 - **Requests inbox** — one screen (with a live badge) to accept/decline every
   pending item: friend requests, split approvals, payment confirmations, group
   invites. Also surfaced inline in the Friends and Splits screens.
+- **Notification center** — an in‑app feed of past notifications, independent of
+  the OS notification tray.
 - **Push notifications (FCM)** for all of the above, delivered by Cloud Functions.
 
 ---
@@ -99,15 +112,21 @@ lib/
 │   ├── group_invitation_model.dart
 │   └── friend_request_model.dart
 ├── services/                  # ChangeNotifier services
-│   ├── auth_service.dart      # Google auth, friends, friend requests
+│   ├── auth_service.dart        # Google auth, friends, friend requests
 │   ├── expense_service.dart
-│   ├── group_service.dart     # groups, splits, approvals, settlements
+│   ├── category_service.dart    # user-defined custom categories
+│   ├── recurring_service.dart   # scheduled recurring expenses
+│   ├── account_service.dart     # multi-account balances
+│   ├── group_service.dart       # groups, splits, approvals, settlements
 │   ├── budget_service.dart
 │   ├── invitation_service.dart
-│   └── notification_service.dart  # FCM tokens, permissions, local notifications
+│   ├── ai_service.dart          # natural-language / voice split drafting
+│   ├── home_widget_service.dart # home-screen widget sync
+│   ├── notification_service.dart        # FCM tokens, permissions, local notifications
+│   └── notification_center_service.dart # in-app notification feed
 ├── screens/
-│   ├── auth/ home/ dashboard/ expenses/ splits/ groups/ budgets/
-│   ├── analytics/ profile/ invitations/
+│   ├── auth/ home/ accounts/ expenses/ recurring/ splits/ groups/ budgets/
+│   ├── analytics/ profile/ invitations/ notifications/ ai/
 │   └── requests/              # central handshake inbox
 ├── utils/money.dart           # exact even-split helper
 └── widgets/                   # shared UI (budget cards, dialogs)
