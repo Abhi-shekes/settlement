@@ -308,3 +308,12 @@ Unit tests cover the pure business logic:
 ## License
 
 Proprietary — all rights reserved (update as appropriate).
+
+## Firebase configuration
+
+`android/app/google-services.json` is not committed. Copy the template and fill in
+your own Firebase project values before building:
+
+```sh
+cp android/app/google-services.json.example android/app/google-services.json
+```
