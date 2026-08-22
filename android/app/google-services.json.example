@@ -36,7 +36,7 @@
       ],
       "api_key": [
         {
-          "current_key": "REMOVED_GOOGLE_API_KEY"
+          "current_key": "YOUR_ANDROID_FIREBASE_API_KEY"
         }
       ],
       "services": {
